@@ -1,0 +1,4 @@
+(library
+ (name RelationalNetkat)
+ (libraries mlbdd ounit2)
+ )
