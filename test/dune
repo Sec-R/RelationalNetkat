@@ -1,1 +1,8 @@
+(test
+  (name test_RelationalNetkat)
+  (libraries RelationalNetkat mlbdd ounit2)
+)
 
+(env
+  (dev
+    (flags (:standard -warn-error -A))))
