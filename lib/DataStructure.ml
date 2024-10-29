@@ -49,7 +49,7 @@ type rel =
   
 let pk_max = 0
 (* The variable is in order of x x' y y' --> 4k, 4k+1, 4k+2, 4k+3*)
-let bddvar pk field = 4*field+pk
+let bddvar pk field = 10*field+pk
 
 let generate_single_var (man:MLBDD.man) (pk:pk) (field:field):MLBDD.t =
     MLBDD.ithvar man (bddvar pk field)
@@ -182,11 +182,11 @@ let canoicalize_r (r:rel):rel=
 let r_equivalent (r1:rel) (r2:rel):bool=
    (r_included r1 r2)&&(r_included r2 r1)
 
-let nkro_equivalent (nkr1:netkat*rel option) (nkr2:netkat*rel option):bool =
-  (nk_equivalent (fst nkr1) (fst nkr2))&&(Option.equal r_equivalent (snd nkr1) (snd nkr2))
+let nkr_equivalent (nkr1:netkat*rel) (nkr2:netkat*rel):bool =
+  (nk_equivalent (fst nkr1) (fst nkr2))&&(r_equivalent (snd nkr1) (snd nkr2))
 
-let canoicalize_nkro (nkr:netkat*rel option):netkat*rel option=
-  ((canoicalize_nk (fst nkr)),(Option.map canoicalize_r (snd nkr)))
+let canoicalize_nkr (nkr:netkat*rel):netkat*rel=
+  ((canoicalize_nk (fst nkr)),(canoicalize_r (snd nkr)))
 
 (* We assume the invariant here is the mapping is canoicalized *)      
 let add_mapping (con:'a) (bdd:MLBDD.t) (equiv:'a -> 'a -> bool)(norm:'a -> 'a )(mapping:('a*MLBDD.t)list):('a*MLBDD.t)list=
@@ -210,9 +210,12 @@ let add_nko_mapping (nko:netkat option) (bdd:MLBDD.t) (mapping:(netkat option*ML
 
 let add_r_mapping (rel:rel) (bdd:MLBDD.t) (mapping:(rel*MLBDD.t)list):(rel*MLBDD.t)list=
   add_mapping rel bdd r_equivalent canoicalize_r mapping
-      
-let add_nkro_mapping (con:netkat*rel option) (bdd:MLBDD.t) (mapping:((netkat*rel option)*MLBDD.t)list):((netkat*rel option)*MLBDD.t)list=
-  add_mapping con bdd nkro_equivalent canoicalize_nkro mapping
+
+let add_ro_mapping (relo:rel option) (bdd:MLBDD.t) (mapping:(rel option*MLBDD.t)list):(rel option*MLBDD.t)list=
+  add_mapping relo bdd (Option.equal r_equivalent) (Option.map canoicalize_r) mapping
+
+let add_nkro_mapping (con:(netkat*rel) option) (bdd:MLBDD.t) (mapping:((netkat*rel) option*MLBDD.t)list):((netkat*rel) option*MLBDD.t)list=
+  add_mapping con bdd (Option.equal nkr_equivalent) (Option.map canoicalize_nkr) mapping
 
   (* We assume the invariant here is the arguments are canoicalized *)      
 let rec union_mapping (equiv:'a -> 'a -> bool)(norm:'a -> 'a )(mapping1:('a*MLBDD.t)list) (mapping2:('a*MLBDD.t)list):('a*MLBDD.t)list=
@@ -229,8 +232,11 @@ let union_nko_mapping (mapping1:(netkat option*MLBDD.t)list) (mapping2:(netkat o
 let union_r_mapping (mapping1:(rel*MLBDD.t)list) (mapping2:(rel*MLBDD.t)list):(rel*MLBDD.t)list=
   union_mapping r_equivalent canoicalize_r mapping1 mapping2
 
-let union_nkro_mapping (mapping1:((netkat*rel option)*MLBDD.t)list) (mapping2:((netkat*rel option)*MLBDD.t)list):((netkat*rel option)*MLBDD.t)list=
-  union_mapping nkro_equivalent canoicalize_nkro mapping1 mapping2
+let union_ro_mapping (mapping1:(rel option*MLBDD.t)list) (mapping2:(rel option*MLBDD.t)list):(rel option*MLBDD.t)list=
+  union_mapping (Option.equal r_equivalent) (Option.map canoicalize_r) mapping1 mapping2
+
+let union_nkro_mapping (mapping1:((netkat*rel) option*MLBDD.t)list) (mapping2:((netkat*rel) option*MLBDD.t)list):((netkat*rel) option*MLBDD.t)list=
+  union_mapping (Option.equal nkr_equivalent) (Option.map canoicalize_nkr) mapping1 mapping2
   
 let canonicalize (equiv:'a -> 'a -> bool)(norm:'a -> 'a )(mapping:('a*MLBDD.t)list):('a*MLBDD.t)list=
    union_mapping equiv norm mapping []
@@ -244,11 +250,17 @@ let canonicalize_nko_mapping (mapping:(netkat option*MLBDD.t)list):(netkat optio
 let canonicalize_r_mapping (mapping:(rel*MLBDD.t)list):(rel*MLBDD.t)list=
    canonicalize r_equivalent canoicalize_r mapping
 
-let canonicalize_nkro_mapping (mapping:((netkat*rel option)*MLBDD.t)list):((netkat*rel option)*MLBDD.t)list=
-   canonicalize nkro_equivalent canoicalize_nkro mapping
+let canonicalize_ro_mapping (mapping:(rel option*MLBDD.t)list):(rel option*MLBDD.t)list=
+   canonicalize (Option.equal r_equivalent) (Option.map canoicalize_r) mapping
+
+let canonicalize_nkro_mapping (mapping:((netkat*rel) option*MLBDD.t)list):((netkat*rel) option*MLBDD.t)list=
+   canonicalize (Option.equal nkr_equivalent) (Option.map canoicalize_nkr) mapping
    
-let apply_mapping (bdd:MLBDD.t) (mapping:('a*MLBDD.t)list):('a*MLBDD.t)list=
-  (List.filter  (fun (a,b)-> not (MLBDD.is_false b)) (List.map (fun (a,b)-> (a,MLBDD.dand b bdd)) mapping))
+let apply_mapping (tobdd:MLBDD.t->MLBDD.t) (mapping:('a*MLBDD.t)list):('a*MLBDD.t)list=
+  (List.filter_map (fun (a,bdd)-> let nbdd = tobdd bdd in 
+                                    if (MLBDD.is_false nbdd) then
+                                       None
+                                    else Some (a,nbdd)) mapping)
 
 let concatenate_mapping (mapping:('a*MLBDD.t)list) (seq:'a*'a->'a)(con:'a):('a*MLBDD.t)list=
    (List.map (fun (a,b)-> (seq (a,con),b)) mapping)
@@ -257,117 +269,61 @@ let concatenate_nk_mapping (mapping:(netkat*MLBDD.t)list) (nk:netkat):(netkat*ML
   concatenate_mapping mapping (fun (a,b)->Seq (a,b)) nk
 
 let concatenate_nko_mapping (mapping:(netkat option*MLBDD.t)list) (nko:netkat option):(netkat option*MLBDD.t)list=
-  concatenate_mapping mapping ((fun (a,b)->match a with
-                                          | Some nk1 -> (match b with 
-                                                        | Some nk2 -> Some (Seq (nk1,nk2))
-                                                        | None -> a)
-                                          | None -> b)) nko
+  concatenate_mapping mapping (fun (nko1,nko2)->match (nko1,nko2) with
+                                          | (None,_) -> nko2
+                                          | (_, None) -> nko1
+                                          | (Some nk1,Some nk2) -> Some (Seq (nk1,nk2))
+                                                      ) nko
 
 let concatenate_r_mapping (mapping:(rel*MLBDD.t)list) (rel:rel):(rel*MLBDD.t)list=
   concatenate_mapping mapping (fun (a,b)->SeqR (a,b)) rel
 
-let concatenate_nkro_mapping (mapping:((netkat*rel option)*MLBDD.t)list) (con:netkat*rel option):((netkat*rel option)*MLBDD.t)list=
-  concatenate_mapping mapping (fun ((nk1,ro1),(nk2,ro2))->(Seq (nk1,nk2),
-                                                        match ro1 with
-                                                        | Some r1 -> (match ro2 with 
-                                                                          | Some r2 -> Some (SeqR (r1,r2))
-                                                                          | None -> ro1)
-                                                        | None -> ro2)) con
-              
-let rec epsilon_k (man:MLBDD.man)(pk1:pk)(pk2:pk)(nk:netkat): MLBDD.t=
-    match nk with
-    | Pred pred -> compile_pred_bdd man pk1 pred
-    | Asgn (field, b) -> produce_assign man pk1 pk2 (bddvar pk1 field) b true
-  	| Union(nk1,nk2) -> MLBDD.dor (epsilon_k man pk1 pk2 nk1) (epsilon_k man pk1 pk2 nk2)
-  	| Seq(nk1,nk2) -> comp_bdd man pk1 pk2 epsilon_k nk1 nk2
-  	| Star(nk) -> closure_bdd man pk1 pk2 epsilon_k nk
-    | Dup -> MLBDD.dfalse man   
+let concatenate_ro_mapping (mapping:(rel option*MLBDD.t)list) (relo:rel option):(rel option*MLBDD.t)list=
+  concatenate_mapping mapping (fun (ro1,ro2)->match (ro1,ro2) with
+                                                  | (None,_) -> ro2
+                                                  | (_, None) -> ro1
+                                                  | (Some r1,Some r2) -> Some (SeqR (r1,r2))
+                                                        ) relo
 
+let concatenate_nkro_mapping (mapping:((netkat*rel) option*MLBDD.t)list) (con:(netkat*rel) option):((netkat*rel) option*MLBDD.t)list=
+  concatenate_mapping mapping (fun (nkro1,nkro2)->match (nkro1,nkro2) with
+                                                      | (None,_) -> nkro2
+                                                      | (_,None) -> nkro1
+                                                      | (Some (nk1,r1),Some (nk2,r2)) ->Some (Seq (nk1,nk2),SeqR(r1,r2))
+  ) con
+
+let folding_epsilon (man:MLBDD.man) (nkol:(netkat option*MLBDD.t)list):MLBDD.t =
+  List.fold_left 
+  (fun acc (nko,bdd)-> match nko with 
+                            | None -> MLBDD.dor acc bdd
+                            | _ -> acc) 
+                            (MLBDD.dfalse man) nkol                                                        
 (* We assume the invariant here is the return value is canoicalized *)
-let rec delta_k (man:MLBDD.man)(pk1:pk)(pk2:pk)(nk:netkat): (netkat*MLBDD.t)list=
-    match nk with
-    	| Pred _ -> []  
-    	| Asgn _ -> []
-  	  | Union(nk1,nk2) -> union_nk_mapping  (delta_k man pk1 pk2 nk1) (delta_k man pk1 pk2 nk2)
-  	  | Seq(nk1,nk2) -> union_nk_mapping (concatenate_nk_mapping (delta_k man pk1 pk2 nk1) nk2)
-  	                      (apply_mapping (epsilon_k man pk1 pk2 nk1) (delta_k man pk1 pk2 nk2))
-  	  | Star nk -> concatenate_nk_mapping (let pk3 = generate_unused_pk pk1 pk2 in
-                      	                      let support = generate_support pk3 in                         
-                                                List.map (fun (nk,bdd) -> (nk,(MLBDD.exists support bdd))) (apply_mapping (epsilon_k man pk1 pk3 (Star nk)) (delta_k man pk3 pk2 nk))) (Star nk) 
-      | Dup -> [(Pred True,produce_id man pk1 pk2)]
+let rec delta_k (man:MLBDD.man)(pk1:pk)(pk2:pk)(nko:netkat option): (netkat option*MLBDD.t)list=
+    match nko with
+      | None -> []
+    	| Some (Pred pred) -> [(None,MLBDD.dand (compile_pred_bdd man pk1 pred) (produce_id man pk1 pk2))]  
+    	| Some (Asgn (field, b)) -> [(None,produce_assign man pk1 pk2 (bddvar pk1 field) b true)]
+  	  | Some (Union(nk1,nk2)) -> union_nko_mapping  (delta_k man pk1 pk2 (Some nk1)) (delta_k man pk1 pk2 (Some nk2))
+  	  | Some (Seq(nk1,nk2)) -> let pk3 =  generate_unused_pk pk1 pk2 in
+                                  let support = generate_support pk3 in
+                                    union_nko_mapping (concatenate_nko_mapping (delta_k man pk1 pk2 (Some nk1)) (Some nk2))
+  	                                (let epsilon = folding_epsilon man (delta_k man pk1 pk3 (Some nk1)) in
+                                      (apply_mapping (fun bdd -> MLBDD.exists support (MLBDD.dand epsilon bdd)) (delta_k man pk3 pk2 (Some nk2))))
+  	  | Some (Star nk) -> concatenate_nko_mapping (let pk3 = generate_unused_pk pk1 pk2 in
+                      	                      let support = generate_support pk3 in
+                                                let epsilon = closure_bdd man pk1 pk3 (fun man pk1 pk2 nk 
+                                                                                            -> folding_epsilon man (delta_k man pk1 pk2 (Some nk))) nk in                         
+                                                 (apply_mapping (fun bdd -> MLBDD.exists support (MLBDD.dand epsilon bdd)) (delta_k man pk3 pk2 (Some nk)))) (Some (Star nk)) 
+      | Some Dup -> [(Some (Pred True),produce_id man pk1 pk2)]
 (* For epsilon kr, there is no transition on the y or the input tape, thus we only need two tape denoting the before
 and after hidden state *)
-let rec empty_r (rel:rel):bool =
-  match rel with
-    | StarR rel -> true
-    | OrR (r1,r2) -> empty_r r1||empty_r r2 
-    | SeqR (r1,r2) -> empty_r r1&&empty_r r2
-    | _ -> false
-
-let rec epsilon_r (man:MLBDD.man) (pk1:pk) (pk2:pk) (rel:rel):MLBDD.t =
-  match rel with
-  | Left pred -> compile_pred_bdd man pk1 pred
-  | Right pred -> compile_pred_bdd man pk2 pred
-  | Binary pkr -> compile_pkr_bdd man pk1 pk2 pkr
-  | OrR (r1,r2) -> MLBDD.dor (epsilon_r man pk1 pk2 r1) (epsilon_r man pk1 pk2 r2)
-  | SeqR (r1,r2) -> if empty_r r1 then
-                      (epsilon_r man pk1 pk2 r1)
-                    else
-                      MLBDD.dfalse man
-  | StarR r -> epsilon_r man pk1 pk2 r
-
-let rec delta_r (man:MLBDD.man) (pk1:pk) (pk2:pk) (rel:rel):(rel*MLBDD.t)list=
-  match rel with
-  | OrR (r1,r2) -> union_r_mapping (delta_r man pk1 pk2 r1) (delta_r man pk1 pk2 r2)
-  | SeqR (r1,r2) -> if empty_r r1 then
-                      union_r_mapping (delta_r man pk1 pk2 r2) (add_r_mapping r2 (epsilon_r man pk1 pk2 r1) (delta_r man pk1 pk2 r1))
-                    else
-                      (add_r_mapping r2 (epsilon_r man pk1 pk2 r1) (delta_r man pk1 pk2 r1))
-  | StarR r -> delta_r man pk1 pk2 r
-  | _ -> []
 
 (* A naive implementation, to be optimized*)
-let rec epsilon_0_kr (man:MLBDD.man) (pk1:pk) (pk2:pk) (nk:netkat)(rel:rel): (netkat option*MLBDD.t)list=
-  (* Calculate all the state that is reachable through delta_re0 transition, which exhaust the relation rel *)
-  (* Since the y tape doesn't move, thus we only need two pk, which is pk1 and pk2*)
-  let epsilon_0_kr_aux (pk1:pk) (pk2:pk) (r:rel) (compiler:pk -> pk ->(netkat option*MLBDD.t)list):(netkat option*MLBDD.t)list =
-    let pk3 = generate_unused_pk pk1 pk2 in
-      let support = generate_support pk3 in
-        List.fold_left (fun acc -> fun (nko,bdd) -> union_nko_mapping acc 
-                          (match nko with
-                            | Some nk -> List.map (fun (a,b)-> (a,(MLBDD.exists support (MLBDD.dand bdd b)))) (epsilon_0_kr man pk3 pk2 nk r)
-                            | None -> if empty_r r then
-                                       [(None,MLBDD.exists support (MLBDD.dand bdd (produce_id man pk3 pk2)))]
-                                      else
-                                       [] ))
-                             [] (compiler pk1 pk3)
-  in                         
-  match rel with
-    | Left pred -> [(None,MLBDD.dand (compile_pred_bdd man pk2 pred) (epsilon_k man pk1 pk2 nk))]
-    | OrR (r1,r2) -> union_nko_mapping (epsilon_0_kr man pk1 pk2 nk r1) (epsilon_0_kr man pk1 pk2 nk r2)
-    | SeqR (r1,r2) -> epsilon_0_kr_aux pk1 pk2 r2 (fun pk1 -> fun pk2 -> (epsilon_0_kr man pk1 pk2 nk r1))
-    | StarR r -> let rec star_aux (compiler:pk->pk->(netkat option*MLBDD.t)list): (netkat option*MLBDD.t)list=
-                    let cur = compiler pk1 pk2 in
-                      let next = (union_nko_mapping (epsilon_0_kr_aux pk1 pk2 r compiler) cur) in
-                      if List.equal (fun (nko1,bdd1)->fun(nko2,bdd2) -> (MLBDD.equal bdd1 bdd2)&&(Option.equal nk_equivalent nko1 nko2)) cur next
-                       then cur
-                      else
-                        star_aux (fun pk1 -> fun pk2 -> (union_nko_mapping (epsilon_0_kr_aux pk1 pk2 r compiler) cur)) (*It is next*)
-                  in star_aux (fun pk1 -> fun pk2 ->[(Some nk,produce_id man pk1 pk2)])
-    | _ -> []  
-
-
-
-let epsilon_kr (man:MLBDD.man) (pk1:pk) (pk2:pk) (nk:netkat)(rel:rel): MLBDD.t=
-   List.fold_left (fun acc -> fun (nko,bdd) -> match nko with
-                                                | Some nk -> acc
-                                                | None -> MLBDD.dor acc bdd) (MLBDD.dfalse man) (epsilon_0_kr man pk1 pk2 nk rel)
-
-let generate_unused_tri_pk (pk1:pk) (pk2:pk) (pk3:pk):pk =
-  6 - pk1 - pk2 - pk3  
-
-let rec delta_kr (man:MLBDD.man) (pk1:pk) (pk2:pk) (pk3:pk) (nk:netkat)(rel:rel): ((netkat*rel option)*MLBDD.t)list= 
-  match rel with                                           
+let rec delta_kr (man:MLBDD.man) (pk1:pk) (pk2:pk) (pk3:pk) (nkro:netkat*rel option): ((netkat*rel option)*MLBDD.t)list= 
+  match nkro with
+    | None -> []
+    | Some (Left pred) ->                                            
     | Left pred -> []
     | Right pred -> [((nk,None), compile_pred_bdd man pk3 pred)]
     | Binary pkr ->  let bdd = compile_pkr_bdd man pk2 pk3 pkr in 
@@ -377,59 +333,20 @@ let rec delta_kr (man:MLBDD.man) (pk1:pk) (pk2:pk) (pk3:pk) (nk:netkat)(rel:rel)
                           let support = generate_support pk4 in
                             union_nkro_mapping (concatenate_nkro_mapping (delta_kr man pk1 pk2 pk4 nk r1) (nk,Some r2))
                               (let eps = epsilon_0_kr man pk1 pk4 nk r1 in 
-                                List.fold_left (fun acc -> fun ((nk,ro),dbdd) -> union_nkro_mapping acc 
-                                    (List.map (fun (nko,ebdd)-> match nko with 
-                                                                      | Some nk' -> ((Seq(nk',nk),ro),MLBDD.exists support (MLBDD.dand dbdd ebdd))
-                                                                      | None -> ((nk,ro),MLBDD.exists support (MLBDD.dand dbdd ebdd))
-                                    ) eps)) [] (delta_kr man pk4 pk2 pk3 nk r2))
+                                List.fold_left (fun acc -> fun (nko,ebdd) -> union_nkro_mapping acc 
+                                 (match nko with
+                                 | Some nk -> List.map (fun (con,dbdd)-> (con, MLBDD.exists support (MLBDD.dand ebdd dbdd))) 
+                                                (delta_kr man pk4 pk2 pk3 nk r2)
+                                 | None -> [] )) [] eps)
     | StarR r -> let pk4 = generate_unused_tri_pk pk1 pk2 pk3 in
                     let support = generate_support pk4 in
      (concatenate_nkro_mapping  
         (let eps = epsilon_0_kr man pk1 pk4 nk (StarR r) in 
-          List.fold_left (fun acc -> fun ((nk,ro),dbdd) -> union_nkro_mapping acc 
-              (List.map (fun (nko,ebdd)-> match nko with 
-                                                | Some nk' -> ((Seq(nk',nk),ro),MLBDD.exists support (MLBDD.dand dbdd ebdd))
-                                                | None -> ((nk,ro),MLBDD.exists support (MLBDD.dand dbdd ebdd))
-              ) eps)) [] (delta_kr man pk4 pk2 pk3 nk r)) (nk,Some (StarR r)))
-                                                (*    
-let rec epsilon_l_kr (man:MLBDD.man) (pk1:pk) (pk2:pk) (nk:netkat)(rel:rel): (netkat*MLBDD.t)list=
-  (* Calculate the one step rel bdd on left *)
-  match rel with
-    | Left pred -> apply_mapping (compile_pred_bdd man pk2 pred) (delta_k man pk1 pk2 nk)
-    | OrR (r1,r2) -> MLBDD.dor (epsilon_l_kr man pk1 pk2 nk r1) (epsilon_l_kr man pk1 pk2 nk r2)
-    | SeqR (r1,r2) -> let pk3 = generate_unused_pk pk1 pk2 in
-                          List.fold_left (fun acc -> fun (nk,bdd) -> MLBDD.dor acc (MLBDD.exists (generate_support pk3)
-                              (MLBDD.dand (MLBDD.dand (epsilon_l_kr_aux pk1 pk3 r1) bdd)(epsilon_l_kr man pk3 pk2 nk r2))))
-                             (MLBDD.dfalse man) (delta_k man pk1 pk3 nk)
-    | StarR r -> concatenate_nk_mapping (apply_mapping (epsilon_0_kr man pk1 pk2 (Star nk) r) (epsilon_l_kr man pk1 pk2 nk r)) (Star nk)
-    | _ -> MLBDD.dfalse man  
-
-    
-let rec epsilon_l_kr (man:MLBDD.man) (pk1:pk) (pk2:pk) (nk:netkat)(rel:rel): MLBDD.t=
-  (* Calculate the one step rel bdd on left *)
-  let rec epsilon_l_kr_aux(pk1:pk)(pk2:pk)(rel:rel):MLBDD.t =
-    match rel with
-    | Left pred -> (compile_pred_bdd man pk2 pred) 
-    | OrR (r1,r2) -> MLBDD.dor (epsilon_l_kr_aux pk1 pk2 r1) (epsilon_l_kr_aux pk1 pk2 r2)
-    | SeqR (r1,r2) -> if empty_r r1 then
-                        epsilon_l_kr_aux pk1 pk2 r2
-                      else
-                        MLBDD.dfalse man   
-    | StarR r -> epsilon_l_kr_aux pk1 pk2 r
-    | _ -> MLBDD.dfalse man
-  in  
-  match rel with
-    | Left pred -> MLBDD.dand (compile_pred_bdd man pk1 pred) (epsilon_k man pk1 pk2 nk)
-    | OrR (r1,r2) -> MLBDD.dor (epsilon_l_kr man pk1 pk2 nk r1) (epsilon_l_kr man pk1 pk2 nk r2)
-    | SeqR (r1,r2) -> let pk3 = generate_unused_pk pk1 pk2 in
-                          List.fold_left (fun acc -> fun (nk,bdd) -> MLBDD.dor acc (MLBDD.exists (generate_support pk3)
-                              (MLBDD.dand (MLBDD.dand (epsilon_l_kr_aux pk1 pk3 r1) bdd)(epsilon_l_kr man pk3 pk2 nk r2))))
-                             (MLBDD.dfalse man) (delta_k man pk1 pk3 nk)
-    | StarR r -> epsilon_r man pk1 pk2 r
-    | _ -> MLBDD.dfalse man  
-
-  *)
-      
+              List.fold_left (fun acc -> fun (nko,ebdd) -> union_nkro_mapping acc 
+              (match nko with
+                | Some nk -> List.map (fun (con,dbdd)-> (con, MLBDD.exists support (MLBDD.dand ebdd dbdd))) 
+                       (delta_kr man pk4 pk2 pk3 nk r)
+                | None -> [] )) [] eps) (nk,Some (StarR r)))
     
     
     
