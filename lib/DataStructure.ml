@@ -397,6 +397,53 @@ let delta_kr (man:MLBDD.man) (pk1:pk) (pk2:pk) (pk3:pk) (nkro:(netkat option*rel
         canonicalize_nkro_mapping (List.flatten (List.map (fun (nkro,bdd) -> apply_mapping (fun ebdd -> (MLBDD.exists support (MLBDD.dand bdd ebdd))) 
             (delta_kr_aux man pk4 pk2 pk3 nkro)) (epsilon_kr man pk1 pk4 nkro)))
 
+
+let add_mapping_2 (con:'a) (bdd:MLBDD.t) (equiv:'a -> 'a -> bool)(norm:'a -> 'a )(mapping:('a*MLBDD.t)list):('a*MLBDD.t)list option=
+      let rec update_mapping (con:'a) (bdd:MLBDD.t) (mapping:('a*MLBDD.t)list) =
+            match mapping with
+              | [] ->Some [(con,bdd)]
+              | (conh,bddh)::tl -> if equiv con conh then
+                                    if MLBDD.equal (MLBDD.dor bdd bddh) bddh then
+                                       None
+                                    else Some ((conh,MLBDD.dor bdd bddh)::tl)
+                                   else match (update_mapping con bdd tl) with 
+                                       | None -> None
+                                       | Some tl -> Some ((conh,bddh)::tl)
+      in
+         if MLBDD.is_false bdd then
+	        None
+	      else
+          update_mapping (norm con) bdd mapping  
+
+let add_nkro_mapping_2 (con:(netkat option*rel option)) (bdd:MLBDD.t) (mapping:((netkat option*rel option)*MLBDD.t)list):((netkat option*rel option)*MLBDD.t)list option=
+  add_mapping_2 con bdd nkro_equivalent canoicalize_nkro mapping
+
+let append_second (pair:('a*('b list))) (con:'b): ('a*('b list))=
+  (fst pair,con::(snd pair))
+
+let calculate_reachable_set (man:MLBDD.man) (pk1:pk) (pk2:pk) (pk3:pk) (nkr:netkat*rel):((netkat option*rel option)*MLBDD.t)list =
+  let pk4 = generate_unused_tri_pk pk1 pk2 pk3 in
+    let support2 = generate_support pk2 in
+    let support3 = generate_support pk3 in
+    let support1 = generate_support pk1 in
+    let id12 = produce_id man pk1 pk2 in
+    let id34 = produce_id man pk3 pk4 in
+      let rec calculate_reachable_set_aux (cur:((netkat option*rel option)*MLBDD.t)list) (worklist:((netkat option*rel option)*MLBDD.t)list): ((netkat option*rel option)*MLBDD.t)list=
+        match worklist with
+          | [] -> cur
+          | (nkro,bdd)::tl -> 
+                let next = apply_mapping 
+                  (fun nbdd -> (MLBDD.exists support2 (MLBDD.exists support3 (MLBDD.dand id34 (MLBDD.dand id12 (MLBDD.exists support1 (MLBDD.dand nbdd bdd)))))))
+                    (delta_kr man pk1 pk2 pk3 nkro)
+                        in let rec update_cur (cur:((netkat option*rel option)*MLBDD.t)list) (next:((netkat option*rel option)*MLBDD.t)list):(((netkat option*rel option)*MLBDD.t)list)*(((netkat option*rel option)*MLBDD.t)list)=
+                             match next with
+                               | [] -> (cur,[])
+                               | (nkro,bdd)::tl -> match (add_nkro_mapping_2 nkro bdd cur) with
+                                                   | None -> update_cur cur tl
+                                                   | Some cur -> append_second  (update_cur cur tl) (nkro,bdd)
+                in match (update_cur cur next) with
+                   | (cur,ntl) -> calculate_reachable_set_aux cur (List.append tl ntl)
+     in calculate_reachable_set_aux [] [(Some (fst nkr),Some (snd nkr)),(MLBDD.dtrue man)]
                                        
     
     
