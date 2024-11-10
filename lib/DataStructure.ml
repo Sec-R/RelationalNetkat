@@ -385,7 +385,7 @@ let delta_kr (man:MLBDD.man) (pk1:pk) (pk2:pk) (pk3:pk) (nkro:(netkat option*rel
         | (nko,None) -> []
         | (nko,Some (Left pred)) -> []
         | (nko,Some (Right pred)) -> let pred_bdd = compile_pred_bdd man pk3 pred in
-                                        List.map (fun (nko,bdd) -> (nko,None),bdd) (apply_mapping (fun bdd -> MLBDD.dand bdd pred_bdd) (delta_k man pk1 pk4 nko))
+                                        [(nko,None),pred_bdd]
         | (nko,Some (Binary pkr)) -> let pkr_bdd = compile_pkr_bdd man pk4 pk3 pkr in
                                         List.map (fun (nko,bdd) -> (nko,None),bdd) (apply_mapping (fun bdd -> MLBDD.dand bdd pkr_bdd) (delta_k man pk1 pk4 nko))
         | (nko,Some (OrR (r1,r2))) -> union_nkro_mapping (delta_kr_aux man pk1 pk4 pk3 (nko,Some r1)) (delta_kr_aux man pk1 pk4 pk3 (nko,Some r2))                                
@@ -443,9 +443,18 @@ let calculate_reachable_set (man:MLBDD.man) (pk1:pk) (pk2:pk) (pk3:pk) (nkr:netk
                                                    | Some cur -> append_second  (update_cur cur tl) (nkro,bdd)
                 in match (update_cur cur next) with
                    | (cur,ntl) -> calculate_reachable_set_aux cur (List.append tl ntl)
-     in calculate_reachable_set_aux [] [(Some (fst nkr),Some (snd nkr)),(MLBDD.dtrue man)]
+     in calculate_reachable_set_aux [] [(Some (fst nkr),Some (snd nkr)),(produce_id man pk1 pk4)]
                                        
-    
-    
-    
+let simplify (man:MLBDD.man) (pk:pk) (bdd:MLBDD.t) =
+  let simplify_aux (bnode:MLBDD.t MLBDD.b) =
+      match bnode with
+      | MLBDD.BFalse -> MLBDD.dfalse man     
+      | MLBDD.BTrue -> MLBDD.dtrue man      
+      | MLBDD.BIf (low,var,high) -> 
+            if (pk mod 4) = (var mod 4) then
+              if MLBDD.is_false low then high
+              else if MLBDD.is_false high then low
+              else MLBDD.dand (MLBDD.dand (MLBDD.ithvar man var) low) (MLBDD.dand (MLBDD.dnot (MLBDD.ithvar man var)) high) 
+            else MLBDD.dand (MLBDD.dand (MLBDD.ithvar man var) low) (MLBDD.dand (MLBDD.dnot (MLBDD.ithvar man var)) high)
+  in MLBDD.foldb_cont (MLBDD.fold_init man) simplify_aux bdd
 
