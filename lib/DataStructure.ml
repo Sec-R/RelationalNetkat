@@ -556,5 +556,38 @@ let determinization (transition:(int*bool*((int*MLBDD.t)list)) list):((SI.t*bool
                           (List.map (fun (si,_) -> si) dnexts)) in
                     let newacc = (si,final,dnexts)::acc in
                     determinization_aux newworklist newdonelist newacc
-    in determinization_aux [SI.singleton 0] [] []
+    in determinization_aux [SI.singleton 0] [] [SI.empty,false,[]]
 
+let bisim (man:MLBDD.man)(pk1:pk)(pk2:pk)(aut1:((SI.t*bool*((SI.t*MLBDD.t)list)) list)) (aut2:((SI.t*bool*((SI.t*MLBDD.t)list)) list)):bool =
+  let support2 = generate_support pk2 in
+  let id12 = produce_id man pk1 pk2 in
+  let rec bisim_aux (worklist:(SI.t*SI.t*MLBDD.t)list) (donelist:(SI.t*SI.t*MLBDD.t)list):bool =
+    match worklist with
+      | [] -> true
+      | (si1,si2,bdd)::tl -> let bdd = match List.find_opt (fun (dsi1,dsi2,dbdd) -> (SI.equal dsi1 si1)&&(SI.equal dsi2 si2)) donelist with 
+                                  | None -> bdd
+                                  | Some (_,_,dbdd) -> (MLBDD.dand bdd (MLBDD.dnot dbdd)) in
+                                if MLBDD.is_false bdd then
+                                  true
+                                else  
+                                  let (si1,final1,tr1) = List.find (fun (si,_,_) -> SI.equal si1 si) aut1 in
+                                  let (si2,final2,tr2) = List.find (fun (si,_,_) -> SI.equal si2 si) aut2 in
+                                    if final1 <> final2 then false
+                                    else let newworklist = List.append tl 
+                                    (List.flatten (List.map 
+                                      (fun (nsi1,tbdd1) -> List.map 
+                                        (fun (nsi2,tbdd2) -> 
+                                          (nsi1,nsi2, (MLBDD.exists support2(MLBDD.dand id12 (MLBDD.dand bdd (MLBDD.dand tbdd1 tbdd2)))))) tr2) tr1)) in
+                                         let newdonelist = match List.find_opt (fun (dsi1,dsi2,dbdd) -> (SI.equal dsi1 si1)&&(SI.equal dsi2 si2)) donelist with 
+                                                             | None -> (si1,si2,bdd)::donelist
+                                                             | Some _ -> List.map (fun (dsi1,dsi2,dbdd) -> if (SI.equal dsi1 si1)&&(SI.equal dsi2 si2) then
+                                                                                                                (si1,si2,MLBDD.dor bdd dbdd)
+                                                                                                              else (dsi1,dsi2,dbdd)) donelist in                                                                                                              
+                                         let newworklist = List.append newworklist 
+                                                (let reachable_bdd = (List.fold_left (fun acc -> fun (nsi2,bdd) -> MLBDD.dor acc bdd) (MLBDD.dfalse man) tr2) in
+                                                  List.map (fun (nsi1,bdd) -> (nsi1,SI.empty,MLBDD.dand bdd (MLBDD.dnot reachable_bdd))) tr1) in
+                                         let newworklist = List.append newworklist 
+                                                  (let reachable_bdd = (List.fold_left (fun acc -> fun (nsi1,bdd) -> MLBDD.dor acc bdd) (MLBDD.dfalse man) tr1) in
+                                                    List.map (fun (nsi2,bdd) -> (nsi2,SI.empty,MLBDD.dand bdd (MLBDD.dnot reachable_bdd))) tr2) in   
+                                          bisim_aux newworklist newdonelist
+  in bisim_aux [(SI.singleton 0,SI.singleton 0,MLBDD.dtrue man)] [] 
