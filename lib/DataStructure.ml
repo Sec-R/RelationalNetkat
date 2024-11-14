@@ -3,6 +3,8 @@
 [@@@ocaml.warning "-27"] 
 
 
+module SI = Set.Make(Int)
+
 (* The first r denote the state, as we use residual string to represent states *)
 (* The second pred denote the additional predicate we need to label the state, such as x =1 *)
 (* The last BDD records the transition from current state to next state *)
@@ -457,4 +459,102 @@ let simplify (man:MLBDD.man) (pk:pk) (bdd:MLBDD.t) =
               else MLBDD.dand (MLBDD.dand (MLBDD.ithvar man var) low) (MLBDD.dand (MLBDD.dnot (MLBDD.ithvar man var)) high) 
             else MLBDD.dand (MLBDD.dand (MLBDD.ithvar man var) low) (MLBDD.dand (MLBDD.dnot (MLBDD.ithvar man var)) high)
   in MLBDD.foldb_cont (MLBDD.fold_init man) simplify_aux bdd
+
+let generate_all_transition(man:MLBDD.man) (pk1:pk) (pk2:pk) (pk3:pk) (nkr:netkat*rel):(((netkat option*rel option)*MLBDD.t)*(((netkat option*rel option)*MLBDD.t)list))list=
+  let support2 = generate_support pk2 in
+  let support3 = generate_support pk3 in
+  let pk4 = generate_unused_tri_pk pk1 pk2 pk3 in
+  let support4 = generate_support pk4 in  
+    List.map (fun (nkro,bdd) -> let new_delta = apply_mapping (fun tbdd -> MLBDD.dand tbdd bdd) (delta_kr man pk1 pk2 pk3 nkro)
+                                  in let hidden_state = MLBDD.exists support2 (MLBDD.exists support3
+                                     (MLBDD.exists support4 (List.fold_left (fun acc (nkro,bdd) -> MLBDD.dor acc bdd) (MLBDD.dfalse man) new_delta))) in
+                                      ((nkro,hidden_state),new_delta)) (calculate_reachable_set man pk1 pk2 pk3 nkr)
+      
+let spliting_bdd (man:MLBDD.man) (bdd:MLBDD.t): MLBDD.t list =
+  MLBDD.foldb (fun btree -> match btree with
+                            | MLBDD.BFalse -> []
+                            | MLBDD.BTrue -> [MLBDD.dtrue man]
+                            | MLBDD.BIf (low,var,high) -> List.append (List.map (fun bdd -> MLBDD.dand (MLBDD.ithvar man var) bdd) high) (List.map (fun bdd -> MLBDD.dand (MLBDD.dnot (MLBDD.ithvar man var)) bdd) low)
+                            ) bdd
+
+let find_bdd (nkro:netkat option*rel option)(transition:(((netkat option*rel option)*MLBDD.t)*((netkat option*rel option)*MLBDD.t)list)list):MLBDD.t =
+  snd (fst (List.find (fun ((nkro1,_),_) -> nkro_equivalent nkro nkro1) transition))                           
+
+let simplify_all_transition(man:MLBDD.man) (pk1:pk) (pk2:pk) (pk3:pk) (nkr:netkat*rel):(((netkat option*rel option)*MLBDD.t)*(((netkat option*rel option)*MLBDD.t)*MLBDD.t)list)list=
+  let id12 = produce_id man pk1 pk2 in
+  let support1 = generate_support pk1 in
+  let pk4 = generate_unused_tri_pk pk1 pk2 pk3 in
+  let support2 = generate_support pk2 in
+  let support4 = generate_support pk4 in  
+  let all_transition = generate_all_transition man pk1 pk2 pk3 nkr in
+    List.concat_map (fun ((nkro1,hbdd1),nkrol) -> let hbddl1 = spliting_bdd man hbdd1 in
+                                        List.map (fun hbdd1 -> ((nkro1,hbdd1),List.concat_map (fun (nkro2,tbdd)->
+                                          let hbddl2 = spliting_bdd man (find_bdd nkro2 all_transition) in
+                                          List.filter_map (fun hbdd2 -> let tbddf = 
+                                            MLBDD.dand (MLBDD.dand hbdd1 tbdd) (MLBDD.exists support1 (MLBDD.dand hbdd2 id12)) in
+                                            if MLBDD.is_false tbddf then
+                                              None
+                                            else Some ((nkro2,hbdd2),MLBDD.exists support4 (MLBDD.exists support2 tbddf))
+                                            )
+                                          hbddl2
+                                        ) nkrol) ) hbddl1) all_transition
+
+let is_final_state (nkro:netkat option*rel option):bool =
+  match nkro with
+    | (None,None) -> true
+    | _ -> false                         
+
+let transition_to_int (man:MLBDD.man) (pk1:pk) (pk2:pk) (pk3:pk) (nkr:netkat*rel):(int*bool*((int*MLBDD.t)list)) list=
+  let all_transition = simplify_all_transition man pk1 pk2 pk3 nkr in
+    List.map (fun ((nkro1,hbdd1),nkrobl) -> match List.find_index (fun ((nkro2,hbdd2),_) -> (nkro_equivalent nkro1 nkro2)&&(MLBDD.equal hbdd1 hbdd2)) all_transition with
+                                            | None -> failwith "Transition not found"
+                                            | Some index -> (index,is_final_state nkro1,List.map (fun ((nkro2,hbdd2),tbdd) -> 
+                                              (Option.get (List.find_index (fun ((nkro3,hbdd3),_) -> (nkro_equivalent nkro2 nkro3)&&(MLBDD.equal hbdd2 hbdd3)) all_transition),tbdd) 
+                                              ) nkrobl)) all_transition
+
+let determinize_transition (nexts:(int*MLBDD.t)list):((SI.t*MLBDD.t)list)=
+  let rec add_transition (index:int) (bdd:MLBDD.t) (acc:((SI.t*MLBDD.t)list)):((SI.t*MLBDD.t)list)=
+      if MLBDD.is_false bdd then
+        acc
+      else                                        
+      (match acc with
+        | [] -> [(SI.singleton index,bdd)]
+        | (si,bddh)::tl -> let ibdd = MLBDD.dand bdd bddh in
+                           let dbdd1 = MLBDD.dand (MLBDD.dnot bdd) bddh in
+                           let dbdd2 = MLBDD.dand bdd (MLBDD.dnot bddh) in
+                           let res1 = if MLBDD.is_false ibdd then
+                                        (si,bddh)::(add_transition index dbdd1 tl)
+                                      else (SI.add index si,ibdd)::(add_transition index dbdd1 tl) in
+                            let res2 = if MLBDD.is_false dbdd2 then
+                                          res1
+                                        else (si,dbdd2)::res1 in res2)
+  in let rec determinize_transition_aux (nexts:(int*MLBDD.t)list) (acc:((SI.t*MLBDD.t)list)):((SI.t*MLBDD.t)list)=
+    match nexts with
+      | [] -> acc
+      | (index,bdd)::tl -> determinize_transition_aux tl (add_transition index bdd acc)
+  in determinize_transition_aux nexts []                                                             
+
+let find_final_state (index:int)(transition:(int*bool*((int*MLBDD.t)list)) list):bool =
+  match (List.find (fun (i,b,l) -> i=index) transition) with
+    | (_,true,_) -> true
+    | _ -> false                          
+
+
+let determinization (transition:(int*bool*((int*MLBDD.t)list)) list):((SI.t*bool*((SI.t*MLBDD.t)list)) list)=
+   let rec determinization_aux (worklist:SI.t list) (donelist:SI.t list) (acc:((SI.t*bool*((SI.t*MLBDD.t)list)) list)):((SI.t*bool*((SI.t*MLBDD.t)list)) list)=
+      match worklist with
+        | [] -> acc
+        | si::tl -> let nexts = List.flatten (List.map (fun (index,final,nexts) -> if SI.mem index si then
+                                                                                      nexts
+                                                                                    else []
+                                                    ) transition) in
+                    let dnexts = determinize_transition nexts in
+                    let final = SI.exists (fun index -> find_final_state index transition) si in
+                    let newdonelist = si::donelist in
+                    let newworklist = 
+                      List.append tl (List.filter (fun si -> not ((List.mem si newdonelist)||(List.mem si tl))) 
+                          (List.map (fun (si,_) -> si) dnexts)) in
+                    let newacc = (si,final,dnexts)::acc in
+                    determinization_aux newworklist newdonelist newacc
+    in determinization_aux [SI.singleton 0] [] []
 
