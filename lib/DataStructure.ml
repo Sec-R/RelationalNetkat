@@ -118,19 +118,24 @@ module NKOMap = Map.Make(
   struct type t = NK.t option 
   let compare = compare end)
 
+module BMap = Map.Make(
+  struct type t = MLBDD.t 
+  let compare a b = compare (MLBDD.id a) (MLBDD.id b) 
+end)  
+
 module NKROMap = Map.Make(
   struct type t = (NK.t option*Rel.t option) 
   let compare = compare
 end)
 
-module BMap = Map.Make(
-  struct type t = MLBDD.t 
-  let compare a b = compare (MLBDD.id a) (MLBDD.id b) 
-end)
-
 module NKROBMap = Map.Make(
   struct type t = (NK.t option*Rel.t option)*MLBDD.t 
   let compare a b = let c = compare (fst a) (fst b) in if c = 0 then compare (MLBDD.id (snd a)) (MLBDD.id (snd b)) else c
+end)
+
+module BSet = Set.Make(
+  struct type t = MLBDD.t 
+  let compare a b = compare (MLBDD.id a) (MLBDD.id b)
 end)
 
 module NKROBSet = Set.Make(
@@ -151,14 +156,12 @@ end)
 type man = {
   field_max: field;
   bman:MLBDD.man;
+  equiv:MLBDD.man->pk->pk->MLBDD.t;
 }
 
 
 (* The variable is in order of x x' y y' --> 4k, 4k+1, 4k+2, 4k+3*)
-let bddvar (man:man) (pk:pk) (field:field) = if field mod 4 = 0 then field*2
-                      else if field mod 4 = 1 then field*2 + 1
-                      else if field mod 4 = 2 then man.field_max*2 + field
-                      else man.field_max*3 + field
+let bddvar (man:man) (pk:pk) (field:field) = field*4 + pk
 
 let generate_single_var (man:man) (pk:pk) (field:field):MLBDD.t =
     MLBDD.ithvar (man.bman) (bddvar man pk field)
@@ -442,18 +445,83 @@ let calculate_reachable_set (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (nkr:NK.t*Rel.t
      in Queue.add ((Some (fst nkr),Some (snd nkr)),(produce_id man pk1 pk4)) worklist;
        calculate_reachable_set_aux NKROMap.empty 
     
+let equate_bdd (man:man) (pk1:pk) (pk2:pk) (bdd:MLBDD.t):MLBDD.t=
+    let support1 = generate_support man pk1 in
+    let support2 = generate_support man pk2 in
+      let equiv_bdd = man.equiv man.bman pk1 pk2 in
+      (MLBDD.dor bdd (MLBDD.dand equiv_bdd (MLBDD.exists support1 (MLBDD.exists support2 (MLBDD.dand equiv_bdd bdd)))))
 
 let generate_all_transition(man:man) (pk1:pk) (pk2:pk) (pk3:pk) (nkr:NK.t*Rel.t):(MLBDD.t*(MLBDD.t)NKROMap.t)NKROMap.t=
   let support2 = generate_support man pk2 in
   let support3 = generate_support man pk3 in
   let pk4 = generate_unused_tri_pk pk1 pk2 pk3 in
   let support4 = generate_support man pk4 in  
-    NKROMap.mapi (fun nkro bdd -> let new_delta = apply_nkro_mapping (fun tbdd -> MLBDD.dand tbdd bdd) (delta_kr man pk1 pk2 pk3 nkro)
+    NKROMap.mapi (fun nkro bdd -> let new_delta = apply_nkro_mapping (fun tbdd -> equate_bdd man pk1 pk2 (MLBDD.dand tbdd bdd)) (delta_kr man pk1 pk2 pk3 nkro)
                                   in let hidden_state = MLBDD.exists support2 (MLBDD.exists support3
                                      (MLBDD.exists support4 (NKROMap.fold (fun nkro bdd acc -> MLBDD.dor acc bdd) new_delta (bdd_false man)))) in
                                       (hidden_state,new_delta)) (calculate_reachable_set man pk1 pk2 pk3 nkr)
-      
-                                    
+
+let re_ordering (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (bdd:MLBDD.t):MLBDD.t=
+let pk4 = generate_unused_tri_pk pk1 pk2 pk3 in
+let permute var = if var mod 4 = pk3 then
+                      (var / 4)
+                    else if var mod 4 = pk2 then
+                      2*(var / 4) + man.field_max
+                    else if var mod 4 = pk4 then
+                      2*(var / 4) + 1 + man.field_max
+                    else
+                      (var / 4) + 3*man.field_max
+                    in MLBDD.permutef permute bdd
+
+let back_ordering (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (bdd:MLBDD.t):MLBDD.t=
+  let pk4 = generate_unused_tri_pk pk1 pk2 pk3 in
+  let permute var = if var < man.field_max then
+                      4 * var + pk3
+                    else if var >= 3*man.field_max then
+                      (var - 3 * man.field_max)*4 + pk1
+                    else if var mod 2 = 0 then
+                      (var - man.field_max)*2 + pk2
+                    else
+                      (var - man.field_max - 1)*2 + pk4
+                    in MLBDD.permutef permute bdd
+
+let count_x_for_y (man:man)(pk1:pk)(pk2:pk)(pk3:pk) (bdd:MLBDD.t): (BSet.t)BMap.t =
+  BMap.map (fun bset -> BSet.map (fun bdd -> back_ordering man pk1 pk2 pk3 bdd) bset)
+  ( 
+  MLBDD.foldb (fun btree -> 
+                      match btree with
+                            | MLBDD.BFalse -> BMap.empty
+                            | MLBDD.BTrue -> BMap.singleton (bdd_true man) (BSet.singleton (bdd_true man))
+                            | MLBDD.BIf (low,var,high) -> if var < man.field_max then
+                                                          (BMap.union (fun _ _ _ -> Some BSet.empty) 
+                                                          (BMap.fold (fun ybdd bset acc ->BMap.add (MLBDD.dand (MLBDD.dnot (MLBDD.ithvar man.bman var)) ybdd) bset acc) low BMap.empty)
+                                                          (BMap.fold (fun ybdd bset acc ->BMap.add (MLBDD.dand (MLBDD.ithvar man.bman var) ybdd) bset acc) high BMap.empty))
+                                                          else if var < man.field_max*3 then
+                                                            (BMap.union (fun _ bset1 bset2 -> Some (BSet.union bset1 bset2)) 
+                                                            low high)
+                                                          else   
+                                                            (BMap.union (fun _ bset1 bset2 -> Some 
+                                                            (match (BSet.choose_opt bset1,BSet.choose_opt bset2) with
+                                                              | (None,None) -> BSet.empty
+                                                              | (None,Some bdd) -> BSet.singleton (MLBDD.dand (MLBDD.ithvar man.bman var) bdd)
+                                                              | (Some bdd,None) -> BSet.singleton (MLBDD.dand (MLBDD.dnot (MLBDD.ithvar man.bman var)) bdd)
+                                                              | (Some bdd1,Some bdd2) -> BSet.singleton (MLBDD.dor (MLBDD.dand (MLBDD.dnot (MLBDD.ithvar man.bman var)) bdd1) (MLBDD.dand (MLBDD.ithvar man.bman var) bdd2))
+                                                            )) 
+                                                            low high)                               
+                            ) (re_ordering man pk1 pk2 pk3 bdd))
+  
+let transform (man:man)(counting:(BSet.t)BMap.t): MLBDD.t list =
+  let rec transform_aux (counting:(MLBDD.t list)BMap.t) (cur:MLBDD.t list): MLBDD.t list =
+    if BMap.is_empty counting then
+      cur
+    else
+      transform_aux (BMap.filter_map (fun _ blist -> 
+                                        match blist with
+                                        | [] -> None
+                                        | bdd::[] -> None
+                                        | bdd::blist -> Some blist) counting) ((BMap.fold (fun _ blist acc -> MLBDD.dor (List.hd blist) acc) counting (bdd_false man))::cur)
+  in transform_aux (BMap.map (fun bset -> BSet.elements bset)counting) [] 
+
 let spliting_bdd (man:man) (bdd:MLBDD.t): MLBDD.t list =
   MLBDD.foldb (fun btree -> match btree with
                             | MLBDD.BFalse -> []
@@ -466,6 +534,7 @@ let find_bdd (nkro:NK.t option*Rel.t option)(transition:(MLBDD.t*(MLBDD.t)NKROMa
     | None -> failwith "Transition not found"
     | Some (bdd,_) -> bdd                           
 
+    
 let simplify_all_transition(man:man) (pk1:pk) (pk2:pk) (pk3:pk) (nkr:NK.t*Rel.t):((MLBDD.t)NKROBMap.t)NKROBMap.t=
   let id12 = produce_id man pk1 pk2 in
   let support1 = generate_support man pk1 in
@@ -486,6 +555,41 @@ let simplify_all_transition(man:man) (pk1:pk) (pk2:pk) (pk3:pk) (nkr:NK.t*Rel.t)
                                           hbddl2 acc
                                         ) nkrom acc) hbddl1 acc) all_transition NKROBMap.empty
 
+let folding_list_b (man:man) (blist:MLBDD.t list) :MLBDD.t=
+  List.fold_right (fun bdd acc -> MLBDD.dor bdd acc) blist (bdd_false man)
+
+let generate_all_transition_2(man:man) (pk1:pk) (pk2:pk) (pk3:pk) (nkr:NK.t*Rel.t):((MLBDD.t)list*((MLBDD.t)list)NKROMap.t)NKROMap.t=
+  let support3 = generate_support man pk3 in
+  let pk4 = generate_unused_tri_pk pk1 pk2 pk3 in
+  let support4 = generate_support man pk4 in  
+  NKROMap.mapi (fun nkro bdd -> let new_delta = NKROMap.map (fun bdd -> transform man (count_x_for_y man pk1 pk2 pk3 bdd)) (apply_nkro_mapping (fun tbdd -> equate_bdd man pk1 pk2 (MLBDD.dand tbdd bdd)) (delta_kr man pk1 pk2 pk3 nkro)) in
+                                  let hidden_state_l = (NKROMap.fold (fun nkro blist acc -> List.append (List.map (fun bdd -> MLBDD.exists support4 (MLBDD.exists support3 bdd)) blist) acc) new_delta []) in
+                                      (hidden_state_l,new_delta)) (calculate_reachable_set man pk1 pk2 pk3 nkr)
+let find_bddl (nkro:NK.t option*Rel.t option)(transition:((MLBDD.t)list*((MLBDD.t)list)NKROMap.t)NKROMap.t):MLBDD.t list=
+  match NKROMap.find_opt nkro transition with
+    | None -> failwith "Transition not found"
+    | Some (bddl,_) -> bddl                           
+
+let simplify_all_transition_2(man:man) (pk1:pk) (pk2:pk) (pk3:pk) (nkr:NK.t*Rel.t):((MLBDD.t)NKROBMap.t)NKROBMap.t=
+  let id12 = produce_id man pk1 pk2 in
+  let support1 = generate_support man pk1 in
+  let pk4 = generate_unused_tri_pk pk1 pk2 pk3 in
+  let id34 = produce_id man pk3 pk4 in
+  let support2 = generate_support man pk2 in
+  let support3 = generate_support man pk2 in
+  let support4 = generate_support man pk4 in  
+  let all_transition = generate_all_transition_2 man pk1 pk2 pk3 nkr in
+    NKROMap.fold (fun nkro1 (_,nkrom) acc -> NKROMap.fold (fun nkro2 hbddl1 acc ->
+                                        let hbddl2 = find_bddl nkro2 all_transition
+                                          in List.fold_right (fun hbdd1 acc -> 
+                                             List.fold_right (fun hbdd2 acc -> 
+                                              let tbddf = MLBDD.dand hbdd1 (MLBDD.exists support3 (MLBDD.exists support1 (MLBDD.dand id34 (MLBDD.dand hbdd2 id12)))) in
+                                              if MLBDD.is_false tbddf then
+                                                acc
+                                              else
+                                                NKROBMap.add (nkro1,hbdd1) (NKROBMap.singleton (nkro2,hbdd2) (MLBDD.exists support4 (MLBDD.exists support2 tbddf))) acc)
+                                          hbddl2 acc) hbddl1 acc) nkrom acc) all_transition NKROBMap.empty
+                                        
 let is_final_state (nkro:NK.t option*Rel.t option):bool =
   match nkro with
     | (None,None) -> true
