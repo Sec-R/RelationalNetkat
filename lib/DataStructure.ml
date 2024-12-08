@@ -1,3 +1,82 @@
+(*
+  This module defines various data structures and functions for working with 
+  Relational NetKAT using Binary Decision Diagrams (BDDs). 
+
+  The main components include:
+  - Types for representing fields, predicates, and packet relations.
+  - Modules for representing NetKAT expressions (NK) and sets of NetKAT expressions (SNK).
+  - Modules for representing relational expressions (Rel) and sets of relational expressions (SR).
+  - Functions for compiling predicates and packet relations into BDDs.
+  - Functions for manipulating BDDs, including generating support sets, renaming variables, and computing closures.
+  - Functions for constructing and manipulating mappings between NetKAT expressions and BDDs.
+  - Functions for computing reachable sets and transitions in a NetKAT automaton.
+  - Functions for determinizing and bisimulating NetKAT automata.
+
+  The main types and functions are:
+
+  - type field: Represents a field in a packet.
+  - type pk: Represents a packet.
+  - type pred: Represents a predicate in NetKAT.
+  - type pkr: Represents a packet relation in NetKAT.
+  - module NK: Represents NetKAT expressions.
+  - module SNK: Represents sets of NetKAT expressions.
+  - module Rel: Represents relational expressions.
+  - module SR: Represents sets of relational expressions.
+  - module NKOMap: Represents a mapping from optional NetKAT expressions to BDDs.
+  - module BMap: Represents a mapping from BDDs to other values.
+  - module NKROMap: Represents a mapping from pairs of optional NetKAT and relational expressions to BDDs.
+  - module NKROBMap: Represents a mapping from pairs of optional NetKAT and relational expressions and BDDs to other values.
+  - module BSet: Represents a set of BDDs.
+  - module NKROBSet: Represents a set of pairs of optional NetKAT and relational expressions and BDDs.
+  - module NKROBSMap: Represents a mapping from sets of pairs of optional NetKAT and relational expressions and BDDs to other values.
+  - type man: Represents a manager for BDD operations.
+  - let bddvar: Computes the BDD variable index for a given field and packet.
+  - let generate_single_var: Generates a BDD for a single variable.
+  - let bdd_true: Returns the BDD representing true.
+  - let bdd_false: Returns the BDD representing false.
+  - let compile_pred_bdd: Compiles a predicate into a BDD.
+  - let produce_id: Produces a BDD representing the identity relation.
+  - let produce_assign: Produces a BDD representing an assignment.
+  - let generate_unused_pk: Generates an unused packet index.
+  - let generate_support: Generates the support set for a packet.
+  - let generate_double_support: Generates the support set for two packets.
+  - let comp_bdd: Composes two BDDs.
+  - let compile_pkr_bdd: Compiles a packet relation into a BDD.
+  - let rename_bdd: Renames the variables in a BDD.
+  - let closure_bdd: Computes the closure of a BDD.
+  - let add_nko_mapping: Adds a mapping from an optional NetKAT expression to a BDD.
+  - let add_nkro_mapping: Adds a mapping from a pair of optional NetKAT and relational expressions to a BDD.
+  - let add_nkro_mapping_updated: Adds a mapping from a pair of optional NetKAT and relational expressions to a BDD, with an update flag.
+  - let union_nko_mapping: Unions two mappings from optional NetKAT expressions to BDDs.
+  - let union_nkro_mapping: Unions two mappings from pairs of optional NetKAT and relational expressions to BDDs.
+  - let union_nkro_mapping_updated: Unions two mappings from pairs of optional NetKAT and relational expressions to BDDs, with an update flag.
+  - let apply_nko_mapping: Applies a function to the BDDs in a mapping from optional NetKAT expressions to BDDs.
+  - let apply_nkro_mapping: Applies a function to the BDDs in a mapping from pairs of optional NetKAT and relational expressions to BDDs.
+  - let concatenate_nko_mapping: Concatenates a mapping from optional NetKAT expressions to BDDs with an optional NetKAT expression.
+  - let concatenate_nkro_mapping: Concatenates a mapping from pairs of optional NetKAT and relational expressions to BDDs with a pair of optional NetKAT and relational expressions.
+  - let folding_epsilon: Computes the epsilon closure of a mapping from optional NetKAT expressions to BDDs.
+  - let delta_k: Computes the delta transition for a NetKAT expression.
+  - let comp_nkro_map: Composes two mappings from pairs of optional NetKAT and relational expressions to BDDs.
+  - let closure_nkro_map: Computes the closure of a mapping from pairs of optional NetKAT and relational expressions to BDDs.
+  - let epsilon_kr: Computes the epsilon transition for a pair of optional NetKAT and relational expressions.
+  - let generate_unused_pk5: Generates an unused packet index from four packet indices.
+  - let delta_kr: Computes the delta transition for a pair of optional NetKAT and relational expressions.
+  - let calculate_reachable_set: Computes the reachable set for a NetKAT automaton.
+  - let re_ordering: Reorders the variables in a BDD.
+  - let back_ordering: Reverts the reordering of variables in a BDD.
+  - let var_low_branch: Computes the low branch of a BDD for a given variable.
+  - let var_high_branch: Computes the high branch of a BDD for a given variable.
+  - let var_if: Computes the if-then-else of two BDDs for a given variable.
+  - let splitting_bdd: Splits a BDD into a list of BDDs.
+  - let generate_all_transition: Generates all transitions for a NetKAT automaton.
+  - let find_bddl: Finds the BDD list for a given pair of optional NetKAT and relational expressions.
+  - let simplify_all_transition: Simplifies all transitions for a NetKAT automaton.
+  - let is_final_state: Checks if a pair of optional NetKAT and relational expressions is a final state.
+  - let is_final_state_S: Checks if a set of pairs of optional NetKAT and relational expressions and BDDs contains a final state.
+  - let determinize_transition: Determinizes a transition mapping.
+  - let determinization: Determinizes a NetKAT automaton.
+  - let bisim: Checks if two NetKAT automata are bisimilar.
+*)
 [@@@ocaml.warning "-37"] 
 [@@@ocaml.warning "-32"] 
 [@@@ocaml.warning "-27"] 
