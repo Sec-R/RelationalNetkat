@@ -1,4 +1,5 @@
 (library
  (name RelationalNetkat)
+ (public_name RelationalNetkat)
  (libraries mlbdd ounit2)
  )
