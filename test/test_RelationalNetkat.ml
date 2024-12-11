@@ -104,18 +104,75 @@ let tests = "MLBDD tests" >::: [
         let bdd23 = RN.compile_pkr_bdd man pk1 pk2 (RN.Or (RN.Comp (RN.RightAsgn (3, true),RN.LeftAsgn (1, true)),RN.Comp(RN.RightAsgn (3, true),RN.LeftTest (2, true)))) in
         assert_equal ~cmp:MLBDD.equal bdd22 bdd23;
       );
-      "compile_pkr_test" >:: (fun _ctx ->
+      "compile_delta_k_test" >:: (fun _ctx ->
         let man = RN.init_man 10 10 in
         let pk1 = 0 in
         let pk2 = 1 in
         let compare = RN.NKOMap.equal MLBDD.equal in
         let nkomap1 = RN.delta_k man pk1 pk2 (Some (RN.NK.Star (RN.NK.Pred (RN.True)))) in
-        let nkomap2 = RN.NKOMap.singleton (Some (RN.NK.Star (RN.NK.Pred (RN.True)))) (RN.compile_pkr_bdd man pk1 pk2 RN.Id) in
+        let nkomap2 = RN.NKOMap.singleton None (RN.compile_pkr_bdd man pk1 pk2 RN.Id) in
         assert_equal ~cmp:compare nkomap1 nkomap2;
-        let nkomap1 = RN.delta_k man pk1 pk2 (Some (RN.NK.Star (RN.NK.Pred (RN.True)))) in
-        let nkomap2 = RN.NKOMap.singleton (Some (RN.NK.Star (RN.NK.Pred (RN.True)))) (RN.compile_pkr_bdd man pk1 pk2 RN.Id) in
-        assert_equal ~cmp:compare nkomap1 nkomap2;
+        let nkomap3 = RN.delta_k man pk1 pk2 (Some (RN.NK.Star RN.NK.Dup)) in
+        let nkomap4 = RN.add_nko_mapping (Some (RN.NK.Seq (Pred True, RN.NK.Star RN.NK.Dup)))
+          (RN.produce_id man pk1 pk2) nkomap2 in
+        assert_equal ~cmp:compare nkomap3 nkomap4;
+        let nkomap5 = RN.delta_k man pk1 pk2 (Some (RN.NK.Seq (Asgn (1,true), RN.NK.Dup))) in
+        let nkomap6 = RN.NKOMap.singleton (Some (Pred True)) (RN.compile_pkr_bdd man pk1 pk2 (RN.RightAsgn (1, true))) in
+        assert_equal ~cmp:compare nkomap5 nkomap6;
+        let nkomap7 = RN.delta_k man pk1 pk2 (Some (RN.NK.Seq (Asgn (1,true), Asgn (2,true)))) in
+        let nkomap8 = RN.NKOMap.singleton None (RN.compile_pkr_bdd man pk1 pk2 (RN.Comp (RN.RightAsgn (1, true),RN.RightAsgn (2, true)))) in
+        assert_equal ~cmp:compare nkomap7 nkomap8;
+        let nkomap9 = RN.delta_k man pk1 pk2 (Some (RN.NK.Union (RN.SNK.add (Asgn (1,true)) (RN.SNK.add (Asgn (2,true)) RN.SNK.empty)))) in
+        let nkomap10 = RN.NKOMap.singleton None (RN.compile_pkr_bdd man pk1 pk2 (RN.Or (RN.RightAsgn (1, true),RN.RightAsgn (2, true)))) in
+        assert_equal ~cmp:compare nkomap9 nkomap10;
+        let nkomap11 = RN.delta_k man pk1 pk2 (Some (RN.NK.Star(RN.NK.Union (RN.SNK.add (Asgn (1,true)) (RN.SNK.add (Asgn (2,true)) RN.SNK.empty))))) in
+        let nkomap12 = RN.NKOMap.singleton None (RN.compile_pkr_bdd man pk1 pk2 (RN.Comp (RN.Or (RN.RightAsgn (1, true),RN.Id),(RN.Or (RN.RightAsgn (2, true),RN.Id))))) in
+        assert_equal ~cmp:compare nkomap11 nkomap12;
+        let nkomap13 = RN.delta_k man pk1 pk2 (Some (RN.NK.Star(RN.NK.Union (RN.SNK.add (Asgn (1,true)) (RN.SNK.add RN.NK.Dup RN.SNK.empty))))) in
+        let nkomap14 = RN.add_nko_mapping 
+          (Some (RN.NK.Seq (Pred True, RN.NK.Star(RN.NK.Union (RN.SNK.add (Asgn (1,true)) (RN.SNK.add RN.NK.Dup RN.SNK.empty)))))) 
+          (RN.compile_pkr_bdd man pk1 pk2 (RN.Or (RN.RightAsgn (1, true),RN.Id))) 
+          (RN.NKOMap.singleton None (RN.compile_pkr_bdd man pk1 pk2 (RN.Or (RN.RightAsgn (1, true),RN.Id)))) in
+        assert_equal ~cmp:compare nkomap13 nkomap14;
+        let nkomap15 = RN.delta_k man pk1 pk2 (Some (RN.NK.Seq (Asgn (1,true), RN.NK.Seq (Asgn (2,true),RN.NK.Dup)))) in
+        let nkomap16 = RN.NKOMap.singleton (Some (Pred True)) (RN.compile_pkr_bdd man pk1 pk2 (RN.Comp (RN.RightAsgn (1, true),RN.RightAsgn (2, true)))) in
+        assert_equal ~cmp:compare nkomap15 nkomap16;
       );
+      "epsilon_kr_test" >:: (fun _ctx ->
+        let man = RN.init_man 10 10 in
+        let pk1 = 0 in
+        let pk2 = 1 in
+        let compare = RN.NKROMap.equal MLBDD.equal in
+        let nkromap1 = RN.epsilon_kr man pk1 pk2 (None, None) in
+        let nkromap2 = RN.NKROMap.singleton (None,None) (RN.produce_id man pk1 pk2) in
+        assert_equal ~cmp:compare nkromap1 nkromap2;
+        let nkromap3 = RN.epsilon_kr man pk1 pk2 ((Some (Pred True)), Some (RN.Rel.Left RN.Id)) in
+        let nkromap4 = RN.add_nkro_mapping (None,None) (RN.produce_id man pk1 pk2)
+        (RN.NKROMap.singleton ((Some (Pred True)), Some (RN.Rel.Left RN.Id)) (RN.produce_id man pk1 pk2)) in
+        assert_equal ~cmp:compare nkromap3 nkromap4;
+        let nkromap5 = RN.epsilon_kr man pk1 pk2 ((Some RN.NK.Dup), Some (RN.Rel.Left RN.Id)) in
+        let nkromap6 = RN.add_nkro_mapping ((Some (Pred True)),None) (RN.produce_id man pk1 pk2)
+        (RN.NKROMap.singleton ((Some RN.NK.Dup), Some (RN.Rel.Left RN.Id)) (RN.produce_id man pk1 pk2)) in
+        assert_equal ~cmp:compare nkromap5 nkromap6;
+        let nkromap7 = RN.epsilon_kr man pk1 pk2 ((Some RN.NK.Dup), Some (RN.Rel.SeqR (RN.Rel.Left RN.Id, RN.Rel.Left RN.Id))) in
+        let nkromap8 = RN.add_nkro_mapping (None,None) (RN.produce_id man pk1 pk2)
+          (RN.add_nkro_mapping ((Some (Pred True)),Some (RN.Rel.Left RN.Id)) (RN.produce_id man pk1 pk2)
+        (RN.NKROMap.singleton ((Some RN.NK.Dup), Some (RN.Rel.SeqR (RN.Rel.Left RN.Id, RN.Rel.Left RN.Id))) (RN.produce_id man pk1 pk2))) in
+        assert_equal ~cmp:compare nkromap7 nkromap8;
+        let nkromap9 = RN.epsilon_kr man pk1 pk2 (Some (RN.NK.Asgn (1,true)), Some (RN.Rel.Left (RN.RightAsgn (2,true)))) in
+        let nkromap10 = RN.add_nkro_mapping (None,None) 
+        (RN.compile_pkr_bdd man pk1 pk2 (RN.Comp (RN.LeftTest(1,true),RN.LeftTest(2,true))))
+        (RN.NKROMap.singleton (Some (RN.NK.Asgn (1,true)), Some (RN.Rel.Left (RN.RightAsgn (2,true)))) (RN.produce_id man pk1 pk2)) in
+        assert_equal ~cmp:compare nkromap9 nkromap10;
+        let nkromap11 = RN.epsilon_kr man pk1 pk2 ((Some RN.NK.Dup), Some (RN.Rel.SeqR (RN.Rel.Left (RN.RightAsgn (1,true)), RN.Rel.Left (RN.RightAsgn (2,true))))) in
+        let nkromap12 = RN.add_nkro_mapping (None,None)  (RN.compile_pkr_bdd man pk1 pk2 (RN.Comp (RN.RightTest(1,true),RN.RightTest(2,true))))
+          (RN.add_nkro_mapping ((Some (Pred True)),Some (RN.Rel.Left (RN.RightAsgn (2,true)))) (RN.compile_pkr_bdd man pk1 pk2 (RN.RightTest(1,true)))
+        (RN.NKROMap.singleton ((Some RN.NK.Dup), Some (RN.Rel.SeqR (RN.Rel.Left (RN.RightAsgn (1,true)), RN.Rel.Left (RN.RightAsgn (2,true))))) (RN.produce_id man pk1 pk2))) in
+        assert_equal ~cmp:compare nkromap11 nkromap12;
+        let nkromap13 = RN.epsilon_kr man pk1 pk2 ((Some RN.NK.Dup), Some (RN.Rel.StarR (RN.Rel.Left RN.Id))) in
+        print_endline (RN.nkro_map_to_string nkromap13);
+      );
+
       ]
 
 let _ =
