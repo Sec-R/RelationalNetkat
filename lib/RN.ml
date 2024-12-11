@@ -233,6 +233,52 @@ type man = {
   field_max: field;
   bman:MLBDD.man;
 }
+let rec pred_to_string (pred:pred):string= 
+  match pred with
+  | True -> "True"
+  | False -> "False"
+  | Test (field, b) -> "Test " ^ (string_of_int field) ^ " " ^ (string_of_bool b)
+  | And (pred1, pred2) -> "And " ^ (pred_to_string pred1) ^ " " ^ (pred_to_string pred2)
+  | OrP (pred1, pred2) -> "OrP " ^ (pred_to_string pred1) ^ " " ^ (pred_to_string pred2)
+  | Neg pred -> "Neg " ^ (pred_to_string pred)
+
+let rec pkr_to_string (pkr:pkr):string= 
+  match pkr with
+  | Id -> "Id"
+  | Empty -> "Empty"
+  | LeftTest (field, b) -> "LeftTest " ^ (string_of_int field) ^ " " ^ (string_of_bool b)
+  | RightTest (field, b) -> "RightTest " ^ (string_of_int field) ^ " " ^ (string_of_bool b)
+  | LeftAsgn (field, b) -> "LeftAsgn " ^ (string_of_int field) ^ " " ^ (string_of_bool b)
+  | RightAsgn (field, b) -> "RightAsgn " ^ (string_of_int field) ^ " " ^ (string_of_bool b)
+  | Comp (pkr1, pkr2) -> "Comp " ^ (pkr_to_string pkr1) ^ " " ^ (pkr_to_string pkr2)
+  | Or (pkr1,pkr2) -> "Or " ^ (pkr_to_string pkr1) ^ " " ^ (pkr_to_string pkr2)
+
+let rec nk_to_string (nk:NK.t):string=
+  match nk with
+  | Pred pred -> "Pred " ^ (pred_to_string pred)
+  | Asgn (field, b) -> "Asgn " ^ (string_of_int field) ^ " " ^ (string_of_bool b)
+  | Union nks -> "Union " ^ (SNK.fold (fun nk acc -> acc ^ (nk_to_string nk) ^ " ") nks "")
+  | Seq (nk1, nk2) -> "Seq " ^ (nk_to_string nk1) ^ " " ^ (nk_to_string nk2)
+  | Star nk -> "Star " ^ (nk_to_string nk)
+  | Dup -> "Dup"
+
+let rec rel_to_string (rel:Rel.t):string =
+  match rel with
+  | Left pkr -> "Left " ^ (pkr_to_string pkr)
+  | Right pkr -> "Right " ^ (pkr_to_string pkr)
+  | Binary pkr -> "Binary " ^ (pkr_to_string pkr)
+  | OrR sr -> "OrR " ^ (SR.fold (fun r acc -> acc ^ (rel_to_string r) ^ " ") sr "")
+  | SeqR (rel1, rel2) -> "SeqR " ^ (rel_to_string rel1) ^ " " ^ (rel_to_string rel2)
+  | StarR rel -> "StarR " ^ (rel_to_string rel)  
+
+let nkro_map_to_string (mapping:(MLBDD.t)NKROMap.t):string=
+  let str = ref "" in
+    NKROMap.iter (fun (nko,ro) bdd -> str := !str ^ (match nko with
+                                                        | None -> "None"
+                                                        | Some nk -> nk_to_string nk) ^ " " ^ (match ro with
+                                                                                                    | None -> "None"
+                                                                                                    | Some r -> rel_to_string r) ^ "\n") mapping;
+    !str
 
 let init_man (field_max:field) (bman_cache:int) = 
   {field_max = field_max; bman = MLBDD.init ~cache:bman_cache ()}
@@ -266,17 +312,17 @@ let produce_id (man:man) (pk1:pk) (pk2:pk):MLBDD.t =
           MLBDD.dand (MLBDD.nxor (generate_single_var man pk1 cur) ((generate_single_var man pk2 cur))) (produce_id_aux (cur+1))
      in produce_id_aux 0
 
-let produce_assign (man:man) (pk1:pk) (pk2:pk) (bvar:int)(asgn:bool) (left:bool):MLBDD.t =
+let produce_assign (man:man) (pk1:pk) (pk2:pk) (field:field)(asgn:bool) (left:bool):MLBDD.t =
      let rec produce_assign_aux (cur:field):MLBDD.t =
          if cur > man.field_max then 
            bdd_true man
-         else if left && (bvar = (bddvar man pk1 cur)) then 
+         else if left && field = cur then 
                    MLBDD.dand (if asgn then 
                                   (generate_single_var man pk1 cur)
                                else 
                                   MLBDD.dnot (generate_single_var man pk1 cur))
                               (produce_assign_aux (cur+1))         
-         else if (not left) && (bvar = (bddvar man pk2 cur)) then
+         else if (not left) && field = cur then
                    MLBDD.dand (if asgn then 
                    		          (generate_single_var man pk2 cur) 
                    	          else 
@@ -320,8 +366,8 @@ let rec compile_pkr_bdd (man:man)(pk1:pk) (pk2:pk) (pkr:pkr):MLBDD.t =
 	  | LeftTest (field, true) -> (MLBDD.dand (produce_id man pk1 pk2) (generate_single_var man pk1 field))
 	  | RightTest (field, false) -> (MLBDD.dand (produce_id man pk1 pk2) (MLBDD.dnot (generate_single_var man pk2 field)))
 	  | RightTest (field, true) -> (MLBDD.dand (produce_id man pk1 pk2) (generate_single_var man pk2 field))
-	  | LeftAsgn (field, b) -> produce_assign man pk1 pk2 (bddvar man pk1 field) b true  
-	  | RightAsgn (field, b) -> produce_assign man pk1 pk2 (bddvar man pk2 field) b false  
+	  | LeftAsgn (field, b) -> produce_assign man pk1 pk2 field b true  
+	  | RightAsgn (field, b) -> produce_assign man pk1 pk2 field b false  
 	  | Comp (pkr1, pkr2) -> comp_bdd man pk1 pk2 compile_pkr_bdd pkr1 pkr2
     | Or (pkr1,pkr2)-> MLBDD.dor (compile_pkr_bdd_aux pkr1) (compile_pkr_bdd_aux pkr2)
   	in compile_pkr_bdd_aux pkr
@@ -423,14 +469,14 @@ let folding_epsilon (man:man) (nkom:(MLBDD.t)NKOMap.t):MLBDD.t =
                             nkom (bdd_false man)
 
 let filtering_epsilon (nkom:(MLBDD.t)NKOMap.t):(MLBDD.t)NKOMap.t =
-  NKOMap.filter (fun nko _ -> Option.is_some nko) nkom  
+  NKOMap.remove None nkom  
                             
 (* We assume the invariant here is the return value is canoicalized *) 
 let rec delta_k (man:man)(pk1:pk)(pk2:pk)(nko:NK.t option): (MLBDD.t)NKOMap.t=
     match nko with
       | None -> NKOMap.empty
     	| Some (Pred pred) -> NKOMap.singleton None (MLBDD.dand (compile_pred_bdd man pk1 pred) (produce_id man pk1 pk2))  
-    	| Some (Asgn (field, b)) -> NKOMap.singleton None (produce_assign man pk1 pk2 (bddvar man pk1 field) b true)
+    	| Some (Asgn (field, b)) -> NKOMap.singleton None (produce_assign man pk1 pk2 field b false)
   	  | Some (Union nks) -> SNK.fold (fun nk acc -> union_nko_mapping (delta_k man pk1 pk2 (Some nk)) acc) nks NKOMap.empty
   	  | Some (Seq(nk1,nk2)) -> let pk3 =  generate_unused_pk pk1 pk2 in
                                   let support = generate_support man pk3 in

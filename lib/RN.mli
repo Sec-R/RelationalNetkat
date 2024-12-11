@@ -58,6 +58,11 @@ module NKROBSMap : Map.S with type key = NKROBSet.t
 module NKROBSSMap : Map.S with type key = (NKROBSet.t * NKROBSet.t)
 
 (* Functions *)
+val pred_to_string : pred -> string
+val pkr_to_string : pkr -> string
+val nk_to_string : NK.t -> string
+val rel_to_string : Rel.t -> string
+val nkro_map_to_string : (MLBDD.t) NKROMap.t -> string
 val init_man : field -> int -> man
 val bddvar : man -> pk -> field -> int
 val generate_single_var : man -> pk -> field -> MLBDD.t
