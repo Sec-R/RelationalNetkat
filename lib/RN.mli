@@ -90,6 +90,7 @@ val concatenate_nko_mapping : MLBDD.t NKOMap.t -> NK.t option -> MLBDD.t NKOMap.
 val concatenate_nkro_mapping : MLBDD.t NKROMap.t -> (NK.t option * Rel.t option) -> MLBDD.t NKROMap.t
 val folding_epsilon : man -> MLBDD.t NKOMap.t -> MLBDD.t
 val delta_k : man -> pk -> pk -> NK.t option -> MLBDD.t NKOMap.t
+val epsilon_r : Rel.t option -> bool
 val comp_nkro_map : man -> pk -> pk -> (man -> pk -> pk -> (NK.t option * Rel.t option) -> MLBDD.t NKROMap.t) -> NK.t option -> Rel.t -> Rel.t -> MLBDD.t NKROMap.t
 val closure_nkro_map : man -> pk -> pk -> (man -> pk -> pk -> (NK.t option * Rel.t option) -> MLBDD.t NKROMap.t) -> NK.t option -> Rel.t -> MLBDD.t NKROMap.t
 val epsilon_kr : man -> pk -> pk -> (NK.t option * Rel.t option) -> MLBDD.t NKROMap.t

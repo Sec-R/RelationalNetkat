@@ -257,9 +257,9 @@ let rec nk_to_string (nk:NK.t):string=
   match nk with
   | Pred pred -> "Pred " ^ (pred_to_string pred)
   | Asgn (field, b) -> "Asgn " ^ (string_of_int field) ^ " " ^ (string_of_bool b)
-  | Union nks -> "Union " ^ (SNK.fold (fun nk acc -> acc ^ (nk_to_string nk) ^ " ") nks "")
-  | Seq (nk1, nk2) -> "Seq " ^ (nk_to_string nk1) ^ " " ^ (nk_to_string nk2)
-  | Star nk -> "Star " ^ (nk_to_string nk)
+  | Union nks -> "Union (" ^ (SNK.fold (fun nk acc -> acc ^ (nk_to_string nk) ^ " ") nks "") ^ ")"
+  | Seq (nk1, nk2) -> "Seq (" ^ (nk_to_string nk1) ^ ", " ^ (nk_to_string nk2) ^ ")"
+  | Star nk -> "Star (" ^ (nk_to_string nk) ^ ")"
   | Dup -> "Dup"
 
 let rec rel_to_string (rel:Rel.t):string =
@@ -267,15 +267,15 @@ let rec rel_to_string (rel:Rel.t):string =
   | Left pkr -> "Left " ^ (pkr_to_string pkr)
   | Right pkr -> "Right " ^ (pkr_to_string pkr)
   | Binary pkr -> "Binary " ^ (pkr_to_string pkr)
-  | OrR sr -> "OrR " ^ (SR.fold (fun r acc -> acc ^ (rel_to_string r) ^ " ") sr "")
-  | SeqR (rel1, rel2) -> "SeqR " ^ (rel_to_string rel1) ^ " " ^ (rel_to_string rel2)
+  | OrR sr -> "OrR (" ^ (SR.fold (fun r acc -> acc ^ (rel_to_string r) ^ " ") sr "") ^ ")"
+  | SeqR (rel1, rel2) -> "SeqR (" ^ (rel_to_string rel1) ^ ", " ^ (rel_to_string rel2) ^ ")"
   | StarR rel -> "StarR " ^ (rel_to_string rel)  
 
 let nkro_map_to_string (mapping:(MLBDD.t)NKROMap.t):string=
   let str = ref "" in
     NKROMap.iter (fun (nko,ro) bdd -> str := !str ^ (match nko with
                                                         | None -> "None"
-                                                        | Some nk -> nk_to_string nk) ^ " " ^ (match ro with
+                                                        | Some nk -> nk_to_string nk) ^ ", " ^ (match ro with
                                                                                                     | None -> "None"
                                                                                                     | Some r -> rel_to_string r) ^ "\n") mapping;
     !str
@@ -494,16 +494,28 @@ let rec delta_k (man:man)(pk1:pk)(pk2:pk)(nko:NK.t option): (MLBDD.t)NKOMap.t=
 (* For epsilon kr, there is no transition on the y or the input tape, thus we only need two tape denoting the before
 and after hidden state *)
 
+let epsilon_r (ro:Rel.t option): bool =
+  let rec epsilon_r_aux (r:Rel.t):bool =
+    match r with
+    | Left _
+    | Right _ 
+    | Binary _ -> false
+    | OrR sr -> SR.exists epsilon_r_aux sr
+    | SeqR (r1,r2) -> (epsilon_r_aux r1) && (epsilon_r_aux r2)
+    | StarR r -> true
+  in match ro with  
+    | None -> true
+    | Some r -> epsilon_r_aux r  
+
 let comp_nkro_map (man:man) (pk1:pk) (pk2:pk) (compiler:man -> pk -> pk -> (NK.t option*Rel.t option)
        -> (MLBDD.t)NKROMap.t) (nko: NK.t option) (r1: Rel.t) (r2:Rel.t):(MLBDD.t)NKROMap.t =
        union_nkro_mapping (concatenate_nkro_mapping (compiler man pk1 pk2 (nko,Some r1)) (None,(Some r2)))
                           (let pk3 = generate_unused_pk pk1 pk2 in
                             let support = generate_support man pk3 in
                               NKROMap.fold (fun (nko,ro) bdd acc -> 
-                                                               match ro with
-                                                              | None
-                                                              | Some (StarR _) -> union_nkro_mapping (apply_nkro_mapping (fun nbdd -> MLBDD.exists support (MLBDD.dand bdd nbdd)) (compiler man pk3 pk2 (nko,Some r2))) acc
-                                                              | _ -> acc
+                                                               if epsilon_r ro then
+                                                                 union_nkro_mapping (apply_nkro_mapping (fun nbdd -> MLBDD.exists support (MLBDD.dand bdd nbdd)) (compiler man pk3 pk2 (nko,Some r2))) acc
+                                                               else acc
                               ) (compiler man pk1 pk3 (nko,Some r1)) NKROMap.empty) 
           
 let closure_nkro_map (man:man) (pk1:pk) (pk2:pk) (compiler:man -> pk -> pk -> (NK.t option*Rel.t option)
@@ -512,12 +524,12 @@ let closure_nkro_map (man:man) (pk1:pk) (pk2:pk) (compiler:man -> pk -> pk -> (N
          let support2 = generate_support man pk2 in
            let rec closure_nkro_map_aux (cur:(MLBDD.t)NKROMap.t):(MLBDD.t)NKROMap.t =
               match union_nkro_mapping_updated (NKROMap.fold (fun (nko,ro) bdd acc
-                                        -> match ro with
-                                              | None
-                                              | Some (StarR _) -> union_nkro_mapping (apply_nkro_mapping (fun nbdd 
+                                        -> 
+                                        if epsilon_r ro then 
+                                           union_nkro_mapping (apply_nkro_mapping (fun nbdd 
                                                   -> (rename_bdd man pk3 pk2 
                                                           (MLBDD.exists support2 (MLBDD.dand bdd nbdd)))) (compiler man pk2 pk3 (nko,Some r))) acc
-                                              |  _ -> acc) cur NKROMap.empty) cur with
+                                              else acc) cur NKROMap.empty) cur with
                     | (next,false) -> next
                     | (next,true) -> closure_nkro_map_aux next
                 in let closure_map =  (closure_nkro_map_aux (NKROMap.singleton (nko,None) (produce_id man pk1 pk2))) in
@@ -664,10 +676,8 @@ let simplify_all_transition(man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkr:NK
                                           hbddl2 acc) hbddl1 acc) nkrom acc) all_transition NKROBMap.empty
                                         
 let is_final_state (nkro:NK.t option*Rel.t option):bool =
-  match nkro with
-    | (None,None) -> true
-    | _ -> false                         
-
+  Option.is_none (fst nkro) && epsilon_r (snd nkro)
+ 
 let is_final_state_S (nkrobs:NKROBSet.t):bool =
   NKROBSet.exists (fun (nkro,bdd) -> is_final_state nkro) nkrobs
 
