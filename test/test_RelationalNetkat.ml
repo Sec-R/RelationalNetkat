@@ -170,8 +170,37 @@ let tests = "MLBDD tests" >::: [
         (RN.NKROMap.singleton ((Some RN.NK.Dup), Some (RN.Rel.SeqR (RN.Rel.Left (RN.RightAsgn (1,true)), RN.Rel.Left (RN.RightAsgn (2,true))))) (RN.produce_id man pk1 pk2))) in
         assert_equal ~cmp:compare nkromap11 nkromap12;
         let nkromap13 = RN.epsilon_kr man pk1 pk2 ((Some RN.NK.Dup), Some (RN.Rel.StarR (RN.Rel.Left RN.Id))) in
-        print_endline (RN.nkro_map_to_string nkromap13);
-      );
+        let bdd1 = RN.NKROMap.find (None, Some (RN.Rel.SeqR (RN.Rel.Left RN.Id, RN.Rel.StarR (RN.Rel.Left RN.Id)))) nkromap13 in
+        let bdd2 = RN.NKROMap.find (None, Some (RN.Rel.StarR (RN.Rel.Left RN.Id))) nkromap13 in
+        let bdd3 = RN.NKROMap.find ((Some RN.NK.Dup),Some (RN.Rel.SeqR (RN.Rel.Left RN.Id, RN.Rel.StarR (RN.Rel.Left RN.Id)))) nkromap13 in
+        let bdd4 = RN.NKROMap.find ((Some RN.NK.Dup), Some (RN.Rel.StarR (RN.Rel.Left RN.Id))) nkromap13 in
+        let bdd5 = RN.NKROMap.find ((Some (Pred True)),Some (RN.Rel.SeqR (RN.Rel.Left RN.Id, RN.Rel.StarR (RN.Rel.Left RN.Id)))) nkromap13 in
+        let bdd6 = RN.NKROMap.find ((Some (Pred True)), Some (RN.Rel.StarR (RN.Rel.Left RN.Id))) nkromap13 in
+        assert_equal ~cmp:MLBDD.equal bdd1 bdd2;
+        assert_equal ~cmp:MLBDD.equal bdd2 bdd3;
+        assert_equal ~cmp:MLBDD.equal bdd3 bdd4;
+        assert_equal ~cmp:MLBDD.equal bdd4 bdd5;
+        assert_equal ~cmp:MLBDD.equal bdd5 bdd6;
+        assert_equal ~cmp:MLBDD.equal bdd1 (RN.produce_id man pk1 pk2);
+        assert_equal (RN.NKROMap.cardinal nkromap13) 6;
+        let nkromap14 = RN.epsilon_kr man pk1 pk2 ((Some (RN.NK.Star RN.NK.Dup)), Some (RN.Rel.StarR (RN.Rel.Left RN.Id))) in
+        assert_equal (RN.NKROMap.cardinal nkromap14) 6; (* Substitute for (RN.NK.Star RN.NK.Dup)*)
+        let nkromap15 = RN.epsilon_kr man pk1 pk2 ((Some (RN.NK.Star RN.NK.Dup)), Some (RN.Rel.SeqR ((RN.Rel.StarR (RN.Rel.Left RN.Id)),(RN.Rel.StarR (RN.Rel.Left RN.Id))))) in
+        assert_equal (RN.NKROMap.cardinal nkromap15) 12; 
+        (* 
+          The rels now are 
+          SeqR (Left Id, StarR Left Id)
+          SeqR (SeqR (Left Id, StarR Left Id), StarR Left Id)
+          SeqR (StarR Left Id, StarR Left Id)
+          StarR Left Id
+        *)
+        let nkromap16 = RN.epsilon_kr man pk1 pk2 (Some (RN.NK.Star RN.NK.Dup), 
+          Some (RN.Rel.StarR (RN.Rel.OrR (RN.SR.add (RN.Rel.Left (RightAsgn (1,true))) (RN.SR.add (RN.Rel.Left (RightAsgn (2,true))) RN.SR.empty))))) in
+        let bdd7 = RN.NKROMap.find (Some (RN.NK.Seq (Pred True,RN.NK.Star RN.NK.Dup)),
+          Some (RN.Rel.StarR (RN.Rel.OrR (RN.SR.add (RN.Rel.Left (RightAsgn (1,true))) (RN.SR.add (RN.Rel.Left (RightAsgn (2,true))) RN.SR.empty))))) nkromap16 in  
+        let bdd8 = (RN.compile_pkr_bdd man pk1 pk2 (RN.Or (RN.RightTest (1, true),RN.RightTest (2, true)))) in
+        assert_equal ~cmp:MLBDD.equal bdd7 bdd8;     
+        );
 
       ]
 
