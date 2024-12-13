@@ -62,6 +62,7 @@ val pred_to_string : pred -> string
 val pkr_to_string : pkr -> string
 val nk_to_string : NK.t -> string
 val rel_to_string : Rel.t -> string
+val nko_map_to_string : (MLBDD.t) NKOMap.t -> string
 val nkro_map_to_string : (MLBDD.t) NKROMap.t -> string
 val init_man : field -> int -> man
 val bddvar : man -> pk -> field -> int
@@ -76,7 +77,7 @@ val generate_support : man -> pk -> MLBDD.support
 val generate_double_support : man -> pk -> pk -> MLBDD.support
 val comp_bdd : man -> pk -> pk -> (man -> pk -> pk -> 'a -> MLBDD.t) -> 'a -> 'a -> MLBDD.t
 val compile_pkr_bdd : man -> pk -> pk -> pkr -> MLBDD.t
-val rename_bdd : man -> pk -> pk -> MLBDD.t -> MLBDD.t
+val rename_bdd :  pk -> pk -> MLBDD.t -> MLBDD.t
 val closure_bdd : man -> pk -> pk -> (man -> pk -> pk -> 'a -> MLBDD.t) -> 'a -> MLBDD.t
 val add_nko_mapping : NK.t option -> MLBDD.t -> MLBDD.t NKOMap.t -> MLBDD.t NKOMap.t
 val add_nkro_mapping : (NK.t option * Rel.t option) -> MLBDD.t -> MLBDD.t NKROMap.t -> MLBDD.t NKROMap.t
