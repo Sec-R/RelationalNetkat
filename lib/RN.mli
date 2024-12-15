@@ -104,11 +104,11 @@ val var_low_branch : man -> int -> MLBDD.t -> MLBDD.t
 val var_high_branch : man -> int -> MLBDD.t -> MLBDD.t
 val var_if : man -> int -> MLBDD.t -> MLBDD.t -> MLBDD.t
 val splitting_bdd : man -> pk -> pk -> pk -> pk -> MLBDD.t -> MLBDD.t list
-val generate_all_transition : man -> pk -> pk -> pk -> pk -> (NK.t * Rel.t) -> (MLBDD.t list * (MLBDD.t list) NKROMap.t) NKROMap.t
+val generate_all_transition : man -> pk -> pk -> pk -> pk -> MLBDD.t NKROMap.t -> (MLBDD.t list * (MLBDD.t list) NKROMap.t) NKROMap.t
 val find_bddl : (NK.t option * Rel.t option) -> (MLBDD.t list * (MLBDD.t list) NKROMap.t) NKROMap.t -> MLBDD.t list
-val simplify_all_transition : man -> pk -> pk -> pk -> pk -> (NK.t * Rel.t) -> MLBDD.t NKROBMap.t NKROBMap.t
+val simplify_all_transition : man -> pk -> pk -> pk -> pk -> ((MLBDD.t)list*((MLBDD.t)list)NKROMap.t)NKROMap.t -> MLBDD.t NKROBMap.t NKROBMap.t
 val is_final_state : (NK.t option * Rel.t option) * MLBDD.t -> bool
 val determinize_transition : MLBDD.t NKROBMap.t -> MLBDD.t NKROBSMap.t
 val generate_start : man -> pk -> pk -> (NK.t * Rel.t) -> NKROBSet.t * bool
-val determinization : man -> pk -> pk -> (NK.t * Rel.t) -> (MLBDD.t NKROBMap.t) NKROBMap.t -> (MLBDD.t NKROBSMap.t) NKROBSMap.t
-val bisim : man -> pk -> pk -> (NK.t * Rel.t) -> (NK.t * Rel.t) -> (MLBDD.t NKROBSMap.t) NKROBSMap.t -> (MLBDD.t NKROBSMap.t) NKROBSMap.t -> bool
+val determinization : man -> pk -> pk -> (NKROBSet.t*bool) -> (MLBDD.t NKROBMap.t) NKROBMap.t -> (MLBDD.t NKROBSMap.t) NKROBSMap.t
+val bisim : man -> pk -> pk -> (NKROBSet.t*bool) -> (NKROBSet.t*bool) -> (MLBDD.t NKROBSMap.t) NKROBSMap.t -> (MLBDD.t NKROBSMap.t) NKROBSMap.t -> bool
