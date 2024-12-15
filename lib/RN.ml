@@ -271,6 +271,13 @@ let rec rel_to_string (rel:Rel.t):string =
   | SeqR (rel1, rel2) -> "SeqR (" ^ (rel_to_string rel1) ^ ", " ^ (rel_to_string rel2) ^ ")"
   | StarR rel -> "StarR " ^ (rel_to_string rel)  
 
+let nkro_to_string (nkro:NK.t option*Rel.t option):string=
+  match nkro with
+  | (None, None) -> "None, None"
+  | (Some nk, None) -> (nk_to_string nk) ^ ", None"
+  | (None, Some r) -> "None, " ^ (rel_to_string r)
+  | (Some nk, Some r) -> (nk_to_string nk) ^ ", " ^ (rel_to_string r)
+
 let nko_map_to_string (mapping:(MLBDD.t)NKOMap.t):string=
   let str = ref "" in
     NKOMap.iter (fun nko bdd -> str := !str ^ (match nko with
@@ -579,9 +586,9 @@ let delta_kr (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro:(NK.t option*Re
       (match nkro with
         | (nko,None) -> NKROMap.empty
         | (nko,Some (Left pkr)) -> NKROMap.empty
-        | (nko,Some (Right pkr)) -> let pkr_bdd = compile_pkr_bdd man pk3 pk4 pkr in
+        | (nko,Some (Right pkr)) -> let pkr_bdd = (MLBDD.dand (compile_pkr_bdd man pk3 pk4 pkr) (produce_id man pk1 pk5)) in
                                         NKROMap.singleton (nko,None) pkr_bdd
-        | (nko,Some (Binary pkr)) -> let pkr_bdd = compile_pkr_bdd man pk5 pk4 pkr in
+        | (nko,Some (Binary pkr)) -> let pkr_bdd = compile_pkr_bdd man pk5 pk4 pkr  in
                                         NKOMap.fold (fun nko bdd acc -> NKROMap.add (nko,None) bdd acc) (apply_nko_mapping (fun bdd -> MLBDD.dand bdd pkr_bdd) (delta_k man pk1 pk5 nko)) NKROMap.empty
         | (nko,Some (OrR rs)) -> SR.fold (fun r acc -> union_nkro_mapping (delta_kr_aux man pk1 pk5 pk3 pk4 (nko,Some r)) acc) rs NKROMap.empty                                
      (*Here we already start with the epsilon closure of a (nko,r1), thus we don't need to deal with the epsilon cases*)
