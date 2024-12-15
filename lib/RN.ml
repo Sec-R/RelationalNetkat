@@ -610,9 +610,9 @@ let calculate_reachable_set (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkr:N
         match Queue.take_opt worklist with
           | None -> cur
           | Some (nkro,bdd) -> 
-            calculate_reachable_set_aux (NKROMap.fold (fun nkro bdd acc-> match (add_nkro_mapping_updated nkro bdd cur) with
-                                                | (cur,true) -> Queue.add (nkro,bdd) worklist; cur
-                                                | (cur,false) -> cur) 
+            calculate_reachable_set_aux (NKROMap.fold (fun nkro bdd acc-> match (add_nkro_mapping_updated nkro bdd acc) with
+                                                | (next,true) -> Queue.add (nkro,bdd) worklist; next
+                                                | (next,false) -> next) 
                                                 (apply_nkro_mapping 
                   (fun nbdd -> (rename_bdd pk2 pk1 (rename_bdd pk4 pk3 (MLBDD.exists support13 (MLBDD.dand nbdd bdd)))))
                     (delta_kr man pk1 pk2 pk3 pk4 nkro)) cur)
