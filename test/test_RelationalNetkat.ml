@@ -192,8 +192,62 @@ let tests = "MLBDD tests" >::: [
         let bdd9 = RN.NKROMap.find ((Some (RN.NK.Seq (Pred True, RN.NK.Star RN.NK.Dup))),None) nkromap16 in
         assert_equal ~cmp:MLBDD.equal bdd6 bdd7;
         assert_equal ~cmp:MLBDD.equal bdd8 (RN.produce_id man pk1 pk2);     
-        assert_equal ~cmp:MLBDD.equal bdd6 bdd9;     
+        assert_equal ~cmp:MLBDD.equal bdd6 bdd9;
+        let nkromap17 = RN.epsilon_kr man pk1 pk2 (Some (RN.NK.Star RN.NK.Dup), Some (RN.Rel.StarR (RN.Rel.Right RN.Id))) in
+        let bdd10 = RN.NKROMap.find (Some (RN.NK.Star RN.NK.Dup),None) nkromap17 in
+        assert_equal ~cmp:MLBDD.equal bdd10 (RN.produce_id man pk1 pk2);
+        let nkromap17 = RN.epsilon_kr man pk1 pk2 (Some (RN.NK.Star RN.NK.Dup), 
+        Some (RN.Rel.StarR (RN.Rel.OrR (RN.SR.add (RN.Rel.Left (RightAsgn (1,true))) (RN.SR.add (RN.Rel.Right (RightAsgn (2,true))) RN.SR.empty))))) in
+        let bdd11 = RN.NKROMap.find (None,None) nkromap17 in
+        let bdd12 =  RN.compile_pkr_bdd man pk1 pk2 (RN.LeftTest (1, true)) in
+        assert_equal ~cmp:MLBDD.equal bdd11 bdd12;
         );
+        "delta_kr_test" >:: (fun _ctx ->
+          let man = RN.init_man 10 10 in
+          let pk1 = 0 in
+          let pk2 = 1 in
+          let pk3 = 2 in
+          let pk4 = 3 in
+          let compare = RN.NKROMap.equal MLBDD.equal in
+          let nkromap1 = RN.delta_kr man pk1 pk2 pk3 pk4 (None,None) in
+          let nkromap2 = RN.NKROMap.empty in
+          assert_equal ~cmp:compare nkromap1 nkromap2;
+          let nkromap3 = RN.delta_kr man pk1 pk2 pk3 pk4 (Some (RN.NK.Star RN.NK.Dup),None) in
+          assert_equal ~cmp:compare nkromap2 nkromap3;
+          let nkromap4 = RN.delta_kr man pk1 pk2 pk3 pk4 (Some (RN.NK.Star RN.NK.Dup), Some (RN.Rel.StarR (RN.Rel.Left RN.Id))) in
+          assert_equal ~cmp:compare nkromap3 nkromap4; 
+          let nkromap5 = RN.delta_kr man pk1 pk2 pk3 pk4 (Some (RN.NK.Star RN.NK.Dup), Some (RN.Rel.StarR (RN.Rel.Right RN.Id))) in
+          let bdd1 = RN.NKROMap.find (Some (RN.NK.Star RN.NK.Dup),None) nkromap5 in
+          let bdd2 = RN.NKROMap.find (Some (RN.NK.Star RN.NK.Dup),Some (RN.Rel.SeqR (RN.Rel.Right RN.Id,(RN.Rel.StarR (RN.Rel.Right RN.Id))))) nkromap5 in
+          let bdd3 = (MLBDD.dand (RN.produce_id man pk1 pk2) (RN.produce_id man pk3 pk4)) in
+          assert_equal ~cmp:MLBDD.equal bdd1 bdd2;
+          assert_equal ~cmp:MLBDD.equal bdd2 bdd3;
+          let nkromap6 = RN.delta_kr man pk1 pk2 pk3 pk4 (Some (RN.NK.Star RN.NK.Dup), 
+          Some (RN.Rel.StarR (RN.Rel.OrR (RN.SR.add (RN.Rel.Left (RightAsgn (1,true))) (RN.SR.add (RN.Rel.Right (RightAsgn (2,true))) RN.SR.empty))))) in
+          let bdd4 = RN.NKROMap.find (None,None) nkromap6 in
+          let bdd5 =  (MLBDD.dand (RN.compile_pkr_bdd man pk3 pk4 (RN.RightAsgn (2, true))) (RN.compile_pkr_bdd man pk1 pk2 (RN.LeftTest (1, true)))) in
+          let bdd6 = RN.NKROMap.find (Some (RN.NK.Star RN.NK.Dup),None) nkromap6 in
+          let bdd7 =  (MLBDD.dand (RN.compile_pkr_bdd man pk3 pk4 (RN.RightAsgn (2, true))) (RN.produce_id man pk1 pk2)) in
+          assert_equal ~cmp:MLBDD.equal bdd4 bdd5;
+          assert_equal ~cmp:MLBDD.equal bdd6 bdd7;
+          let nkromap7 = RN.delta_kr man pk1 pk2 pk3 pk4 (Some (RN.NK.Dup), Some (RN.Rel.StarR (RN.Rel.OrR (RN.SR.add (RN.Rel.Left (RightAsgn (1,true))) (RN.SR.add (RN.Rel.Left (RightAsgn (2,true))) RN.SR.empty))))) in
+          assert_equal ~cmp:compare nkromap1 nkromap7;
+          let nkromap8 = RN.delta_kr man pk1 pk2 pk3 pk4 (Some (RN.NK.Star (RN.NK.Asgn (1,true))), Some (RN.Rel.StarR (RN.Rel.OrR (RN.SR.add (RN.Rel.Left (RightAsgn (1,true))) (RN.SR.add (RN.Rel.Right (RightAsgn (2,true))) RN.SR.empty))))) in
+          let bdd8 = RN.NKROMap.find (None,None) nkromap8 in
+          let bdd9 =  (MLBDD.dand (RN.compile_pkr_bdd man pk3 pk4 (RN.RightAsgn (2, true))) (RN.compile_pkr_bdd man pk1 pk2 (RN.RightAsgn (1, true)))) in
+          assert_equal ~cmp:MLBDD.equal bdd8 bdd9;
+        );
+        "calculate_reachable_test" >:: (fun _ctx ->
+          let man = RN.init_man 10 10 in
+          let pk1 = 0 in
+          let pk2 = 1 in
+          let pk3 = 2 in
+          let pk4 = 3 in
+          let compare = RN.NKROMap.equal MLBDD.equal in
+          let nkromap1 = RN.calculate_reachable_set man pk1 pk2 pk3 pk4 (RN.NK.Star RN.NK.Dup,RN.Rel.StarR (RN.Rel.OrR (RN.SR.add (RN.Rel.Left (RightAsgn (1,true))) (RN.SR.add (RN.Rel.Right (RightAsgn (2,true))) RN.SR.empty)))) in
+          print_endline (RN.nkro_map_to_string nkromap1);
+        );
+  
       ]
 
 let _ =
