@@ -268,6 +268,40 @@ let tests = "MLBDD tests" >::: [
           let nkromap4 = RN.calculate_reachable_set man pk1 pk2 pk3 pk4 ((RN.NK.Seq (RN.NK.Asgn (1,true),(RN.NK.Star (RN.NK.Asgn (1,true))))),  (RN.Rel.StarR (RN.Rel.OrR (RN.SR.add (RN.Rel.Left (LeftTest (1,false))) (RN.SR.add (RN.Rel.Right (RightAsgn (3,true))) RN.SR.empty))))) in
           assert_equal (Option.is_none (RN.NKROMap.find_opt (None,None) nkromap4)) true;
         );
+        "var_order_test" >:: (fun _ctx ->
+          let man = RN.init_man 10 1 in
+          let pk1 = 0 in
+          let pk2 = 1 in
+          let pk3 = 2 in
+          let pk4 = 3 in
+          let btree = MLBDD.inspectb (RN.produce_id man pk1 pk3) in
+          match btree with
+            | MLBDD.BTrue -> failwith "Wrong Inspection!"
+            | MLBDD.BFalse -> failwith "Wrong Inspection!"
+            | MLBDD.BIf (l,v,r) -> 
+              let bdd1 = RN.var_if man v l r in
+              assert_equal ~cmp:MLBDD.equal bdd1 (RN.produce_id man pk1 pk3);
+          let bdd2 =  MLBDD.dand (RN.produce_id man pk1 pk3) (MLBDD.dand (RN.compile_pkr_bdd man pk3 pk4 (RN.RightAsgn (3, true))) (RN.compile_pkr_bdd man pk1 pk2 (RN.RightTest (2, true)))) in
+          let bdd3 = RN.back_ordering man pk1 pk2 pk3 pk4 (RN.re_ordering man pk1 pk2 pk3 pk4 bdd2) in
+          assert_equal ~cmp:MLBDD.equal bdd2 bdd3;
+          );
+        "splitting_bdd_test" >:: (fun _ctx ->
+          let man = RN.init_man 5 5 in
+          let pk1 = 0 in
+          let pk2 = 1 in
+          let pk3 = 2 in
+          let pk4 = 3 in
+          let bdd1 = RN.produce_id man pk1 pk3 in
+          let bdd2 = List.hd (RN.splitting_bdd man pk1 pk2 pk3 pk4 bdd1) in
+          assert_equal ~cmp:MLBDD.equal bdd1 bdd2;
+          assert_equal (List.length (RN.splitting_bdd man pk1 pk2 pk3 pk4 bdd1)) 1;
+          let bdd3 = (MLBDD.dand (RN.compile_pkr_bdd man pk3 pk4 (RN.RightAsgn (2, true))) (RN.compile_pkr_bdd man pk1 pk2 (RN.RightAsgn (1, true)))) in
+          (*10 10 requires more than 30s to split it*)
+          let bddlist = RN.splitting_bdd man pk1 pk2 pk3 pk4 bdd3 in
+          let bdd4 = List.fold_left (fun acc x -> MLBDD.dor acc x) (RN.bdd_false man) bddlist in
+          assert_equal ~cmp:MLBDD.equal bdd3 bdd4;
+          assert_equal (List.length bddlist) 16;
+        );
   
       ]
 
