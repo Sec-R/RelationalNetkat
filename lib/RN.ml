@@ -320,7 +320,7 @@ let compile_pred_bdd (man:man)(pk:pk) (predicate:pred):MLBDD.t =
 
 let produce_id (man:man) (pk1:pk) (pk2:pk):MLBDD.t =
      let rec produce_id_aux (cur:field):MLBDD.t =
-         if cur > man.field_max then 
+         if cur >= man.field_max then 
           bdd_true man
          else  
           MLBDD.dand (MLBDD.nxor (generate_single_var man pk1 cur) ((generate_single_var man pk2 cur))) (produce_id_aux (cur+1))
@@ -328,7 +328,7 @@ let produce_id (man:man) (pk1:pk) (pk2:pk):MLBDD.t =
 
 let produce_assign (man:man) (pk1:pk) (pk2:pk) (field:field)(asgn:bool) (left:bool):MLBDD.t =
      let rec produce_assign_aux (cur:field):MLBDD.t =
-         if cur > man.field_max then 
+         if cur >= man.field_max then 
            bdd_true man
          else if left && field = cur then 
                    MLBDD.dand (if asgn then 
@@ -356,13 +356,13 @@ let generate_unused_pk (pk1:pk) (pk2:pk):pk =
 
 let generate_support (man:man) (pk:pk):MLBDD.support =
   let rec generate_list (cur:field):int list =
-     if cur > man.field_max then []
+     if cur >= man.field_max then []
      else (bddvar man pk cur)::(generate_list (cur+1))
   in MLBDD.support_of_list (generate_list 0)
 
 let generate_double_support (man:man) (pk1:pk) (pk2:pk):MLBDD.support =
   let rec generate_list (cur:field):int list =
-      if cur > man.field_max then []
+      if cur >= man.field_max then []
       else (bddvar man pk1 cur)::(bddvar man pk2 cur)::(generate_list (cur+1))
   in MLBDD.support_of_list (generate_list 0)
   
@@ -649,28 +649,26 @@ let var_high_branch (man:man) (var:int) (bdd:MLBDD.t):MLBDD.t=
  (MLBDD.dand (MLBDD.ithvar man.bman var) bdd)
 
 let var_if (man:man) (var:int) (lbdd:MLBDD.t) (hbdd:MLBDD.t):MLBDD.t=
- (MLBDD.dor (var_low_branch man var lbdd) (var_high_branch man var lbdd))
+ (MLBDD.dor (var_low_branch man var lbdd) (var_high_branch man var hbdd))
 
 let splitting_bdd (man:man)(pk1:pk)(pk2:pk)(pk3:pk)(pk4:pk) (bdd:MLBDD.t): MLBDD.t list =
-  let splitting_bdd_aux (bdd:MLBDD.t): MLBDD.t * MLBDD.t =  
-  MLBDD.foldb (fun btree -> 
-                      match btree with
-                            | MLBDD.BFalse -> (bdd_false man,bdd_false man)  
-                            | MLBDD.BTrue -> (bdd_true man,bdd_false man) 
-                            | MLBDD.BIf (low,var,high) -> if var < man.field_max then
-                                                             (var_if man var (fst low) (fst high), var_if man var (snd low) (snd high))
-                                                          else if var < man.field_max*2 then
-                                                             if MLBDD.is_false (fst low) then
-                                                               (var_high_branch man var (fst high),var_high_branch man var(snd high))
-                                                             else 
-                                                               (var_low_branch man var (fst low),MLBDD.dand (var_low_branch man var (snd low)) (var_if man var (fst high) (snd high))) 
-                                                          else   
-                                                            (var_if man var (fst low) (fst high), bdd_false man)                               
-                            ) bdd in
-    let rec loop (cur:MLBDD.t list) (bdd:MLBDD.t):MLBDD.t list = 
+  let rec splitting_bdd_aux (bdd:MLBDD.t): MLBDD.t =  
+    match (MLBDD.inspectb bdd) with
+      | MLBDD.BFalse -> bdd_false man
+      | MLBDD.BTrue -> bdd_true man
+      | MLBDD.BIf (low,var,high) -> if var < man.field_max then
+                                       var_if man var (splitting_bdd_aux low) (splitting_bdd_aux high)
+                                    else if var < man.field_max*2 then
+                                       let low = splitting_bdd_aux low in
+                                       if MLBDD.is_false low then
+                                        var_high_branch man var (splitting_bdd_aux high)
+                                       else var_low_branch man var low
+                                    else var_if man var low high
+     in  
+  let rec loop (cur:MLBDD.t list) (bdd:MLBDD.t):MLBDD.t list = 
       if MLBDD.is_false bdd then cur
-      else let (low,high) = splitting_bdd_aux bdd in
-            loop (low::cur) high in
+      else let low = splitting_bdd_aux bdd in
+            loop (low::cur) (MLBDD.dand bdd (MLBDD.dnot low)) in
     List.map (fun bdd -> back_ordering man pk1 pk2 pk3 pk4 bdd) (loop [] (re_ordering man pk1 pk2 pk3 pk4 bdd))                         
  
 (* pk1: x, pk2:x', pk3:y, pk4:y'*)
