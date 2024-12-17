@@ -313,7 +313,7 @@ let nkrobs_to_string (nkrobs:NKROBSet.t):string=
 
 let nkrobs_map_to_string (mapping:(MLBDD.t)NKROBSMap.t):string=
   let str = ref "" in
-    NKROBSMap.iter (fun (nkrobs,flag) nkrobs_map -> str := !str ^ (nkrobs_to_string nkrobs) ^ " accept: " ^ (string_of_bool flag) ^ "\n") mapping;
+    NKROBSMap.iter (fun (nkrobs,flag) bdd -> str := !str ^ (nkrobs_to_string nkrobs) ^"transition bdd id: "^(string_of_int (MLBDD.id bdd)) ^ "\naccept: " ^ (string_of_bool flag) ^ "\n") mapping;
     !str
 
 let nkros_map_to_string (mapping:(BSet.t)NKROMap.t):string=
@@ -768,10 +768,10 @@ let determinize_transition (nexts:(MLBDD.t)NKROBMap.t):(MLBDD.t)NKROBSMap.t=
             let temp = if MLBDD.is_false ibdd then
                          acc
                        else
-                         NKROBSMap.add (NKROBSet.add nkrob (fst nkrobs),(snd nkrobs)||is_final_state nkrob) bddh acc in
+                         NKROBSMap.add (NKROBSet.add nkrob (fst nkrobs),(snd nkrobs)||is_final_state nkrob) ibdd acc in
               if MLBDD.is_false dbdd then
                          temp
-              else NKROBSMap.add nkrobs bddh temp) acc NKROBSMap.empty in
+              else NKROBSMap.add nkrobs dbdd temp) acc NKROBSMap.empty in
           if MLBDD.is_false new_bdd then
             next_map
           else
