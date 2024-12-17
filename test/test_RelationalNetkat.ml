@@ -240,6 +240,23 @@ let tests = "MLBDD tests" >::: [
           let bdd9 =  (MLBDD.dand (RN.compile_pkr_bdd man pk3 pk4 (RN.RightAsgn (2, true))) (RN.compile_pkr_bdd man pk1 pk2 (RN.RightAsgn (1, true)))) in
           assert_equal ~cmp:MLBDD.equal bdd8 bdd9;
         );
+        "var_order_test" >:: (fun _ctx ->
+          let man = RN.init_man 10 1 in
+          let pk1 = 0 in
+          let pk2 = 1 in
+          let pk3 = 2 in
+          let pk4 = 3 in
+          let btree = MLBDD.inspectb (RN.produce_id man pk1 pk3) in
+          match btree with
+            | MLBDD.BTrue -> failwith "Wrong Inspection!"
+            | MLBDD.BFalse -> failwith "Wrong Inspection!"
+            | MLBDD.BIf (l,v,r) -> 
+              let bdd1 = RN.var_if man v l r in
+              assert_equal ~cmp:MLBDD.equal bdd1 (RN.produce_id man pk1 pk3);
+          let bdd2 =  MLBDD.dand (RN.produce_id man pk1 pk3) (MLBDD.dand (RN.compile_pkr_bdd man pk3 pk4 (RN.RightAsgn (3, true))) (RN.compile_pkr_bdd man pk1 pk2 (RN.RightTest (2, true)))) in
+          let bdd3 = RN.back_ordering man pk1 pk2 pk3 pk4 (RN.re_ordering man pk1 pk2 pk3 pk4 bdd2) in
+          assert_equal ~cmp:MLBDD.equal bdd2 bdd3;
+          );
         "calculate_reachable_test" >:: (fun _ctx ->
           let man = RN.init_man 10 10 in
           let pk1 = 0 in
@@ -268,23 +285,6 @@ let tests = "MLBDD tests" >::: [
           let nkromap4 = RN.calculate_reachable_set man pk1 pk2 pk3 pk4 ((RN.NK.Seq (RN.NK.Asgn (1,true),(RN.NK.Star (RN.NK.Asgn (1,true))))),  (RN.Rel.StarR (RN.Rel.OrR (RN.SR.add (RN.Rel.Left (LeftTest (1,false))) (RN.SR.add (RN.Rel.Right (RightAsgn (3,true))) RN.SR.empty))))) in
           assert_equal (Option.is_none (RN.NKROMap.find_opt (None,None) nkromap4)) true;
         );
-        "var_order_test" >:: (fun _ctx ->
-          let man = RN.init_man 10 1 in
-          let pk1 = 0 in
-          let pk2 = 1 in
-          let pk3 = 2 in
-          let pk4 = 3 in
-          let btree = MLBDD.inspectb (RN.produce_id man pk1 pk3) in
-          match btree with
-            | MLBDD.BTrue -> failwith "Wrong Inspection!"
-            | MLBDD.BFalse -> failwith "Wrong Inspection!"
-            | MLBDD.BIf (l,v,r) -> 
-              let bdd1 = RN.var_if man v l r in
-              assert_equal ~cmp:MLBDD.equal bdd1 (RN.produce_id man pk1 pk3);
-          let bdd2 =  MLBDD.dand (RN.produce_id man pk1 pk3) (MLBDD.dand (RN.compile_pkr_bdd man pk3 pk4 (RN.RightAsgn (3, true))) (RN.compile_pkr_bdd man pk1 pk2 (RN.RightTest (2, true)))) in
-          let bdd3 = RN.back_ordering man pk1 pk2 pk3 pk4 (RN.re_ordering man pk1 pk2 pk3 pk4 bdd2) in
-          assert_equal ~cmp:MLBDD.equal bdd2 bdd3;
-          );
         "splitting_bdd_test" >:: (fun _ctx ->
           let man = RN.init_man 5 5 in
           let pk1 = 0 in
@@ -292,17 +292,72 @@ let tests = "MLBDD tests" >::: [
           let pk3 = 2 in
           let pk4 = 3 in
           let bdd1 = RN.produce_id man pk1 pk3 in
-          let bdd2 = List.hd (RN.splitting_bdd man pk1 pk2 pk3 pk4 bdd1) in
+          let bdd2 = RN.BSet.choose (RN.splitting_bdd man pk1 pk2 pk3 pk4 bdd1) in
           assert_equal ~cmp:MLBDD.equal bdd1 bdd2;
-          assert_equal (List.length (RN.splitting_bdd man pk1 pk2 pk3 pk4 bdd1)) 1;
+          assert_equal (RN.BSet.cardinal (RN.splitting_bdd man pk1 pk2 pk3 pk4 bdd1)) 1;
           let bdd3 = (MLBDD.dand (RN.compile_pkr_bdd man pk3 pk4 (RN.RightAsgn (2, true))) (RN.compile_pkr_bdd man pk1 pk2 (RN.RightAsgn (1, true)))) in
           (*10 10 requires more than 30s to split it*)
-          let bddlist = RN.splitting_bdd man pk1 pk2 pk3 pk4 bdd3 in
-          let bdd4 = List.fold_left (fun acc x -> MLBDD.dor acc x) (RN.bdd_false man) bddlist in
+          let bddset = RN.splitting_bdd man pk1 pk2 pk3 pk4 bdd3 in
+          let bdd4 = RN.BSet.fold (fun acc x -> MLBDD.dor acc x) bddset (RN.bdd_false man) in
           assert_equal ~cmp:MLBDD.equal bdd3 bdd4;
-          assert_equal (List.length bddlist) 16;
+          assert_equal (RN.BSet.cardinal bddset) 16;
         );
-  
+        "transition_test" >:: (fun _ctx ->
+          let man = RN.init_man 5 5 in
+          (* 10 requires a lot of more time*)
+          let pk1 = 0 in
+          let pk2 = 1 in
+          let pk3 = 2 in
+          let pk4 = 3 in
+          let nkrosmap1 = RN.generate_all_transition man pk1 pk2 pk3 pk4 ( (RN.NK.Star (RN.NK.Asgn (1,true))),  (RN.Rel.StarR (RN.Rel.OrR (RN.SR.add (RN.Rel.Left (RightAsgn (2,true))) (RN.SR.add (RN.Rel.Right (RightAsgn (3,true))) RN.SR.empty))))) in
+          (* Print to see*)
+          (* print_endline (RN.transition_set_map_to_string nkrosmap1);*)        
+          let nkrosmap2 = RN.generate_all_transition man pk1 pk2 pk3 pk4 ( (RN.NK.Star RN.NK.Dup),  (RN.Rel.StarR (RN.Rel.OrR (RN.SR.add (RN.Rel.Left (RightAsgn (2,true))) (RN.SR.add (RN.Rel.Right (RightAsgn (3,true))) RN.SR.empty))))) in
+          (* Print to see*)
+          (* Print_endline (RN.transition_set_map_to_string nkrosmap2); *)
+          assert_equal ~cmp:(fun _ _ -> true) nkrosmap1 nkrosmap2;
+          let nkrobmap1 = RN.simplify_all_transition man pk1 pk2 pk3 pk4 nkrosmap1 in
+          let nkrobmap2 = RN.simplify_all_transition man pk1 pk2 pk3 pk4 nkrosmap2 in
+          (* Print to see*)
+          (* print_endline (RN.transition_map_to_string nkrobmap1); *）
+         （* print_endline (RN.transition_map_to_string nkrobmap2); *)
+           assert_equal ~cmp:(fun _ _ -> true) nkrobmap1 nkrobmap2;
+          (* Not sure how to test this*)
+        );
+        "determinization_test" >:: (fun _ctx ->
+          let man = RN.init_man 5 5 in
+          let pk1 = 0 in
+          let pk2 = 1 in
+          let pk3 = 2 in
+          let pk4 = 3 in
+          let map1 = RN.NKROBMap.singleton ((None,None),RN.bdd_false man) (RN.produce_id man pk1 pk2) in
+          let dmap1 = RN.determinize_transition map1 in
+          let ((key1,flag1),bdd1) = RN.NKROBSMap.choose dmap1 in
+          assert_equal ~cmp:RN.NKROBSet.equal key1 (RN.NKROBSet.singleton ((None,None),RN.bdd_false man));
+          assert_equal ~cmp:MLBDD.equal bdd1 (RN.produce_id man pk1 pk2);
+          assert_equal flag1 true;
+          let map2 = RN.NKROBMap.add ((None,None),RN.bdd_true man) (RN.produce_id man pk1 pk2) map1 in
+          let dmap2 = RN.determinize_transition map2 in
+          let ((key2,flag2),bdd2) = RN.NKROBSMap.choose dmap2 in
+          assert_equal ~cmp:RN.NKROBSet.equal key2 (RN.NKROBSet.add ((None,None),RN.bdd_true man) (RN.NKROBSet.singleton ((None,None),RN.bdd_false man)));
+          assert_equal ~cmp:MLBDD.equal bdd2 (RN.produce_id man pk1 pk2);
+          assert_equal flag2 true;
+          assert_equal (RN.NKROBSMap.cardinal dmap2) 1;
+          let map3 = RN.NKROBMap.add ((None,None),RN.bdd_true man) (RN.produce_id man pk3 pk4) map1 in
+          let dmap3 = RN.determinize_transition map3 in
+          let bdd3 = RN.NKROBSMap.find (key2,true) dmap3 in
+          let bdd4 = RN.NKROBSMap.find (key1,true) dmap3 in
+          let bdd5 = RN.NKROBSMap.find  ((RN.NKROBSet.singleton ((None,None),RN.bdd_true man)),true) dmap3 in      
+          assert_equal ~cmp:MLBDD.equal bdd3 (MLBDD.dand (RN.produce_id man pk1 pk2) (RN.produce_id man pk3 pk4));
+          assert_equal ~cmp:MLBDD.equal bdd4 (MLBDD.dand (RN.produce_id man pk1 pk2) (MLBDD.dnot (RN.produce_id man pk3 pk4)));
+          assert_equal ~cmp:MLBDD.equal bdd5 (MLBDD.dand (MLBDD.dnot (RN.produce_id man pk1 pk2)) (RN.produce_id man pk3 pk4));
+          let map4 = RN.NKROBMap.add ((None,Some (RN.Rel.StarR (RN.Rel.Left RN.Id))),RN.bdd_true man) (RN.produce_id man pk2 pk3) map3 in
+          let dmap4 = RN.determinize_transition map4 in
+          let bdd6 = RN.NKROBSMap.find (key2,true) dmap4 in
+          let bdd7 = RN.NKROBSMap.find (RN.NKROBSet.singleton ((None,Some (RN.Rel.StarR (RN.Rel.Left RN.Id))),RN.bdd_true man),false) dmap4 in
+          assert_equal ~cmp:MLBDD.equal bdd6 (MLBDD.dand (MLBDD.dnot (RN.produce_id man pk2 pk3)) bdd3);
+          assert_equal ~cmp:MLBDD.equal bdd7 (MLBDD.dand (RN.produce_id man pk2 pk3) (MLBDD.dnot (MLBDD.dor (RN.produce_id man pk1 pk2) (RN.produce_id man pk3 pk4))));
+        );  
       ]
 
 let _ =
