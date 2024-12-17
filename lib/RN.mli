@@ -64,6 +64,7 @@ val rel_to_string : Rel.t -> string
 val nkro_to_string : (NK.t option * Rel.t option) -> string
 val nko_map_to_string : MLBDD.t NKOMap.t -> string
 val nkro_map_to_string : MLBDD.t NKROMap.t -> string
+val bset_to_string : BSet.t -> string
 val nkrob_map_to_string : MLBDD.t NKROBMap.t -> string
 val nkrobs_to_string : NKROBSet.t -> string
 val nkrobs_map_to_string : MLBDD.t NKROBSMap.t -> string

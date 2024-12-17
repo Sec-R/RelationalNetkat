@@ -294,6 +294,11 @@ let nkro_map_to_string (mapping:(MLBDD.t)NKROMap.t):string=
                                                                                                     | Some r -> rel_to_string r) ^" bdd id: "^(string_of_int (MLBDD.id bdd)) ^ "\n") mapping;
     !str
 
+let bset_to_string (bset:BSet.t):string=
+  let str = ref "" in
+    BSet.iter (fun bdd -> str := !str ^ (string_of_int (MLBDD.id bdd)) ^ " ") bset;
+    !str
+        
 let nkrob_map_to_string (mapping:(MLBDD.t)NKROBMap.t):string=
   let str = ref "" in
     NKROBMap.iter (fun ((nko,ro),bdd) bdd' -> str := !str ^ (match nko with
@@ -725,12 +730,19 @@ let splitting_bdd (man:man)(pk1:pk)(pk2:pk)(pk3:pk)(pk4:pk) (bdd:MLBDD.t): BSet.
             loop (BSet.add low cur) (MLBDD.dand bdd (MLBDD.dnot low)) in
     BSet.map (fun bdd -> back_ordering man pk1 pk2 pk3 pk4 bdd) (loop BSet.empty (re_ordering man pk1 pk2 pk3 pk4 bdd))                         
  
+
+let is_final (nkro:NK.t option*Rel.t option):bool =
+  Option.is_none (fst nkro)&& Option.is_none (snd nkro)
+
 (* pk1: x, pk2:x', pk3:y, pk4:y'*)
 let generate_all_transition(man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkr:NK.t*Rel.t):(BSet.t*(BSet.t)NKROMap.t)NKROMap.t=
   let support24 = generate_double_support man pk2 pk4 in
   NKROMap.mapi (fun nkro bdd -> let new_delta = NKROMap.map (fun bdd -> splitting_bdd man pk1 pk2 pk3 pk4 bdd) 
                                     (apply_nkro_mapping (fun tbdd -> (MLBDD.dand tbdd bdd)) (delta_kr man pk1 pk2 pk3 pk4 nkro)) in
-                                  let hidden_state_set = (NKROMap.fold (fun nkro bset acc -> BSet.union (BSet.map (fun bdd -> MLBDD.exists support24 bdd) bset) acc) new_delta BSet.empty) in
+                                  let hidden_state_set = 
+                                        if is_final nkro 
+                                        then BSet.singleton (bdd_true man)
+                                        else (NKROMap.fold (fun nkro bset acc -> BSet.union (BSet.map (fun bdd -> MLBDD.exists support24 bdd) bset) acc) new_delta BSet.empty) in
                                       (hidden_state_set,new_delta)) (calculate_reachable_set man pk1 pk2 pk3 pk4 nkr)
 
 let find_bdds (nkro:NK.t option*Rel.t option)(transition:(BSet.t*(BSet.t)NKROMap.t)NKROMap.t):BSet.t=
