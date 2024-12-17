@@ -291,9 +291,63 @@ let nkro_map_to_string (mapping:(MLBDD.t)NKROMap.t):string=
                                                         | None -> "None"
                                                         | Some nk -> nk_to_string nk) ^ ", " ^ (match ro with
                                                                                                     | None -> "None"
-                                                                                                    | Some r -> rel_to_string r) ^ "\n") mapping;
+                                                                                                    | Some r -> rel_to_string r) ^" bdd id: "^(string_of_int (MLBDD.id bdd)) ^ "\n") mapping;
     !str
 
+let nkrob_map_to_string (mapping:(MLBDD.t)NKROBMap.t):string=
+  let str = ref "" in
+    NKROBMap.iter (fun ((nko,ro),bdd) bdd' -> str := !str ^ (match nko with
+                                                        | None -> "None"
+                                                        | Some nk -> nk_to_string nk) ^ ", " ^ (match ro with
+                                                                                                    | None -> "None"
+                                                                                                    | Some r -> rel_to_string r) ^" tag bdd id: "^(string_of_int (MLBDD.id bdd)) ^" transition bdd id: "^(string_of_int (MLBDD.id bdd')) ^ "\n") mapping;
+    !str
+let nkrobs_to_string (nkrobs:NKROBSet.t):string=
+  let str = ref "" in
+    NKROBSet.iter (fun ((nko,ro),bdd) -> str := !str ^ (match nko with
+                                                        | None -> "None"
+                                                        | Some nk -> nk_to_string nk) ^ ", " ^ (match ro with
+                                                                                                    | None -> "None"
+                                                                                                    | Some r -> rel_to_string r) ^" tag bdd id: "^(string_of_int (MLBDD.id bdd)) ^ "\n") nkrobs;
+    !str
+
+let nkrobs_map_to_string (mapping:(MLBDD.t)NKROBSMap.t):string=
+  let str = ref "" in
+    NKROBSMap.iter (fun (nkrobs,flag) nkrobs_map -> str := !str ^ (nkrobs_to_string nkrobs) ^ " accept: " ^ (string_of_bool flag) ^ "\n") mapping;
+    !str
+
+let nkros_map_to_string (mapping:(BSet.t)NKROMap.t):string=
+  let str = ref "" in
+    NKROMap.iter (fun (nko,ro) bdd_set -> str := !str ^ (match nko with
+                                                        | None -> "None"
+                                                        | Some nk -> nk_to_string nk) ^ ", " ^ (match ro with
+                                                                                                    | None -> "None"
+                                                                                                    | Some r -> rel_to_string r) ^ "\n" ^ (BSet.fold (fun bdd acc  -> acc ^ (string_of_int (MLBDD.id bdd) ^ " ")) bdd_set "") ^ "\n") mapping;
+    !str
+
+let transition_set_map_to_string (mapping:(BSet.t*(BSet.t)NKROMap.t)NKROMap.t):string=
+  let str = ref "" in
+    NKROMap.iter (fun (nko,ro) (bdd_set,bdd_map) -> str := !str ^ "Source node: \n" ^(match nko with
+                                                                    | None -> "None"
+                                                                    | Some nk -> nk_to_string nk) ^ ", " ^ (match ro with
+                                                                                                    | None -> "None"
+                                                                                                    | Some r -> rel_to_string r) ^ "\nSource bdd sets:\n" ^ (BSet.fold (fun bdd acc  -> acc ^ (string_of_int (MLBDD.id bdd) ^ " ")) bdd_set "") ^ "\nDest nodes:\n" ^ (nkros_map_to_string bdd_map) ^ "\n") mapping;
+    !str
+
+let transition_map_to_string (mapping:((MLBDD.t)NKROBMap.t)NKROBMap.t):string=
+   let str = ref "" in
+    NKROBMap.iter (fun ((nko,ro),bdd) bdd_map -> str := !str ^ "Source node: \n" ^(match nko with
+                                                        | None -> "None"
+                                                        | Some nk -> nk_to_string nk) ^ ", " ^ (match ro with
+                                                                                                    | None -> "None"
+                                                                                                    | Some r -> rel_to_string r) ^ " tag bdd id: " ^(string_of_int (MLBDD.id bdd)) ^ "\nDest nodes:\n" ^ (nkrob_map_to_string bdd_map) ^ "\n") mapping;
+    !str
+
+let determinized_transition_map_to_string (mapping:((MLBDD.t)NKROBSMap.t)NKROBSMap.t):string=
+    let str = ref ""
+    in NKROBSMap.iter (fun (nkrobs,flag) nkrobs_map -> str := !str ^ "Source node: \n" ^ (nkrobs_to_string nkrobs) ^ " accept: " ^ (string_of_bool flag) ^ "\nDest nodes:\n" ^ (nkrobs_map_to_string nkrobs_map) ^ "\n") mapping;
+    !str
+    
 let init_man (field_max:field) (bman_cache:int) = 
   {field_max = field_max; bman = MLBDD.init ~cache:bman_cache ()}
 (* The variable is in order of x x' y y' --> 5k, 5k+1, 5k+2, 5k+3*)
@@ -651,7 +705,7 @@ let var_high_branch (man:man) (var:int) (bdd:MLBDD.t):MLBDD.t=
 let var_if (man:man) (var:int) (lbdd:MLBDD.t) (hbdd:MLBDD.t):MLBDD.t=
  (MLBDD.dor (var_low_branch man var lbdd) (var_high_branch man var hbdd))
 
-let splitting_bdd (man:man)(pk1:pk)(pk2:pk)(pk3:pk)(pk4:pk) (bdd:MLBDD.t): MLBDD.t list =
+let splitting_bdd (man:man)(pk1:pk)(pk2:pk)(pk3:pk)(pk4:pk) (bdd:MLBDD.t): BSet.t =
   let rec splitting_bdd_aux (bdd:MLBDD.t): MLBDD.t =  
     match (MLBDD.inspectb bdd) with
       | MLBDD.BFalse -> bdd_false man
@@ -665,37 +719,38 @@ let splitting_bdd (man:man)(pk1:pk)(pk2:pk)(pk3:pk)(pk4:pk) (bdd:MLBDD.t): MLBDD
                                        else var_low_branch man var low
                                     else var_if man var low high
      in  
-  let rec loop (cur:MLBDD.t list) (bdd:MLBDD.t):MLBDD.t list = 
+  let rec loop (cur:BSet.t) (bdd:MLBDD.t):BSet.t = 
       if MLBDD.is_false bdd then cur
       else let low = splitting_bdd_aux bdd in
-            loop (low::cur) (MLBDD.dand bdd (MLBDD.dnot low)) in
-    List.map (fun bdd -> back_ordering man pk1 pk2 pk3 pk4 bdd) (loop [] (re_ordering man pk1 pk2 pk3 pk4 bdd))                         
+            loop (BSet.add low cur) (MLBDD.dand bdd (MLBDD.dnot low)) in
+    BSet.map (fun bdd -> back_ordering man pk1 pk2 pk3 pk4 bdd) (loop BSet.empty (re_ordering man pk1 pk2 pk3 pk4 bdd))                         
  
 (* pk1: x, pk2:x', pk3:y, pk4:y'*)
-let generate_all_transition(man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (reachable:(MLBDD.t)NKROMap.t):((MLBDD.t)list*((MLBDD.t)list)NKROMap.t)NKROMap.t=
+let generate_all_transition(man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkr:NK.t*Rel.t):(BSet.t*(BSet.t)NKROMap.t)NKROMap.t=
   let support24 = generate_double_support man pk2 pk4 in
   NKROMap.mapi (fun nkro bdd -> let new_delta = NKROMap.map (fun bdd -> splitting_bdd man pk1 pk2 pk3 pk4 bdd) 
                                     (apply_nkro_mapping (fun tbdd -> (MLBDD.dand tbdd bdd)) (delta_kr man pk1 pk2 pk3 pk4 nkro)) in
-                                  let hidden_state_l = (NKROMap.fold (fun nkro blist acc -> List.append (List.map (fun bdd -> MLBDD.exists support24 bdd) blist) acc) new_delta []) in
-                                      (hidden_state_l,new_delta)) reachable
+                                  let hidden_state_set = (NKROMap.fold (fun nkro bset acc -> BSet.union (BSet.map (fun bdd -> MLBDD.exists support24 bdd) bset) acc) new_delta BSet.empty) in
+                                      (hidden_state_set,new_delta)) (calculate_reachable_set man pk1 pk2 pk3 pk4 nkr)
 
-let find_bddl (nkro:NK.t option*Rel.t option)(transition:((MLBDD.t)list*((MLBDD.t)list)NKROMap.t)NKROMap.t):MLBDD.t list=
+let find_bdds (nkro:NK.t option*Rel.t option)(transition:(BSet.t*(BSet.t)NKROMap.t)NKROMap.t):BSet.t=
   match NKROMap.find_opt nkro transition with
     | None -> failwith "Transition not found"
-    | Some (bddl,_) -> bddl                           
+    | Some (bdds,_) -> bdds                           
 
-let simplify_all_transition(man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (all_transition:((MLBDD.t)list*((MLBDD.t)list)NKROMap.t)NKROMap.t):((MLBDD.t)NKROBMap.t)NKROBMap.t=
+let simplify_all_transition(man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (all_transition:(BSet.t*(BSet.t)NKROMap.t)NKROMap.t):((MLBDD.t)NKROBMap.t)NKROBMap.t=
   let support12 = generate_double_support man pk1 pk2 in
-    NKROMap.fold (fun nkro1 (_,nkrom) acc -> NKROMap.fold (fun nkro2 hbddl1 acc ->
-                                        let hbddl2 = find_bddl nkro2 all_transition
-                                          in List.fold_right (fun hbdd1 acc -> 
-                                             List.fold_right (fun hbdd2 acc -> 
+  let support24 = generate_double_support man pk2 pk4 in
+    NKROMap.fold (fun nkro1 (_,nkrom) acc -> NKROMap.fold (fun nkro2 hbdds1 acc ->
+                                        let hbdds2 = find_bdds nkro2 all_transition
+                                          in BSet.fold (fun hbdd1 acc -> 
+                                            BSet.fold (fun hbdd2 acc -> 
                                               let tbddf = MLBDD.dand hbdd1 (rename_bdd pk1 pk2 (rename_bdd pk3 pk4 hbdd2)) in
                                               if MLBDD.is_false tbddf then
                                                 acc
                                               else
-                                                NKROBMap.add (nkro1,hbdd1) (NKROBMap.singleton (nkro2,hbdd2) (MLBDD.exists support12 tbddf)) acc)
-                                          hbddl2 acc) hbddl1 acc) nkrom acc) all_transition NKROBMap.empty
+                                                NKROBMap.add (nkro1,(MLBDD.exists support24 hbdd1)) (NKROBMap.singleton (nkro2,hbdd2) (MLBDD.exists support12 tbddf)) acc)
+                                          hbdds2 acc) hbdds1 acc) nkrom acc) all_transition NKROBMap.empty
                                         
 let is_final_state (nkrob:(NK.t option*Rel.t option)*MLBDD.t):bool =
   Option.is_none (fst (fst nkrob)) && Option.is_none (snd (fst nkrob))
