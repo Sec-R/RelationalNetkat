@@ -311,7 +311,7 @@ let tests = "MLBDD tests" >::: [
           let pk4 = 3 in
           let nkrosmap1 = RN.generate_all_transition man pk1 pk2 pk3 pk4 ( (RN.NK.Star (RN.NK.Asgn (1,true))),  (RN.Rel.StarR (RN.Rel.OrR (RN.SR.add (RN.Rel.Left (RightAsgn (2,true))) (RN.SR.add (RN.Rel.Right (RightAsgn (3,true))) RN.SR.empty))))) in
           (* Print to see*)
-          (* print_endline (RN.transition_set_map_to_string nkrosmap1);*)     
+          (* print_endline (RN.transition_set_map_to_string nkrosmap1); *)   
           let nkrosmap2 = RN.generate_all_transition man pk1 pk2 pk3 pk4 ( (RN.NK.Star RN.NK.Dup),  (RN.Rel.StarR (RN.Rel.OrR (RN.SR.add (RN.Rel.Left (RightAsgn (2,true))) (RN.SR.add (RN.Rel.Right (RightAsgn (3,true))) RN.SR.empty))))) in
           (* Print to see*)
           (* Print_endline (RN.transition_set_map_to_string nkrosmap2); *)
@@ -319,28 +319,9 @@ let tests = "MLBDD tests" >::: [
           let nkrobmap1 = RN.simplify_all_transition man pk1 pk2 pk3 pk4 nkrosmap1 in
           let nkrobmap2 = RN.simplify_all_transition man pk1 pk2 pk3 pk4 nkrosmap2 in
           (* Print to see*)
-          (*print_endline (RN.transition_map_to_string nkrobmap1);*)
+          (* print_endline (RN.transition_map_to_string nkrobmap1); *)
          (* print_endline (RN.transition_map_to_string nkrobmap2); *)
-           assert_equal ~cmp:(fun _ _ -> true) nkrobmap1 nkrobmap2;
-           let bset1 = RN.find_bdds (None,None) nkrosmap1 in
-           let support12 = RN.generate_double_support man pk1 pk2 in
-           let support24 = RN.generate_double_support man pk2 pk4 in
-           let nkrobmap3 =
-             RN.NKROMap.fold (fun nkro1 (_,nkrom) acc -> RN.NKROMap.fold (fun nkro2 hbdds1 acc ->
-                                                 let hbdds2 = RN.find_bdds nkro2 nkrosmap1
-                                                   in RN.BSet.fold (fun hbdd1 acc -> 
-                                                     RN.BSet.fold (fun hbdd2 acc -> 
-                                                       let tbddf = MLBDD.dand hbdd1 (RN.rename_bdd pk1 pk2 (RN.rename_bdd pk3 pk4 hbdd2)) in
-                                                       print_endline ("\n hbdd2 id: " ^ (string_of_int  (MLBDD.id hbdd2)));
-                                                       print_endline ("\n rename id: " ^ (string_of_int (MLBDD.id (RN.rename_bdd pk1 pk2 (RN.rename_bdd pk3 pk4 hbdd2)))));
-                                                       print_endline ("\nSource: " ^ RN.nkro_to_string nkro1 ^ "\nDest: " ^ RN.nkro_to_string nkro2 ^"\ntransition id:" ^ (string_of_int (MLBDD.id tbddf)));
-                                                       if MLBDD.is_false tbddf then
-                                                         acc
-                                                       else
-                                                        RN.NKROBMap.add (nkro1,(MLBDD.exists support24 hbdd1)) (RN.NKROBMap.singleton (nkro2,hbdd2) (MLBDD.exists support12 tbddf)) acc)
-                                                   hbdds2 acc) hbdds1 acc) nkrom acc) nkrosmap1 RN.NKROBMap.empty in
-                                                   assert_equal 1 1;
-
+           assert_equal ~cmp:(fun _ _ -> true) nkrobmap1 nkrobmap2;                                       
           (* Not sure how to test this*)
         );
         "determinization_test" >:: (fun _ctx ->
