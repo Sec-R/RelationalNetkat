@@ -112,6 +112,7 @@ val var_low_branch : man -> int -> MLBDD.t -> MLBDD.t
 val var_high_branch : man -> int -> MLBDD.t -> MLBDD.t
 val var_if : man -> int -> MLBDD.t -> MLBDD.t -> MLBDD.t
 val splitting_bdd : man -> pk -> pk -> pk -> pk -> MLBDD.t -> BSet.t
+val is_final : (NK.t option * Rel.t option) -> bool
 val generate_all_transition : man -> pk -> pk -> pk -> pk -> (NK.t * Rel.t) -> (BSet.t * (BSet.t) NKROMap.t) NKROMap.t
 val find_bdds : (NK.t option * Rel.t option) -> (BSet.t * (BSet.t) NKROMap.t) NKROMap.t -> BSet.t
 val simplify_all_transition : man -> pk -> pk -> pk -> pk -> (BSet.t * (BSet.t) NKROMap.t) NKROMap.t -> (MLBDD.t) NKROBMap.t NKROBMap.t
