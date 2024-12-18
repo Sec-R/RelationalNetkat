@@ -310,18 +310,24 @@ let tests = "MLBDD tests" >::: [
           let pk3 = 2 in
           let pk4 = 3 in
           let nkrosmap1 = RN.generate_all_transition man pk1 pk2 pk3 pk4 ( (RN.NK.Star (RN.NK.Asgn (1,true))),  (RN.Rel.StarR (RN.Rel.OrR (RN.SR.add (RN.Rel.Left (RightAsgn (2,true))) (RN.SR.add (RN.Rel.Right (RightAsgn (3,true))) RN.SR.empty))))) in
+          assert_equal true (RN.NKROMap.mem (None,None) nkrosmap1); 
           (* Print to see*)
           (* print_endline (RN.transition_set_map_to_string nkrosmap1); *)   
           let nkrosmap2 = RN.generate_all_transition man pk1 pk2 pk3 pk4 ( (RN.NK.Star RN.NK.Dup),  (RN.Rel.StarR (RN.Rel.OrR (RN.SR.add (RN.Rel.Left (RightAsgn (2,true))) (RN.SR.add (RN.Rel.Right (RightAsgn (3,true))) RN.SR.empty))))) in
+          let nkromap1 = RN.calculate_reachable_set man pk1 pk2 pk3 pk4 ( (RN.NK.Star RN.NK.Dup),  (RN.Rel.StarR (RN.Rel.OrR (RN.SR.add (RN.Rel.Left (RightAsgn (2,true))) (RN.SR.add (RN.Rel.Right (RightAsgn (3,true))) RN.SR.empty))))) in
+          RN.NKROMap.iter (fun nkro (bset,_) -> if RN.is_final nkro then assert_equal ~cmp:MLBDD.equal (RN.bdd_true man) (RN.BSet.choose bset)
+                                                else assert_equal ~cmp:MLBDD.equal (RN.NKROMap.find nkro nkromap1) (MLBDD.dor (RN.NKROMap.find nkro nkromap1) (RN.BSet.fold (fun bdd acc -> MLBDD.dor bdd acc) bset (RN.bdd_false man)))
+                                                ) nkrosmap2;
           (* Print to see*)
           (* Print_endline (RN.transition_set_map_to_string nkrosmap2); *)
-          assert_equal ~cmp:(fun _ _ -> true) nkrosmap1 nkrosmap2;
           let nkrobmap1 = RN.simplify_all_transition man pk1 pk2 pk3 pk4 nkrosmap1 in
+          assert_equal false (RN.NKROBMap.mem ((None,None),RN.bdd_true man) nkrobmap1); 
+          RN.NKROBMap.iter (fun (nkro,bdd) _ -> assert_equal true (RN.BSet.mem bdd (fst (RN.NKROMap.find nkro nkrosmap1)))) nkrobmap1;
           let nkrobmap2 = RN.simplify_all_transition man pk1 pk2 pk3 pk4 nkrosmap2 in
+          RN.NKROBMap.iter (fun (nkro,bdd) _ -> assert_equal true (RN.BSet.mem bdd (fst (RN.NKROMap.find nkro nkrosmap2)))) nkrobmap2;
           (* Print to see*)
           (* print_endline (RN.transition_map_to_string nkrobmap1); *)
-         (* print_endline (RN.transition_map_to_string nkrobmap2); *)
-           assert_equal ~cmp:(fun _ _ -> true) nkrobmap1 nkrobmap2;                                       
+          (* print_endline (RN.transition_map_to_string nkrobmap2); *)
           (* Not sure how to test this*)
         );
         "determinization_test" >:: (fun _ctx ->
