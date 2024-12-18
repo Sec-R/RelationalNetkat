@@ -298,7 +298,7 @@ let bset_to_string (bset:BSet.t):string=
   let str = ref "" in
     BSet.iter (fun bdd -> str := !str ^ (string_of_int (MLBDD.id bdd)) ^ " ") bset;
     !str
-        
+
 let nkrob_map_to_string (mapping:(MLBDD.t)NKROBMap.t):string=
   let str = ref "" in
     NKROBMap.iter (fun ((nko,ro),bdd) bdd' -> str := !str ^ (match nko with
@@ -761,7 +761,11 @@ let simplify_all_transition(man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (all_tr
                                               if MLBDD.is_false tbddf then
                                                 acc
                                               else
-                                                NKROBMap.add (nkro1,(MLBDD.exists support24 hbdd1)) (NKROBMap.singleton (nkro2,hbdd2) (MLBDD.exists support12 tbddf)) acc)
+                                                NKROBMap.update (nkro1,(MLBDD.exists support24 hbdd1)) 
+                                                (fun mapo -> match mapo with
+                                                  | None -> Some (NKROBMap.singleton (nkro2,hbdd2) (MLBDD.exists support12 tbddf))
+                                                  | Some map -> Some (NKROBMap.add (nkro2,hbdd2) (MLBDD.exists support12 tbddf) map))
+                                                 acc)
                                           hbdds2 acc) hbdds1 acc) nkrom acc) all_transition NKROBMap.empty
                                         
 let is_final_state (nkrob:(NK.t option*Rel.t option)*MLBDD.t):bool =
