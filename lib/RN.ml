@@ -318,7 +318,7 @@ let nkrobs_to_string (nkrobs:NKROBSet.t):string=
 
 let nkrobs_map_to_string (mapping:(MLBDD.t)NKROBSMap.t):string=
   let str = ref "" in
-    NKROBSMap.iter (fun (nkrobs,flag) bdd -> str := !str ^ (nkrobs_to_string nkrobs) ^"transition bdd id: "^(string_of_int (MLBDD.id bdd)) ^ "\naccept: " ^ (string_of_bool flag) ^ "\n") mapping;
+    NKROBSMap.iter (fun (nkrobs,flag) bdd -> str := !str ^ "\n" ^ (nkrobs_to_string nkrobs) ^"transition bdd id: "^(string_of_int (MLBDD.id bdd)) ^ "\naccept: " ^ (string_of_bool flag) ^ "\n") mapping;
     !str
 
 let nkros_map_to_string (mapping:(BSet.t)NKROMap.t):string=
@@ -350,7 +350,7 @@ let transition_map_to_string (mapping:((MLBDD.t)NKROBMap.t)NKROBMap.t):string=
 
 let determinized_transition_map_to_string (mapping:((MLBDD.t)NKROBSMap.t)NKROBSMap.t):string=
     let str = ref ""
-    in NKROBSMap.iter (fun (nkrobs,flag) nkrobs_map -> str := !str ^ "Source node: \n" ^ (nkrobs_to_string nkrobs) ^ " accept: " ^ (string_of_bool flag) ^ "\nDest nodes:\n" ^ (nkrobs_map_to_string nkrobs_map) ^ "\n") mapping;
+    in NKROBSMap.iter (fun (nkrobs,flag) nkrobs_map -> str := !str ^ "\nSource node: \n" ^ (nkrobs_to_string nkrobs) ^ "accept: " ^ (string_of_bool flag) ^ "\nDest nodes:\n" ^ (nkrobs_map_to_string nkrobs_map) ^ "\n") mapping;
     !str
     
 let init_man (field_max:field) (bman_cache:int) = 
@@ -807,12 +807,15 @@ let determinization (man:man) (pk1:pk) (pk2:pk) (start:NKROBSet.t*bool) (transit
         | None -> acc
         | Some nkrobs -> 
                     if NKROBSMap.mem nkrobs acc then
-                      acc
+                      determinization_aux acc
                     else
-                      let nexts = NKROBSet.fold (fun nkrob acc -> NKROBMap.union (fun _ bdd1 bdd2 -> Some (MLBDD.dor bdd1 bdd2)) (NKROBMap.find nkrob transition) acc)
-                                                     (fst nkrobs) NKROBMap.empty in
+                      let nexts = NKROBSet.fold (fun nkrob acc -> NKROBMap.union (fun _ bdd1 bdd2 -> Some (MLBDD.dor bdd1 bdd2)) 
+                      (match (NKROBMap.find_opt nkrob transition) with
+                        | None -> NKROBMap.empty
+                        | Some nexts -> nexts)
+                      acc) (fst nkrobs) NKROBMap.empty in
                     let dnexts = determinize_transition nexts in
-                    NKROBSMap.iter (fun nkrobs _ -> Queue.add nkrobs worklist) dnexts;
+                    NKROBSMap.iter (fun nkrobs_next _ -> Queue.add nkrobs_next worklist) dnexts;
                     determinization_aux (NKROBSMap.add nkrobs dnexts acc)
     in Queue.add start worklist;
        determinization_aux NKROBSMap.empty      
