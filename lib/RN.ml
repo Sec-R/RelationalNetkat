@@ -794,11 +794,11 @@ let determinize_transition (nexts:(MLBDD.t)NKROBMap.t):(MLBDD.t)NKROBSMap.t=
             NKROBSMap.add ((NKROBSet.singleton nkrob),is_final_state nkrob) new_bdd next_map
     in NKROBMap.fold (fun nkrob bdd acc -> add_transition nkrob bdd acc) nexts NKROBSMap.empty
 
-let generate_start (man:man) (pk1:pk) (pk2:pk) (nkr:NK.t*Rel.t):NKROBSet.t*bool =
+let generate_start (man:man) (pk1:pk) (pk2:pk)(pk3:pk)  (nkr:NK.t*Rel.t):NKROBSet.t*bool =
   let epsilon = epsilon_kr man pk1 pk2 (Some (fst nkr),Some (snd nkr)) in
     NKROMap.find_opt (None,None) epsilon |> function
-      | None -> (NKROBSet.singleton ((Some (fst nkr),Some (snd nkr)),bdd_true man),false)
-      | Some _ -> (NKROBSet.singleton ((Some (fst nkr),Some (snd nkr)),bdd_true man),true)
+      | None -> (NKROBSet.singleton ((Some (fst nkr),Some (snd nkr)),produce_id man pk1 pk3),false)
+      | Some _ -> (NKROBSet.singleton ((Some (fst nkr),Some (snd nkr)),produce_id man pk1 pk3),true)
     
 let determinization (man:man) (pk1:pk) (pk2:pk) (start:NKROBSet.t*bool) (transition:((MLBDD.t)NKROBMap.t)NKROBMap.t):((MLBDD.t)NKROBSMap.t)NKROBSMap.t=
    let worklist = Queue.create() in
@@ -822,6 +822,7 @@ let determinization (man:man) (pk1:pk) (pk2:pk) (start:NKROBSet.t*bool) (transit
 
 let bisim (man:man)(pk1:pk)(pk2:pk)(start1:NKROBSet.t*bool)(start2:NKROBSet.t*bool)(aut1:((MLBDD.t)NKROBSMap.t)NKROBSMap.t) (aut2:((MLBDD.t)NKROBSMap.t)NKROBSMap.t):bool =
   let worklist = Queue.create() in
+  let support1 = generate_support man pk1 in
   let rec bisim_aux (donelist:(MLBDD.t)NKROBSSMap.t):bool =
     match Queue.take_opt worklist with
       | None -> true
@@ -834,17 +835,23 @@ let bisim (man:man)(pk1:pk)(pk2:pk)(start1:NKROBSet.t*bool)(start2:NKROBSet.t*bo
                                   if snd nkros1 <> snd nkros2 then
                                     false
                                   else
-                                    let next1 = NKROBSMap.find nkros1 aut1 in
-                                    let next2 = NKROBSMap.find nkros1 aut2 in
+                                    let next1 = 
+                                      (match (NKROBSMap.find_opt nkros1 aut1) with
+                                      | None -> NKROBSMap.empty
+                                      | Some next1 -> next1) in   
+                                    let next2 = 
+                                      (match (NKROBSMap.find_opt nkros2 aut2) with
+                                      | None -> NKROBSMap.empty
+                                      | Some next2 -> next2) in
                                       NKROBSMap.iter (fun nkros1 bdd1 -> 
                                         NKROBSMap.iter (fun nkros2 bdd2 -> 
-                                          Queue.add ((nkros1,nkros2),(rename_bdd pk2 pk1 (MLBDD.dand bdd (MLBDD.dand bdd1 bdd2)))) worklist) next2) next1;
+                                          Queue.add ((nkros1,nkros2),(rename_bdd pk2 pk1 (MLBDD.exists support1 (MLBDD.dand bdd (MLBDD.dand bdd1 bdd2))))) worklist) next2) next1;
                                           (let reachable_bdd = (NKROBSMap.fold (fun nkros2 bdd2 acc -> MLBDD.dor acc bdd2) next2 (bdd_false man)) in
                                             NKROBSMap.iter (fun nkros1 bdd1 -> 
-                                              Queue.add ((nkros1,(NKROBSet.empty,false)),(rename_bdd pk2 pk1 (MLBDD.dand bdd (MLBDD.dand bdd1 (MLBDD.dnot reachable_bdd))))) worklist) next1);
+                                              Queue.add ((nkros1,(NKROBSet.empty,false)),(rename_bdd pk2 pk1 (MLBDD.exists support1 (MLBDD.dand bdd (MLBDD.dand bdd1 (MLBDD.dnot reachable_bdd)))))) worklist) next1);
                                           (let reachable_bdd = (NKROBSMap.fold (fun nkros1 bdd1 acc -> MLBDD.dor acc bdd1) next1 (bdd_false man)) in
                                             NKROBSMap.iter (fun nkros2 bdd2 -> 
-                                              Queue.add (((NKROBSet.empty,false),nkros2),(rename_bdd pk2 pk1 (MLBDD.dand bdd (MLBDD.dand (MLBDD.dnot reachable_bdd) bdd2)))) worklist) next2);    
+                                              Queue.add (((NKROBSet.empty,false),nkros2),(rename_bdd pk2 pk1 (MLBDD.exists support1 (MLBDD.dand bdd (MLBDD.dand (MLBDD.dnot reachable_bdd) bdd2))))) worklist) next2);    
                                           bisim_aux newdonelist
   in Queue.add ((start1,start2),bdd_true man) worklist;
      bisim_aux NKROBSSMap.empty 

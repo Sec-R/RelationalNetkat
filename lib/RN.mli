@@ -118,6 +118,6 @@ val find_bdds : (NK.t option * Rel.t option) -> (BSet.t * (BSet.t) NKROMap.t) NK
 val simplify_all_transition : man -> pk -> pk -> pk -> pk -> (BSet.t * (BSet.t) NKROMap.t) NKROMap.t -> (MLBDD.t) NKROBMap.t NKROBMap.t
 val is_final_state : (NK.t option * Rel.t option) * MLBDD.t -> bool
 val determinize_transition : MLBDD.t NKROBMap.t -> MLBDD.t NKROBSMap.t
-val generate_start : man -> pk -> pk -> (NK.t * Rel.t) -> NKROBSet.t * bool
+val generate_start : man -> pk -> pk -> pk -> (NK.t * Rel.t) -> NKROBSet.t * bool
 val determinization : man -> pk -> pk -> (NKROBSet.t*bool) -> (MLBDD.t NKROBMap.t) NKROBMap.t -> (MLBDD.t NKROBSMap.t) NKROBSMap.t
 val bisim : man -> pk -> pk -> (NKROBSet.t*bool) -> (NKROBSet.t*bool) -> (MLBDD.t NKROBSMap.t) NKROBSMap.t -> (MLBDD.t NKROBSMap.t) NKROBSMap.t -> bool
