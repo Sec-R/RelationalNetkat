@@ -398,8 +398,66 @@ let tests = "MLBDD tests" >::: [
           let bdd7 = (RN.NKROBSMap.find start1 (RN.NKROBSMap.find (RN.NKROBSet.add ((None,Some (RN.Rel.StarR (RN.Rel.Left RN.Id))),RN.bdd_true man) (RN.NKROBSet.singleton ((None,None),RN.bdd_false man)),true) dmap4)) in
           assert_equal ~cmp:MLBDD.equal bdd6 (MLBDD.dand (RN.produce_id man pk2 pk3) (RN.produce_id man pk1 pk2));
           assert_equal ~cmp:MLBDD.equal bdd7 (MLBDD.dand (MLBDD.dnot (RN.produce_id man pk2 pk3)) (MLBDD.dor (RN.produce_id man pk1 pk2) (RN.produce_id man pk3 pk4)));
-           
         );
+        "bisim_test" >:: (fun _ctx ->
+          let man = RN.init_man 10 10 in
+          let pk1 = 0 in
+          let pk2 = 1 in
+          let pk3 = 2 in
+          let pk4 = 3 in
+          let dmap1 = RN.NKROBSMap.empty in
+          let start1 = (RN.NKROBSet.singleton ((None,None),RN.bdd_false man),true) in
+          let start2 = (RN.NKROBSet.singleton ((None,None),RN.bdd_false man),false) in
+          assert_equal true (RN.bisim man pk1 pk2 start1 start1 dmap1 dmap1);
+          assert_equal false (RN.bisim man pk1 pk2 start1 start2 dmap1 dmap1);
+          let start3 = (RN.NKROBSet.singleton ((None,Some (RN.Rel.StarR (RN.Rel.Left RN.Id))),RN.bdd_false man),false) in
+          let start4 = (RN.NKROBSet.singleton ((None,Some (RN.Rel.StarR (RN.Rel.Left RN.Id))),RN.bdd_false man),true) in
+          let dmap2 = RN.NKROBSMap.add start3 (RN.NKROBSMap.singleton start1 (RN.produce_id man pk1 pk2)) dmap1 in
+          assert_equal false (RN.bisim man pk1 pk2 start1 start3 dmap1 dmap2);
+          let dmap3 = RN.NKROBSMap.add start3 (RN.NKROBSMap.singleton start2 (RN.produce_id man pk1 pk2)) dmap1 in
+          assert_equal true (RN.bisim man pk1 pk2 start2 start3 dmap1 dmap3);
+          let dmap4 = RN.NKROBSMap.add start4 (RN.NKROBSMap.singleton start4 (RN.produce_id man pk1 pk2)) dmap1 in
+          let dmap5 = RN.NKROBSMap.add start1 (RN.NKROBSMap.singleton start1 (RN.produce_id man pk1 pk2)) dmap1 in
+          assert_equal true (RN.bisim man pk1 pk2 start4 start1 dmap4 dmap5);
+          let dmap5 = RN.NKROBSMap.add start1 (RN.NKROBSMap.add start2 (MLBDD.dnot (RN.produce_id man pk1 pk2)) (RN.NKROBSMap.singleton start1 (RN.produce_id man pk1 pk2))) dmap1 in
+          let dmap6 = RN.NKROBSMap.add start4 (RN.NKROBSMap.add start3 (MLBDD.dnot (RN.produce_id man pk1 pk2)) (RN.NKROBSMap.singleton start4 (RN.produce_id man pk1 pk2))) dmap1 in
+          assert_equal true (RN.bisim man pk1 pk2 start4 start1 dmap6 dmap5);
+          let dmap7 = RN.NKROBSMap.add start2 (RN.NKROBSMap.singleton start2 (MLBDD.dnot (RN.produce_id man pk1 pk2))) dmap5 in
+          assert_equal true (RN.bisim man pk1 pk2 start4 start1 dmap6 dmap7);
+          let nkrosmap1 = RN.generate_all_transition man pk1 pk2 pk3 pk4 ( (RN.NK.Star (RN.NK.Asgn (1,true))),  (RN.Rel.StarR (RN.Rel.OrR (RN.SR.add (RN.Rel.Left (RightAsgn (2,true))) (RN.SR.add (RN.Rel.Right (RightAsgn (3,true))) RN.SR.empty))))) in
+          let nkrobmap1 = RN.simplify_all_transition man pk1 pk2 pk3 pk4 nkrosmap1 in
+          let start5 = RN.generate_start man pk1 pk2 pk3  ( (RN.NK.Star (RN.NK.Asgn (1,true))),  (RN.Rel.StarR (RN.Rel.OrR (RN.SR.add (RN.Rel.Left (RightAsgn (2,true))) (RN.SR.add (RN.Rel.Right (RightAsgn (3,true))) RN.SR.empty))))) in
+          let nkrobsmap1 = RN.determinization man pk3 pk4 start5 nkrobmap1 in
+          assert_equal true (RN.bisim man pk3 pk4 start5 start5 nkrobsmap1 nkrobsmap1); 
+          let nkrosmap2 = RN.generate_all_transition man pk1 pk2 pk3 pk4 ( (RN.NK.Star (RN.NK.Asgn (4,true))),  (RN.Rel.StarR (RN.Rel.OrR (RN.SR.add (RN.Rel.Left (RightAsgn (2,true))) (RN.SR.add (RN.Rel.Right (RightAsgn (3,true))) RN.SR.empty))))) in
+          let nkrobmap2 = RN.simplify_all_transition man pk1 pk2 pk3 pk4 nkrosmap2 in
+          let start6 = RN.generate_start man pk1 pk2 pk3 ( (RN.NK.Star (RN.NK.Asgn (4,true))),  (RN.Rel.StarR (RN.Rel.OrR (RN.SR.add (RN.Rel.Left (RightAsgn (2,true))) (RN.SR.add (RN.Rel.Right (RightAsgn (3,true))) RN.SR.empty))))) in
+          let nkrobsmap2 = RN.determinization man pk3 pk4 start6 nkrobmap2 in
+          assert_equal true (RN.bisim man pk3 pk4 start5 start6 nkrobsmap1 nkrobsmap2);
+          let nkrosmap3 = RN.generate_all_transition man pk1 pk2 pk3 pk4 ( (RN.NK.Star (RN.NK.Asgn (1,true))),  (RN.Rel.StarR (RN.Rel.Binary Id)))  in
+          let nkrobmap3 = RN.simplify_all_transition man pk1 pk2 pk3 pk4 nkrosmap3 in
+          let start7 = RN.generate_start man pk1 pk2 pk3  ( (RN.NK.Star (RN.NK.Asgn (1,true))),  (RN.Rel.StarR (RN.Rel.Binary Id))) in
+          let nkrobsmap3 = RN.determinization man pk3 pk4 start7 nkrobmap3 in
+          let nkrosmap4 = RN.generate_all_transition man pk1 pk2 pk3 pk4 ( (RN.NK.Star (RN.NK.Asgn (4,true))),  (RN.Rel.StarR (RN.Rel.OrR (RN.SR.add (RN.Rel.Left (RightAsgn (2,true))) (RN.SR.add (RN.Rel.Right (RightAsgn (1,true))) RN.SR.empty))))) in
+          let nkrobmap4 = RN.simplify_all_transition man pk1 pk2 pk3 pk4 nkrosmap4 in
+          let start8 = RN.generate_start man pk1 pk2 pk3 ( (RN.NK.Star (RN.NK.Asgn (4,true))),  (RN.Rel.StarR (RN.Rel.OrR (RN.SR.add (RN.Rel.Left (RightAsgn (2,true))) (RN.SR.add (RN.Rel.Right (RightAsgn (1,true))) RN.SR.empty))))) in
+          let nkrobsmap4 = RN.determinization man pk3 pk4 start8 nkrobmap4 in
+          assert_equal false (RN.bisim man pk3 pk4 start7 start8 nkrobsmap3 nkrobsmap4);
+          let start9 = (fst start7,true) in
+          let nkrobsmap5 = RN.determinization man pk3 pk4 start9 nkrobmap3 in
+          assert_equal false (RN.bisim man pk3 pk4 start7 start9 nkrobsmap3 nkrobsmap5);
+          assert_equal false (RN.bisim man pk3 pk4 start8 start9 nkrobsmap4 nkrobsmap5);
+          let nkrosmap6 = RN.generate_all_transition man pk1 pk2 pk3 pk4 ( (RN.NK.Star RN.NK.Dup),  (RN.Rel.StarR (RN.Rel.Binary Id)))  in
+          let nkrobmap6 = RN.simplify_all_transition man pk1 pk2 pk3 pk4 nkrosmap6 in
+          let start10 = RN.generate_start man pk1 pk2 pk3  ( (RN.NK.Star RN.NK.Dup),  (RN.Rel.StarR (RN.Rel.Binary Id))) in
+          let start11 = (fst start10,true) in
+          let nkrobsmap6 = RN.determinization man pk3 pk4 start11 nkrobmap6 in
+          let nkrosmap7 = RN.generate_all_transition man pk1 pk2 pk3 pk4 ( (RN.NK.Star RN.NK.Dup),  (RN.Rel.StarR (RN.Rel.OrR (RN.SR.add (RN.Rel.Left Id) (RN.SR.add (RN.Rel.Right Id) RN.SR.empty)))))  in
+          let nkrobmap7 = RN.simplify_all_transition man pk1 pk2 pk3 pk4 nkrosmap7 in
+          let start12 = RN.generate_start man pk1 pk2 pk3  ( (RN.NK.Star RN.NK.Dup),  (RN.Rel.StarR (RN.Rel.OrR (RN.SR.add (RN.Rel.Left Id) (RN.SR.add (RN.Rel.Right Id) RN.SR.empty))))) in
+          let nkrobsmap7 = RN.determinization man pk3 pk4 start12 nkrobmap7 in
+          assert_equal true (RN.bisim man pk3 pk4 start11 start12 nkrobsmap6 nkrobsmap7);          
+          );
           
       ]
 
