@@ -11,8 +11,7 @@ type pred =
 type pkr =
   | Id
   | Empty
-  | LeftTest of field * bool 
-  | RightTest of field * bool
+  | Test of field * bool
   | LeftAsgn of field * bool
   | RightAsgn of field * bool
   | Comp of pkr * pkr

@@ -101,8 +101,7 @@ type pred =
 type pkr =
   | Id
   | Empty
-  | LeftTest of field * bool 
-  | RightTest of field * bool
+  | Test of field * bool 
   | LeftAsgn of field * bool
   | RightAsgn of field * bool
   | Comp of pkr * pkr
@@ -246,8 +245,7 @@ let rec pkr_to_string (pkr:pkr):string=
   match pkr with
   | Id -> "Id"
   | Empty -> "Empty"
-  | LeftTest (field, b) -> "LeftTest " ^ (string_of_int field) ^ " " ^ (string_of_bool b)
-  | RightTest (field, b) -> "RightTest " ^ (string_of_int field) ^ " " ^ (string_of_bool b)
+  | Test (field, b) -> "Test " ^ (string_of_int field) ^ " " ^ (string_of_bool b)
   | LeftAsgn (field, b) -> "LeftAsgn " ^ (string_of_int field) ^ " " ^ (string_of_bool b)
   | RightAsgn (field, b) -> "RightAsgn " ^ (string_of_int field) ^ " " ^ (string_of_bool b)
   | Comp (pkr1, pkr2) -> "Comp " ^ (pkr_to_string pkr1) ^ " " ^ (pkr_to_string pkr2)
@@ -435,10 +433,8 @@ let rec compile_pkr_bdd (man:man)(pk1:pk) (pk2:pk) (pkr:pkr):MLBDD.t =
 	match pkr with
 	  | Id -> produce_id man pk1 pk2
 	  | Empty -> bdd_false man
-	  | LeftTest (field, false) -> (MLBDD.dand (produce_id man pk1 pk2) (MLBDD.dnot (generate_single_var man pk1 field)))
-	  | LeftTest (field, true) -> (MLBDD.dand (produce_id man pk1 pk2) (generate_single_var man pk1 field))
-	  | RightTest (field, false) -> (MLBDD.dand (produce_id man pk1 pk2) (MLBDD.dnot (generate_single_var man pk2 field)))
-	  | RightTest (field, true) -> (MLBDD.dand (produce_id man pk1 pk2) (generate_single_var man pk2 field))
+	  | Test (field, false) -> (MLBDD.dand (produce_id man pk1 pk2) (MLBDD.dnot (generate_single_var man pk1 field)))
+	  | Test (field, true) -> (MLBDD.dand (produce_id man pk1 pk2) (generate_single_var man pk1 field))
 	  | LeftAsgn (field, b) -> produce_assign man pk1 pk2 field b true  
 	  | RightAsgn (field, b) -> produce_assign man pk1 pk2 field b false  
 	  | Comp (pkr1, pkr2) -> comp_bdd man pk1 pk2 compile_pkr_bdd pkr1 pkr2
