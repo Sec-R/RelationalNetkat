@@ -114,7 +114,8 @@ val splitting_bdd : man -> pk -> pk -> pk -> pk -> MLBDD.t -> BSet.t
 val is_final : (NK.t option * Rel.t option) -> bool
 val generate_all_transition : man -> pk -> pk -> pk -> pk -> (NK.t * Rel.t) -> (BSet.t * (BSet.t) NKROMap.t) NKROMap.t
 val find_bdds : (NK.t option * Rel.t option) -> (BSet.t * (BSet.t) NKROMap.t) NKROMap.t -> BSet.t
-val simplify_all_transition : man -> pk -> pk -> pk -> pk -> (BSet.t * (BSet.t) NKROMap.t) NKROMap.t -> (MLBDD.t) NKROBMap.t NKROBMap.t
+val nkr_to_nkro : (NK.t * Rel.t) -> (NK.t option * Rel.t option)
+val simplify_all_transition : man -> pk -> pk -> pk -> pk -> (NK.t * Rel.t) -> (BSet.t * (BSet.t) NKROMap.t) NKROMap.t -> (MLBDD.t) NKROBMap.t NKROBMap.t
 val is_final_state : (NK.t option * Rel.t option) * MLBDD.t -> bool
 val determinize_transition : MLBDD.t NKROBMap.t -> MLBDD.t NKROBSMap.t
 val generate_start : man -> pk -> pk -> pk -> (NK.t * Rel.t) -> NKROBSet.t * bool

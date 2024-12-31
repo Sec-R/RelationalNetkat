@@ -730,14 +730,24 @@ let splitting_bdd (man:man)(pk1:pk)(pk2:pk)(pk3:pk)(pk4:pk) (bdd:MLBDD.t): BSet.
 let is_final (nkro:NK.t option*Rel.t option):bool =
   Option.is_none (fst nkro)&& Option.is_none (snd nkro)
 
+let nkr_to_nkro (nkr:NK.t*Rel.t):NK.t option*Rel.t option=
+  (Some (fst nkr),Some (snd nkr))   
+
+let included_bdd_or_else (bdd1:MLBDD.t) (bdd2:MLBDD.t):MLBDD.t=
+  if MLBDD.equal bdd1 (MLBDD.dor bdd1 bdd2) then
+    bdd1
+  else bdd2  
 (* pk1: x, pk2:x', pk3:y, pk4:y'*)
 let generate_all_transition(man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkr:NK.t*Rel.t):(BSet.t*(BSet.t)NKROMap.t)NKROMap.t=
   let support24 = generate_double_support man pk2 pk4 in
+  let id13 = produce_id man pk1 pk3 in
   NKROMap.mapi (fun nkro bdd -> let new_delta = NKROMap.map (fun bdd -> splitting_bdd man pk1 pk2 pk3 pk4 bdd) 
                                     (apply_nkro_mapping (fun tbdd -> (MLBDD.dand tbdd bdd)) (delta_kr man pk1 pk2 pk3 pk4 nkro)) in
                                   let hidden_state_set = 
                                         if is_final nkro 
-                                        then BSet.singleton (bdd_true man)
+                                          then BSet.singleton (bdd_true man)
+                                        else if (nkr_to_nkro nkr) = nkro then
+                                          (NKROMap.fold (fun nkro bset acc -> BSet.union (BSet.map (fun bdd -> included_bdd_or_else id13 (MLBDD.exists support24 bdd)) bset) acc) new_delta (BSet.singleton id13))
                                         else (NKROMap.fold (fun nkro bset acc -> BSet.union (BSet.map (fun bdd -> MLBDD.exists support24 bdd) bset) acc) new_delta BSet.empty) in
                                       (hidden_state_set,new_delta)) (calculate_reachable_set man pk1 pk2 pk3 pk4 nkr)
 
@@ -746,9 +756,10 @@ let find_bdds (nkro:NK.t option*Rel.t option)(transition:(BSet.t*(BSet.t)NKROMap
     | None -> failwith "Transition not found"
     | Some (bdds,_) -> bdds                           
 
-let simplify_all_transition(man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (all_transition:(BSet.t*(BSet.t)NKROMap.t)NKROMap.t):((MLBDD.t)NKROBMap.t)NKROBMap.t=
+let simplify_all_transition(man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk)(nkr:NK.t*Rel.t) (all_transition:(BSet.t*(BSet.t)NKROMap.t)NKROMap.t):((MLBDD.t)NKROBMap.t)NKROBMap.t=
   let support12 = generate_double_support man pk1 pk2 in
   let support24 = generate_double_support man pk2 pk4 in
+  let id13 = produce_id man pk1 pk3 in
     NKROMap.fold (fun nkro1 (_,nkrom) acc -> NKROMap.fold (fun nkro2 hbdds1 acc ->
                                         let hbdds2 = find_bdds nkro2 all_transition
                                           in BSet.fold (fun hbdd1 acc -> 
@@ -757,7 +768,8 @@ let simplify_all_transition(man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (all_tr
                                               if MLBDD.is_false tbddf then
                                                 acc
                                               else
-                                                NKROBMap.update (nkro1,(MLBDD.exists support24 hbdd1)) 
+                                                let hbdd1 = (MLBDD.exists support24 hbdd1) in  
+                                                NKROBMap.update (nkro1,if nkr_to_nkro nkr = nkro1 then included_bdd_or_else id13 hbdd1 else hbdd1) 
                                                 (fun mapo -> match mapo with
                                                   | None -> Some (NKROBMap.singleton (nkro2,hbdd2) (MLBDD.exists support12 tbddf))
                                                   | Some map -> Some (NKROBMap.add (nkro2,hbdd2) (MLBDD.exists support12 tbddf) map))
