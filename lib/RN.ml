@@ -858,6 +858,12 @@ let bisim (man:man)(pk1:pk)(pk2:pk)(start1:NKROBSet.t*bool)(start2:NKROBSet.t*bo
                                             NKROBSMap.iter (fun nkros2 bdd2 -> 
                                               Queue.add (((NKROBSet.empty,false),nkros2),(rename_bdd pk2 pk1 (MLBDD.exists support1 (MLBDD.dand bdd (MLBDD.dand (MLBDD.dnot reachable_bdd) bdd2))))) worklist) next2);    
                                           bisim_aux newdonelist
-  in Queue.add ((start1,start2),bdd_true man) worklist;
-     bisim_aux NKROBSSMap.empty 
+  in
+    let support2 = generate_support man pk2 in 
+      let bdd1 = MLBDD.exists support2 (NKROBSet.fold (fun nkrob acc -> MLBDD.dor acc (snd nkrob)) (fst start1) (bdd_false man)) in
+        let bdd2 = MLBDD.exists support2 (NKROBSet.fold (fun nkrob acc -> MLBDD.dor acc (snd nkrob)) (fst start2) (bdd_false man)) in
+          Queue.add ((start1,start2),MLBDD.dand bdd1 bdd2) worklist;
+            Queue.add ((start1,(NKROBSet.empty,false)),MLBDD.dand bdd1 (MLBDD.dnot bdd2)) worklist;
+             Queue.add (((NKROBSet.empty,false),start2),MLBDD.dand (MLBDD.dnot bdd1) bdd2) worklist;
+              bisim_aux NKROBSSMap.empty 
   
