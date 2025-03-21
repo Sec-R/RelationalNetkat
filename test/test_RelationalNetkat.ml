@@ -307,11 +307,20 @@ let tests = "MLBDD tests" >::: [
           assert_equal ~cmp:MLBDD.equal bdd3 bdd4;
           assert_equal (RN.BSet.cardinal bddset) 512;
           let man2 = RN.init_man 64 64 in
-          (* 1s to 2^20 space for id case*)
           let bdd5 = RN.produce_id man2 pk1 pk3 in
           let bdd6 = RN.BSet.choose (RN.splitting_bdd man2 pk1 pk2 pk3 pk4 bdd5) in
           assert_equal ~cmp:MLBDD.equal bdd5 bdd6;
           assert_equal (RN.BSet.cardinal (RN.splitting_bdd man2 pk1 pk2 pk3 pk4 bdd5)) 1;
+          let bdd7 = (MLBDD.dand (RN.produce_id man2 pk1 pk3) (MLBDD.dand (RN.compile_pkr_bdd man2 pk3 pk4 (RN.RightAsgn (2, true))) (RN.compile_pkr_bdd man2 pk1 pk2 (RN.RightAsgn (1, true))))) in
+          let bddset2 = RN.splitting_bdd man2 pk1 pk2 pk3 pk4 bdd7 in
+          let bdd8 = RN.BSet.fold (fun acc x -> MLBDD.dor acc x) bddset2 (RN.bdd_false man2) in
+          assert_equal ~cmp:MLBDD.equal bdd7 bdd8;
+          assert_equal (RN.BSet.cardinal bddset2) 1;
+          let bdd9 = (MLBDD.dand (RN.compile_pkr_bdd man2 pk1 pk3 (RN.RightAsgn (3, true))) (MLBDD.dand (RN.compile_pkr_bdd man2 pk3 pk4 (RN.RightAsgn (2, true))) (RN.compile_pkr_bdd man2 pk1 pk2 (RN.RightAsgn (1, true))))) in
+          let bddset3 = RN.splitting_bdd man2 pk1 pk2 pk3 pk4 bdd9 in
+          let bdd10 = RN.BSet.fold (fun acc x -> MLBDD.dor acc x) bddset3 (RN.bdd_false man2) in
+          assert_equal ~cmp:MLBDD.equal bdd9 bdd10;
+          assert_equal (RN.BSet.cardinal bddset3) 2;
         );(*
         "transition_test" >:: (fun _ctx ->
           let man = RN.init_man 5 5 in
