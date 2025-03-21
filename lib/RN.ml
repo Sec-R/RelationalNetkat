@@ -239,6 +239,7 @@ end)
 type man = {
   field_max: field;
   bman:MLBDD.man;
+  split_hist:MLBDD.t MLBDD.hist;
 }
 let rec pred_to_string (pred:pred):string= 
   match pred with
@@ -364,7 +365,8 @@ let determinized_transition_map_to_string (mapping:((MLBDD.t)NKROBSMap.t)NKROBSM
     !str
     
 let init_man (field_max:field) (bman_cache:int) = 
-  {field_max = field_max; bman = MLBDD.init ~cache:bman_cache ()}
+  let bman = MLBDD.init ~cache:bman_cache () in
+  {field_max = field_max; bman = bman;split_hist = MLBDD.fold_init bman}
 (* The variable is in order of x x' y y' --> 6k, 6k+1, 6k+2, 6k+3*)
 let bddvar (man:man) (pk:pk) (field:field) = field*6 + pk
 
@@ -685,7 +687,7 @@ let calculate_reachable_set (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkr:N
                   (fun nbdd -> (rename_bdd pk2 pk1 (rename_bdd pk4 pk3 (MLBDD.exists support13 (MLBDD.dand nbdd bdd)))))
                     (delta_kr man pk1 pk2 pk3 pk4 nkro)) cur)
      in Queue.add ((Some (fst nkr),Some (snd nkr)),(bdd_true man)) worklist;
-       calculate_reachable_set_aux (NKROMap.singleton (Some (fst nkr),Some (snd nkr)) (produce_id man pk1 pk3)) 
+       calculate_reachable_set_aux (NKROMap.singleton (Some (fst nkr),Some (snd nkr)) (bdd_true man)) 
     
 (* pk1: x, pk2:x', pk3:y, pk4:y'*)
 (*But should be re-ordered to 0:y, 1:x, 2:y', 3:x'*)
@@ -723,24 +725,22 @@ let var_if (man:man) (var:int) (lbdd:MLBDD.t) (hbdd:MLBDD.t):MLBDD.t=
  (MLBDD.dor (var_low_branch man var lbdd) (var_high_branch man var hbdd))
 
 let splitting_bdd (man:man)(pk1:pk)(pk2:pk)(pk3:pk)(pk4:pk) (bdd:MLBDD.t): BSet.t =
-  let rec splitting_bdd_aux (bdd:MLBDD.t): MLBDD.t =  
-    match (MLBDD.inspectb bdd) with
+  (* Function used for folding *)
+  let splitting_bdd_aux (b:MLBDD.t MLBDD.b): MLBDD.t =  
+    match b with
       | MLBDD.BFalse -> bdd_false man
       | MLBDD.BTrue -> bdd_true man
       | MLBDD.BIf (low,var,high) -> if var mod 6 != 1 then
-                                       var_if man var (splitting_bdd_aux low) (splitting_bdd_aux high)
-                                    else 
-                                       let low = splitting_bdd_aux low in
-                                       if MLBDD.is_false low then
-                                        var_high_branch man var (splitting_bdd_aux high)
-                                       else var_low_branch man var low
-     in  
+                                       var_if man var low high
+                                    else if MLBDD.is_false low then
+                                        var_high_branch man var high
+                                    else var_low_branch man var low
+     in 
   let rec loop (cur:BSet.t) (bdd:MLBDD.t):BSet.t = 
       if MLBDD.is_false bdd then cur
-      else let low = splitting_bdd_aux bdd in
+      else let low = MLBDD.foldb_cont man.split_hist splitting_bdd_aux bdd in
             loop (BSet.add low cur) (MLBDD.dand bdd (MLBDD.dnot low)) in
     BSet.map (fun bdd -> back_ordering man pk1 pk2 pk3 pk4 bdd) (loop BSet.empty (re_ordering man pk1 pk2 pk3 pk4 bdd))                         
- 
 
 let is_final (nkro:NK.t option*Rel.t option):bool =
   Option.is_none (fst nkro)&& Option.is_none (snd nkro)

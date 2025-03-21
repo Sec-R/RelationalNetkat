@@ -59,6 +59,7 @@ module NKROBSSMap : Map.S with type key = (NKROBSet.t * bool) * (NKROBSet.t * bo
 type man = {
   field_max: field;
   bman: MLBDD.man;
+  split_hist:MLBDD.t MLBDD.hist;
 }
 
 val pred_to_string : pred -> string
