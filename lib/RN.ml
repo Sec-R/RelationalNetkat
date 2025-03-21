@@ -95,7 +95,7 @@ type pred =
   | False
   | Test of field * bool
   | And of pred * pred
-  | OrP of pred * pred
+  | Or of pred * pred
   | Neg of pred
   
 type pkr =
@@ -105,7 +105,8 @@ type pkr =
   | LeftAsgn of field * bool
   | RightAsgn of field * bool
   | Comp of pkr * pkr
-  | Or of pkr * pkr
+  | OrP of pkr * pkr
+  | AndP of pkr * pkr
   | Binary of pred * pred
   | FMap of field * field
 
@@ -245,7 +246,7 @@ let rec pred_to_string (pred:pred):string=
   | False -> "False"
   | Test (field, b) -> "Test " ^ (string_of_int field) ^ " " ^ (string_of_bool b)
   | And (pred1, pred2) -> "And " ^ (pred_to_string pred1) ^ " " ^ (pred_to_string pred2)
-  | OrP (pred1, pred2) -> "OrP " ^ (pred_to_string pred1) ^ " " ^ (pred_to_string pred2)
+  | Or (pred1, pred2) -> "Or " ^ (pred_to_string pred1) ^ " " ^ (pred_to_string pred2)
   | Neg pred -> "Neg " ^ (pred_to_string pred)
 
 let rec pkr_to_string (pkr:pkr):string= 
@@ -256,7 +257,8 @@ let rec pkr_to_string (pkr:pkr):string=
   | LeftAsgn (field, b) -> "LeftAsgn " ^ (string_of_int field) ^ " " ^ (string_of_bool b)
   | RightAsgn (field, b) -> "RightAsgn " ^ (string_of_int field) ^ " " ^ (string_of_bool b)
   | Comp (pkr1, pkr2) -> "Comp " ^ (pkr_to_string pkr1) ^ " " ^ (pkr_to_string pkr2)
-  | Or (pkr1,pkr2) -> "Or " ^ (pkr_to_string pkr1) ^ " " ^ (pkr_to_string pkr2)
+  | OrP (pkr1,pkr2) -> "OrP " ^ (pkr_to_string pkr1) ^ " " ^ (pkr_to_string pkr2)
+  | AndP (pkr1,pkr2) -> "AndP " ^ (pkr_to_string pkr1) ^ " " ^ (pkr_to_string pkr2)
   | Binary (pred1,pred2) -> "Binary (" ^ (pred_to_string pred1) ^ ", " ^ (pred_to_string pred2) ^ ")"
   | FMap (field1,field2) -> "FMap " ^ (string_of_int field1) ^ " " ^ (string_of_int field2)
 
@@ -381,7 +383,7 @@ let compile_pred_bdd (man:man)(pk:pk) (predicate:pred):MLBDD.t =
   		| Test (field,false) -> MLBDD.dnot (generate_single_var man pk field)
   		| Test (field,true) -> generate_single_var man pk field
   		| And (pred1,pred2) -> MLBDD.dand (compile_pred_bdd_aux pred1) (compile_pred_bdd_aux pred2)
-  		| OrP (pred1,pred2) -> MLBDD.dor (compile_pred_bdd_aux pred1) (compile_pred_bdd_aux pred2)
+  		| Or (pred1,pred2) -> MLBDD.dor (compile_pred_bdd_aux pred1) (compile_pred_bdd_aux pred2)
   		| Neg predicate -> MLBDD.dnot (compile_pred_bdd_aux predicate)
   	in compile_pred_bdd_aux predicate
 
@@ -456,7 +458,8 @@ let rec compile_pkr_bdd (man:man)(pk1:pk) (pk2:pk) (pkr:pkr):MLBDD.t =
 	  | LeftAsgn (field, b) -> produce_assign man pk1 pk2 field b true  
 	  | RightAsgn (field, b) -> produce_assign man pk1 pk2 field b false  
 	  | Comp (pkr1, pkr2) -> comp_bdd man pk1 pk2 compile_pkr_bdd pkr1 pkr2
-    | Or (pkr1,pkr2)-> MLBDD.dor (compile_pkr_bdd_aux pkr1) (compile_pkr_bdd_aux pkr2)
+    | OrP (pkr1,pkr2)-> MLBDD.dor (compile_pkr_bdd_aux pkr1) (compile_pkr_bdd_aux pkr2)
+    | AndP (pkr1,pkr2)-> MLBDD.dand (compile_pkr_bdd_aux pkr1) (compile_pkr_bdd_aux pkr2)
     | Binary (pred1,pred2) -> MLBDD.dand (compile_pred_bdd man pk1 pred1) (compile_pred_bdd man pk2 pred2)
     | FMap (field1,field2) -> MLBDD.nxor (generate_single_var man pk1 field1) (generate_single_var man pk2 field2) 
   	in compile_pkr_bdd_aux pkr
@@ -609,14 +612,14 @@ let comp_nkro_map (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (compiler:man ->
 let closure_nkro_map (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (compiler:man -> pk -> pk -> pk -> pk -> (NK.t option*Rel.t option)
        -> (MLBDD.t)NKROMap.t) (nko: NK.t option) (r: Rel.t):(MLBDD.t)NKROMap.t =
        let (pk5,pk6) = generate_unused_pk56 pk1 pk2 pk3 pk4 in
-          let support = generate_double_support man pk5 pk6 in
+          let support = generate_double_support man pk2 pk4 in
             let rec closure_nkro_map_aux (cur:(MLBDD.t)NKROMap.t) :(MLBDD.t)NKROMap.t =
               match union_nkro_mapping_updated (NKROMap.fold (fun (nko,ro) bdd acc
                                         -> 
                                         if Option.is_none ro then 
                                            union_nkro_mapping (apply_nkro_mapping (fun nbdd 
                                                   -> (rename_bdd pk5 pk2 (rename_bdd pk6 pk4 
-                                                          (MLBDD.exists support (MLBDD.dand bdd nbdd))))) (compiler man pk2 pk5 pk3 pk6 (nko,Some r))) acc
+                                                          (MLBDD.exists support (MLBDD.dand bdd nbdd))))) (compiler man pk2 pk5 pk4 pk6 (nko,Some r))) acc
                                               else acc) cur NKROMap.empty) cur with
                     | (next,false) -> next
                     | (next,true) -> closure_nkro_map_aux next
@@ -631,7 +634,8 @@ let rec epsilon_kr (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro:(NK.t opt
     | (nko,Some (Binary _)) -> NKROMap.singleton nkro (MLBDD.dand (produce_id man pk1 pk2) (produce_id man pk3 pk4))
     | (nko,Some (Nil (pkr1,pkr2))) -> NKROMap.singleton (nko,None) (MLBDD.dand (compile_pkr_bdd man pk1 pk3 pkr1) (compile_pkr_bdd man pk2 pk4 pkr2))
     | (nko,Some (Left pkr)) -> let pkr_bdd = compile_pkr_bdd man pk1 pk2 pkr in
-                                  NKOMap.fold (fun nko bdd acc -> NKROMap.add (nko,None) bdd acc) (apply_nko_mapping (fun bdd -> MLBDD.dand bdd pkr_bdd) (delta_k man pk1 pk2 nko)) NKROMap.empty
+                                  NKOMap.fold (fun nko bdd acc -> NKROMap.add (nko,None) bdd acc) 
+                                    (apply_nko_mapping (fun bdd -> MLBDD.dand (MLBDD.dand bdd (produce_id man pk3 pk4)) pkr_bdd) (delta_k man pk1 pk2 nko)) NKROMap.empty
     | (nko,Some (OrR rs)) -> SR.fold (fun r acc -> union_nkro_mapping (epsilon_kr man pk1 pk2 pk3 pk4 (nko,Some r)) acc) rs NKROMap.empty
     | (nko,Some (SeqR (r1,r2))) -> comp_nkro_map man pk1 pk2 pk3 pk4 epsilon_kr nko r1 r2
     | (nko,Some (StarR r)) -> closure_nkro_map man pk1 pk2 pk3 pk4 epsilon_kr nko r                                       

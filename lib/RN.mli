@@ -6,16 +6,18 @@ type pred =
   | False
   | Test of field * bool
   | And of pred * pred
-  | OrP of pred * pred
+  | Or of pred * pred
   | Neg of pred
+  
 type pkr =
   | Id
   | Empty
-  | Test of field * bool
+  | Test of field * bool 
   | LeftAsgn of field * bool
   | RightAsgn of field * bool
   | Comp of pkr * pkr
-  | Or of pkr * pkr
+  | OrP of pkr * pkr
+  | AndP of pkr * pkr
   | Binary of pred * pred
   | FMap of field * field
 
