@@ -667,7 +667,7 @@ let delta_kr (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro:(NK.t option*Re
     let (pk5,pk6) = generate_unused_pk56 pk1 pk2 pk3 pk4 in
       let support = generate_double_support man pk5 pk6 in
       (NKROMap.fold (fun nkro bdd acc -> union_nkro_mapping (apply_nkro_mapping (fun ebdd -> (MLBDD.exists support (MLBDD.dand bdd ebdd))) 
-            (delta_kr_aux man pk5 pk2 pk6 pk4 nkro)) acc) (epsilon_kr man pk1 pk5 pk2 pk6 nkro) NKROMap.empty)
+            (delta_kr_aux man pk5 pk2 pk6 pk4 nkro)) acc) (epsilon_kr man pk1 pk5 pk3 pk6 nkro) NKROMap.empty)
 
 (* pk1: x, pk2:x', pk3:y, pk4:y'*)
 (* The reachable set is the x y pair on each state, thus the pk1 pk3 pair on each state*)            
