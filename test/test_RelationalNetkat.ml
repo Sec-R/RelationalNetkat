@@ -321,7 +321,7 @@ let tests = "MLBDD tests" >::: [
           let bdd10 = RN.BSet.fold (fun acc x -> MLBDD.dor acc x) bddset3 (RN.bdd_false man2) in
           assert_equal ~cmp:MLBDD.equal bdd9 bdd10;
           assert_equal (RN.BSet.cardinal bddset3) 2;
-        );(*
+        );
         "transition_test" >:: (fun _ctx ->
           let man = RN.init_man 5 5 in
           (* 10 requires a lot of more time*)
@@ -392,35 +392,30 @@ let tests = "MLBDD tests" >::: [
           let pk3 = 2 in
           let pk4 = 3 in
           let map1 = RN.NKROBMap.singleton ((None,None),RN.bdd_false man) (RN.NKROBMap.singleton ((None,None),RN.bdd_false man) (RN.produce_id man pk1 pk2)) in
-          let start1 = (RN.NKROBSet.singleton ((None,None),RN.bdd_false man),true) in
-          let dmap1 = RN.determinization man pk1 pk2 start1 map1 in
-          let bdd1 = (RN.NKROBSMap.find start1 (RN.NKROBSMap.find start1 dmap1)) in
+          let start1 = (None,None) in
+          let (dmap1,dstart1) = RN.determinization man pk1 pk2 start1 map1 in
+          let bdd1 = (RN.NKROBSMap.find dstart1 (RN.NKROBSMap.find dstart1 dmap1)) in
           assert_equal ~cmp:MLBDD.equal bdd1 (RN.produce_id man pk1 pk2);
           assert_equal (RN.NKROBSMap.cardinal dmap1) 1;
-          assert_equal (RN.NKROBSMap.cardinal (RN.NKROBSMap.find start1 dmap1)) 1;
-          let start2 = (RN.NKROBSet.singleton ((None,None),RN.bdd_false man),false) in
-          let dmap2 = RN.determinization man pk1 pk2 start2 map1 in
-          let bdd2 = (RN.NKROBSMap.find start1 (RN.NKROBSMap.find start1 dmap2)) in
-          let bdd3 = (RN.NKROBSMap.find start1 (RN.NKROBSMap.find start2 dmap2)) in
-          assert_equal ~cmp:MLBDD.equal bdd2 (RN.produce_id man pk1 pk2);
-          assert_equal ~cmp:MLBDD.equal bdd3 (RN.produce_id man pk1 pk2);
-          assert_equal (RN.NKROBSMap.cardinal dmap2) 2;
-          assert_equal (RN.NKROBSMap.cardinal (RN.NKROBSMap.find start1 dmap2)) 1;
-          assert_equal (RN.NKROBSMap.cardinal (RN.NKROBSMap.find start2 dmap2)) 1;
+          assert_equal (RN.NKROBSMap.cardinal (RN.NKROBSMap.find dstart1 dmap1)) 1;
           let map2 = RN.NKROBMap.singleton ((None,None),RN.bdd_false man) (RN.NKROBMap.add ((None,Some (RN.Rel.StarR (RN.Rel.Left RN.Id))),RN.bdd_true man) (RN.produce_id man pk2 pk3) (RN.NKROBMap.singleton ((None,None),RN.bdd_false man) (RN.produce_id man pk1 pk2))) in
-          let dmap3 = RN.determinization man pk1 pk2 start1 map2 in
-          let bdd4 = (RN.NKROBSMap.find start1 (RN.NKROBSMap.find start1 dmap3)) in
-          assert_equal ~cmp:MLBDD.equal bdd4 (MLBDD.dand (RN.produce_id man pk1 pk2) (MLBDD.dnot (RN.produce_id man pk2 pk3)));
-          assert_equal (RN.NKROBSMap.cardinal (RN.NKROBSMap.find start1 dmap3)) 3;
+          let (dmap2,dstart2) = RN.determinization man pk1 pk2 start1 map2 in
+          let bdd2 = (RN.NKROBSMap.find dstart2 (RN.NKROBSMap.find dstart2 dmap2)) in
+          assert_equal ~cmp:MLBDD.equal bdd2 (MLBDD.dand (RN.produce_id man pk1 pk2) (MLBDD.dnot (RN.produce_id man pk2 pk3)));
+          assert_equal (RN.NKROBSMap.cardinal (RN.NKROBSMap.find dstart1 dmap2)) 3;
           let map3 = RN.NKROBMap.add ((None,Some (RN.Rel.StarR (RN.Rel.Left RN.Id))),RN.bdd_true man) (RN.NKROBMap.singleton ((None,None),RN.bdd_false man) (RN.produce_id man pk3 pk4)) map2 in
-          let dmap4 = RN.determinization man pk1 pk2 start1 map3 in
-          let bdd5 = (RN.NKROBSMap.find start1 (RN.NKROBSMap.find start1 dmap4)) in
-          assert_equal ~cmp:MLBDD.equal bdd5 (MLBDD.dand (RN.produce_id man pk1 pk2) (MLBDD.dnot (RN.produce_id man pk2 pk3)));
-          let bdd6 = (RN.NKROBSMap.find (RN.NKROBSet.add ((None,Some (RN.Rel.StarR (RN.Rel.Left RN.Id))),RN.bdd_true man) (RN.NKROBSet.singleton ((None,None),RN.bdd_false man)),true) (RN.NKROBSMap.find start1 dmap4)) in
-          let bdd7 = (RN.NKROBSMap.find start1 (RN.NKROBSMap.find (RN.NKROBSet.add ((None,Some (RN.Rel.StarR (RN.Rel.Left RN.Id))),RN.bdd_true man) (RN.NKROBSet.singleton ((None,None),RN.bdd_false man)),true) dmap4)) in
-          assert_equal ~cmp:MLBDD.equal bdd6 (MLBDD.dand (RN.produce_id man pk2 pk3) (RN.produce_id man pk1 pk2));
-          assert_equal ~cmp:MLBDD.equal bdd7 (MLBDD.dand (MLBDD.dnot (RN.produce_id man pk2 pk3)) (MLBDD.dor (RN.produce_id man pk1 pk2) (RN.produce_id man pk3 pk4)));
-        );
+          let (dmap3,dstart3) = RN.determinization man pk1 pk2 start1 map3 in
+          let bdd3 = (RN.NKROBSMap.find dstart3 (RN.NKROBSMap.find dstart3 dmap3)) in
+          assert_equal ~cmp:MLBDD.equal bdd3 (MLBDD.dand (RN.produce_id man pk1 pk2) (MLBDD.dnot (RN.produce_id man pk2 pk3)));
+          let bdd4 = (RN.NKROBSMap.find (RN.NKROBSet.add ((None,Some (RN.Rel.StarR (RN.Rel.Left RN.Id))),RN.bdd_true man) (RN.NKROBSet.singleton ((None,None),RN.bdd_false man)),true) (RN.NKROBSMap.find dstart3 dmap3)) in
+          let bdd5 = (RN.NKROBSMap.find dstart3 (RN.NKROBSMap.find (RN.NKROBSet.add ((None,Some (RN.Rel.StarR (RN.Rel.Left RN.Id))),RN.bdd_true man) (RN.NKROBSet.singleton ((None,None),RN.bdd_false man)),true) dmap3)) in
+          assert_equal ~cmp:MLBDD.equal bdd4 (MLBDD.dand (RN.produce_id man pk2 pk3) (RN.produce_id man pk1 pk2));
+          assert_equal ~cmp:MLBDD.equal bdd5 (MLBDD.dand (MLBDD.dnot (RN.produce_id man pk2 pk3)) (MLBDD.dor (RN.produce_id man pk1 pk2) (RN.produce_id man pk3 pk4)));
+          let map4 = RN.NKROBMap.add ((None,None),RN.bdd_true man) (RN.NKROBMap.singleton ((None,None),RN.bdd_false man) (RN.produce_id man pk3 pk4)) map1 in
+          let (dmap4,dstart4) = RN.determinization man pk1 pk2 start1 map4 in
+          let bdd6 = (RN.NKROBSMap.find (RN.NKROBSet.singleton ((None,None),RN.bdd_false man),true) (RN.NKROBSMap.find dstart4 dmap4)) in
+          assert_equal ~cmp:MLBDD.equal bdd6 (MLBDD.dor (RN.produce_id man pk3 pk4) (RN.produce_id man pk1 pk2));
+        );(*
         "bisim_test" >:: (fun _ctx ->
           let man = RN.init_man 10 10 in
           let pk1 = 0 in

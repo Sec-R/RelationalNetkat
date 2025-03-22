@@ -808,17 +808,19 @@ let determinize_transition (nexts:(MLBDD.t)NKROBMap.t):(MLBDD.t)NKROBSMap.t=
             NKROBSMap.add ((NKROBSet.singleton nkrob),is_final_state nkrob) new_bdd next_map
     in NKROBMap.fold (fun nkrob bdd acc -> add_transition nkrob bdd acc) nexts NKROBSMap.empty
     
-let determinization (man:man) (pk1:pk) (pk2:pk) (start:NK.t*Rel.t) (transition:((MLBDD.t)NKROBMap.t)NKROBMap.t):((MLBDD.t)NKROBSMap.t)NKROBSMap.t*(NKROBSet.t*bool)=
+let determinization (man:man) (pk1:pk) (pk2:pk) (start:NK.t option*Rel.t option) (transition:((MLBDD.t)NKROBMap.t)NKROBMap.t):((MLBDD.t)NKROBSMap.t)NKROBSMap.t*(NKROBSet.t*bool)=
    let worklist = Queue.create() in
-   let set_of_start = (NKROBMap.fold (fun nkrob _ acc -> if (fst nkrob) = (nkr_to_nkro start) then NKROBSet.add nkrob acc else acc) transition NKROBSet.empty,false) in
-   let rec determinization_aux (acc:((MLBDD.t)NKROBSMap.t)NKROBSMap.t):((MLBDD.t)NKROBSMap.t)NKROBSMap.t=
-      match Queue.take_opt worklist with
-        | None -> acc
-        | Some nkrobs -> 
+     let is_start_final_state = is_final_state (start,bdd_true man) in
+      let set_of_start = (NKROBMap.fold (fun nkrob _ acc -> if (fst nkrob) = start then NKROBSet.add nkrob acc else acc) transition NKROBSet.empty,is_start_final_state) in
+       let rec determinization_aux (acc:((MLBDD.t)NKROBSMap.t)NKROBSMap.t):((MLBDD.t)NKROBSMap.t)NKROBSMap.t=
+        match Queue.take_opt worklist with
+          | None -> acc
+          | Some nkrobs -> 
                     if NKROBSMap.mem nkrobs acc then
                       determinization_aux acc
                     else
                       let nexts = NKROBSet.fold (fun nkrob acc -> NKROBMap.union (fun _ bdd1 bdd2 -> Some (MLBDD.dor bdd1 bdd2)) 
+                      (* Merge the bdd when they reach the same destination *)
                       (match (NKROBMap.find_opt nkrob transition) with
                         | None -> NKROBMap.empty
                         | Some nexts -> nexts)
@@ -826,8 +828,8 @@ let determinization (man:man) (pk1:pk) (pk2:pk) (start:NK.t*Rel.t) (transition:(
                     let dnexts = determinize_transition nexts in
                     NKROBSMap.iter (fun nkrobs_next _ -> Queue.add nkrobs_next worklist) dnexts;
                     determinization_aux (NKROBSMap.add nkrobs dnexts acc)
-    in Queue.add set_of_start worklist;
-       (determinization_aux NKROBSMap.empty,set_of_start)      
+       in Queue.add set_of_start worklist;
+         (determinization_aux NKROBSMap.empty,set_of_start)      
 
 let bisim (man:man)(pk1:pk)(pk2:pk)(start1:NKROBSet.t*bool)(start2:NKROBSet.t*bool)(aut1:((MLBDD.t)NKROBSMap.t)NKROBSMap.t) (aut2:((MLBDD.t)NKROBSMap.t)NKROBSMap.t):bool =
   let worklist = Queue.create() in
@@ -863,11 +865,6 @@ let bisim (man:man)(pk1:pk)(pk2:pk)(start1:NKROBSet.t*bool)(start2:NKROBSet.t*bo
                                               Queue.add (((NKROBSet.empty,false),nkros2),(rename_bdd pk2 pk1 (MLBDD.exists support1 (MLBDD.dand bdd (MLBDD.dand (MLBDD.dnot reachable_bdd) bdd2))))) worklist) next2);    
                                           bisim_aux newdonelist
   in
-    let support2 = generate_support man pk2 in 
-      let bdd1 = MLBDD.exists support2 (NKROBSet.fold (fun nkrob acc -> MLBDD.dor acc (snd nkrob)) (fst start1) (bdd_false man)) in
-        let bdd2 = MLBDD.exists support2 (NKROBSet.fold (fun nkrob acc -> MLBDD.dor acc (snd nkrob)) (fst start2) (bdd_false man)) in
-          Queue.add ((start1,start2),MLBDD.dand bdd1 bdd2) worklist;
-            Queue.add ((start1,(NKROBSet.empty,false)),MLBDD.dand bdd1 (MLBDD.dnot bdd2)) worklist;
-             Queue.add (((NKROBSet.empty,false),start2),MLBDD.dand (MLBDD.dnot bdd1) bdd2) worklist;
-              bisim_aux NKROBSSMap.empty 
+   Queue.add ((start1,start2),bdd_true man) worklist;
+     bisim_aux NKROBSSMap.empty 
   
