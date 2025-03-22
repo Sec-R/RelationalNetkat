@@ -157,7 +157,7 @@ module rec Rel : sig
   | Left of pkr
   | Right of pkr
   | Binary of pkr
-  | Nil of pkr * pkr
+  | Nil of pkr
   | OrR of SR.t
   | SeqR of t * t
   | StarR of t
@@ -168,7 +168,7 @@ end
  | Left of pkr
  | Right of pkr
  | Binary of pkr
- | Nil of pkr * pkr
+ | Nil of pkr
  | OrR of SR.t
  | SeqR of t * t
  | StarR of t
@@ -183,7 +183,7 @@ let rec compare t1 t2 =
   | (Binary p1, Binary p2) -> Stdlib.compare p1 p2
   | (Binary _, _) -> 1
   | (_, Binary _) -> -1
-  | (Nil (p1, p2), Nil (p3, p4)) -> let c = Stdlib.compare p1 p3 in if c = 0 then Stdlib.compare p2 p4 else c
+  | (Nil p1, Nil p2) -> Stdlib.compare p1 p2
   | (Nil _, _) -> 1
   | (_, Nil _) -> -1
   | (OrR sr1, OrR sr2) -> SR.compare sr1 sr2
@@ -277,7 +277,7 @@ let rec rel_to_string (rel:Rel.t):string =
   | Left pkr -> "Left " ^ (pkr_to_string pkr)
   | Right pkr -> "Right " ^ (pkr_to_string pkr)
   | Binary pkr -> "Binary " ^ (pkr_to_string pkr)
-  | Nil (pkr1, pkr2) -> "Nil (" ^ (pkr_to_string pkr1) ^ ", " ^ (pkr_to_string pkr2) ^ ")"
+  | Nil pkr -> "Nil " ^ (pkr_to_string pkr)
   | OrR sr -> "OrR (" ^ (SR.fold (fun r acc -> acc ^ (rel_to_string r) ^ " ") sr "") ^ ")"
   | SeqR (rel1, rel2) -> "SeqR (" ^ (rel_to_string rel1) ^ ", " ^ (rel_to_string rel2) ^ ")"
   | StarR rel -> "StarR " ^ (rel_to_string rel)  
@@ -634,7 +634,7 @@ let rec epsilon_kr (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro:(NK.t opt
     | (nko,None) 
     | (nko,Some (Right _)) 
     | (nko,Some (Binary _)) -> NKROMap.singleton nkro (MLBDD.dand (produce_id man pk1 pk2) (produce_id man pk3 pk4))
-    | (nko,Some (Nil (pkr1,pkr2))) -> NKROMap.singleton (nko,None) (MLBDD.dand (compile_pkr_bdd man pk1 pk3 pkr1) (compile_pkr_bdd man pk2 pk4 pkr2))
+    | (nko,Some (Nil pkr)) -> NKROMap.singleton (nko,None) (MLBDD.dand (compile_pkr_bdd man pk1 pk3 pkr) (MLBDD.dand (produce_id man pk1 pk2) (produce_id man pk3 pk4)))
     | (nko,Some (Left pkr)) -> let pkr_bdd = compile_pkr_bdd man pk1 pk2 pkr in
                                   NKOMap.fold (fun nko bdd acc -> NKROMap.add (nko,None) bdd acc) 
                                     (apply_nko_mapping (fun bdd -> MLBDD.dand (MLBDD.dand bdd (produce_id man pk3 pk4)) pkr_bdd) (delta_k man pk1 pk2 nko)) NKROMap.empty

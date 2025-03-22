@@ -39,7 +39,7 @@ module rec Rel : sig
     | Left of pkr
     | Right of pkr
     | Binary of pkr
-    | Nil of pkr * pkr
+    | Nil of pkr
     | OrR of SR.t
     | SeqR of t * t
     | StarR of t
