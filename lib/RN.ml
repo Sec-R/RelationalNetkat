@@ -113,9 +113,11 @@ type pkr =
 module rec NK : sig
     type t = 
     | Pred of pred
-    | Asgn of field * bool
+    | Pkr of pkr
     | Union of SNK.t
     | Seq of t * t
+    | Inter of t * t
+    | Diff of t * t
     | Star of t
     | Dup
     val compare: t -> t -> int
@@ -123,9 +125,11 @@ module rec NK : sig
 = struct
    type t = 
     | Pred of pred
-    | Asgn of field * bool
+    | Pkr of pkr
     | Union of SNK.t
     | Seq of t * t
+    | Inter of t * t
+    | Diff of t * t
     | Star of t
     | Dup
   let rec compare t1 t2 =
@@ -133,15 +137,21 @@ module rec NK : sig
       | (Pred p1, Pred p2) -> Stdlib.compare p1 p2
       | (Pred _, _) -> 1
       | (_, Pred _) -> -1
-      | (Asgn (f1, b1),Asgn (f2, b2)) -> Stdlib.compare (f1,b1) (f2,b2)
-      | (Asgn _, _) -> 1
-      | (_, Asgn _) -> -1
+      | (Pkr p1,Pkr p2) -> Stdlib.compare p1 p2
+      | (Pkr _, _) -> 1
+      | (_, Pkr _) -> -1
       | (Union sk1, Union sk2) -> SNK.compare sk1 sk2
       | (Union _, _) -> 1
       | (_, Union _) -> -1
       | (Seq (t1, t2), Seq (t3, t4)) -> let c = compare t1 t3 in if c = 0 then compare t2 t4 else c
       | (Seq _, _) -> 1
       | (_, Seq _) -> -1
+      | (Inter (t1, t2), Inter (t3, t4)) -> let c = compare t1 t3 in if c = 0 then compare t2 t4 else c
+      | (Inter _, _) -> 1
+      | (_, Inter _) -> -1
+      | (Diff (t1, t2), Diff (t3, t4)) -> let c = compare t1 t3 in if c = 0 then compare t2 t4 else c
+      | (Diff _, _) -> 1
+      | (_, Diff _) -> -1
       | (Star t1, Star t2) -> compare t1 t2
       | (Star _, _) -> 1
       | (_, Star _) -> -1
@@ -154,9 +164,11 @@ and SNK : Set.S with type elt = NK.t
 
 module rec Rel : sig
   type t = 
-  | Left of pkr
-  | Right of pkr
-  | Binary of pkr
+  | Left of NK.t
+  | Right of NK.t
+  | Binary of NK.t * NK.t
+  | App of pkr
+  | Id of NK.t
   | Nil of pkr
   | OrR of SR.t
   | SeqR of t * t
@@ -165,24 +177,32 @@ module rec Rel : sig
 end
 = struct
  type t = 
- | Left of pkr
- | Right of pkr
- | Binary of pkr
+ | Left of NK.t
+ | Right of NK.t
+ | Binary of NK.t * NK.t
+ | App of pkr
+ | Id of NK.t
  | Nil of pkr
  | OrR of SR.t
  | SeqR of t * t
  | StarR of t
 let rec compare t1 t2 =
   match (t1, t2) with
-  | (Left p1, Left p2) -> Stdlib.compare p1 p2
+  | (Left nk1, Left nk2) -> NK.compare nk1 nk2
   | (Left _, _) -> 1
   | (_, Left _) -> -1
-  | (Right p1, Right p2) -> Stdlib.compare p1 p2
+  | (Right nk1, Right nk2) -> NK.compare nk1 nk2
   | (Right _, _) -> 1
   | (_, Right _) -> -1
-  | (Binary p1, Binary p2) -> Stdlib.compare p1 p2
+  | (Binary (nk11,nk12), Binary (nk21,nk22)) -> let c = NK.compare nk11 nk21 in if c = 0 then NK.compare nk12 nk22 else c
   | (Binary _, _) -> 1
   | (_, Binary _) -> -1
+  | (App p1, App p2) -> Stdlib.compare p1 p2
+  | (App _, _) -> 1
+  | (_, App _) -> -1
+  | (Id nk1, Id nk2) -> NK.compare nk1 nk2
+  | (Id _, _) -> 1
+  | (_, Id _) -> -1
   | (Nil p1, Nil p2) -> Stdlib.compare p1 p2
   | (Nil _, _) -> 1
   | (_, Nil _) -> -1
@@ -266,21 +286,26 @@ let rec pkr_to_string (pkr:pkr):string=
 let rec nk_to_string (nk:NK.t):string=
   match nk with
   | Pred pred -> "Pred " ^ (pred_to_string pred)
-  | Asgn (field, b) -> "Asgn " ^ (string_of_int field) ^ " " ^ (string_of_bool b)
-  | Union nks -> "Union (" ^ (SNK.fold (fun nk acc -> acc ^ (nk_to_string nk) ^ " ") nks "") ^ ")"
-  | Seq (nk1, nk2) -> "Seq (" ^ (nk_to_string nk1) ^ ", " ^ (nk_to_string nk2) ^ ")"
-  | Star nk -> "Star (" ^ (nk_to_string nk) ^ ")"
+  | Pkr pkr -> "Pkr " ^ (pkr_to_string pkr)
+  | Union sk -> "Union " ^ (SNK.fold (fun nk acc -> acc ^ (nk_to_string nk) ^ " ") sk "")
+  | Seq (nk1, nk2) -> "Seq " ^ (nk_to_string nk1) ^ " " ^ (nk_to_string nk2)
+  | Inter (nk1, nk2) -> "Inter " ^ (nk_to_string nk1) ^ " " ^ (nk_to_string nk2)
+  | Diff (nk1, nk2) -> "Diff " ^ (nk_to_string nk1) ^ " " ^ (nk_to_string nk2)
+  | Star nk -> "Star " ^ (nk_to_string nk)
   | Dup -> "Dup"
 
 let rec rel_to_string (rel:Rel.t):string =
   match rel with
-  | Left pkr -> "Left " ^ (pkr_to_string pkr)
-  | Right pkr -> "Right " ^ (pkr_to_string pkr)
-  | Binary pkr -> "Binary " ^ (pkr_to_string pkr)
+  | Left nk -> "Left " ^ (nk_to_string nk)
+  | Right nk -> "Right " ^ (nk_to_string nk)
+  | Binary (nk1, nk2) -> "Binary (" ^ (nk_to_string nk1) ^ ", " ^ (nk_to_string nk2) ^ ")"
+  | App pkr -> "App " ^ (pkr_to_string pkr)
+  | Id nk -> "Id " ^ (nk_to_string nk)
   | Nil pkr -> "Nil " ^ (pkr_to_string pkr)
-  | OrR sr -> "OrR (" ^ (SR.fold (fun r acc -> acc ^ (rel_to_string r) ^ " ") sr "") ^ ")"
-  | SeqR (rel1, rel2) -> "SeqR (" ^ (rel_to_string rel1) ^ ", " ^ (rel_to_string rel2) ^ ")"
-  | StarR rel -> "StarR " ^ (rel_to_string rel)  
+  | OrR sr -> "OrR " ^ (SR.fold (fun rel acc -> acc ^ (rel_to_string rel) ^ " ") sr "")
+  | SeqR (rel1, rel2) -> "SeqR " ^ (rel_to_string rel1) ^ " " ^ (rel_to_string rel2)
+  | StarR rel -> "StarR " ^ (rel_to_string rel)
+
 
 let nkro_to_string (nkro:NK.t option*Rel.t option):string=
   match nkro with
@@ -560,28 +585,69 @@ let concatenate_nkro_mapping (mapping:(MLBDD.t)NKROMap.t) (nkro2:NK.t option*Rel
                                                               )) bdd acc) mapping NKROMap.empty
 
 let folding_epsilon (man:man) (nkom:(MLBDD.t)NKOMap.t):MLBDD.t =
-  NKOMap.fold 
-  (fun nko bdd acc -> match nko with 
-                            | None -> MLBDD.dor acc bdd
-                            | _ -> acc) 
-                            nkom (bdd_false man)
+  match (NKOMap.find_opt None nkom) with
+    | None -> (bdd_false man)
+    | Some bdd -> bdd
 
 let filtering_epsilon (nkom:(MLBDD.t)NKOMap.t):(MLBDD.t)NKOMap.t =
-  NKOMap.remove None nkom  
+  NKOMap.remove None nkom
+
+let unionize_nko (nko1:NK.t option) (nko2:NK.t option):(NK.t option) =
+  match (nko1,nko2) with
+    | (None,_) | (_, None) -> raise (Invalid_argument "unionize_nko: one of the nko is None")
+    | (Some (Union nks1), Some (Union nks2)) -> Some (Union (SNK.union nks1 nks2)) 
+    | (Some (Union nks1), Some nk2) -> Some (Union (SNK.add nk2 nks1))
+    | (Some nk1, Some (Union nks2)) -> Some (Union (SNK.add nk1 nks2))
+    | (Some nk1, Some nk2) -> Some (Union (SNK.add nk1 (SNK.singleton nk2)))
+
+let determinize_nko_transition (nexts:(MLBDD.t)NKOMap.t):(MLBDD.t)NKOMap.t=
+  let add_transition (nko:NK.t option) (bdd:MLBDD.t) (acc:(MLBDD.t)NKOMap.t):(MLBDD.t)NKOMap.t=
+      if MLBDD.is_false bdd then
+        acc
+      else
+        let new_bdd = NKOMap.fold (fun nko bddh acc -> MLBDD.dand (MLBDD.dnot bddh) acc) acc bdd in
+        let next_map =
+          NKOMap.fold (fun nko2 bddh acc -> 
+            let ibdd = MLBDD.dand bdd bddh in
+              let dbdd = MLBDD.dand (MLBDD.dnot bdd) bddh in
+               add_nko_mapping nko2 dbdd (add_nko_mapping (unionize_nko nko2 nko) ibdd acc)) acc NKOMap.empty in
+        add_nko_mapping nko new_bdd next_map
+  in NKOMap.fold (fun nko bdd acc -> add_transition nko bdd acc) nexts NKOMap.empty
+ 
                             
-(* We assume the invariant here is the return value is canoicalized *) 
 let rec delta_k (man:man)(pk1:pk)(pk2:pk)(nko:NK.t option): (MLBDD.t)NKOMap.t=
     match nko with
       | None -> NKOMap.empty
     	| Some (Pred pred) -> NKOMap.singleton None (MLBDD.dand (compile_pred_bdd man pk1 pred) (produce_id man pk1 pk2))  
-    	| Some (Asgn (field, b)) -> NKOMap.singleton None (produce_assign man pk1 pk2 field b false)
-  	  | Some (Union nks) -> SNK.fold (fun nk acc -> union_nko_mapping (delta_k man pk1 pk2 (Some nk)) acc) nks NKOMap.empty
+      | Some (Pkr pkr) -> NKOMap.singleton None (compile_pkr_bdd man pk1 pk2 pkr)
+      | Some (Union nks) -> SNK.fold (fun nk acc -> union_nko_mapping (delta_k man pk1 pk2 (Some nk)) acc) nks NKOMap.empty
   	  | Some (Seq(nk1,nk2)) -> let pk3 =  generate_unused_pk pk1 pk2 in
                                   let support = generate_support man pk3 in
                                     union_nko_mapping (concatenate_nko_mapping (filtering_epsilon (delta_k man pk1 pk2 (Some nk1))) (Some nk2))
   	                                (let epsilon = folding_epsilon man (delta_k man pk1 pk3 (Some nk1)) in
                                       (apply_nko_mapping (fun bdd -> MLBDD.exists support (MLBDD.dand epsilon bdd)) (delta_k man pk3 pk2 (Some nk2))))
-  	  | Some (Star nk) -> let pk3 = generate_unused_pk pk1 pk2 in
+      | Some (Inter(nk1,nk2)) -> let nko_map1 = delta_k man pk1 pk2 (Some nk1) in
+                                   let nko_map2 = delta_k man pk1 pk2 (Some nk2) in
+                                     NKOMap.fold (fun nko1 bdd1 acc -> NKOMap.fold 
+                                      (fun nko2 bdd2 acc -> 
+                                        match (nko1,nko2) with
+                                          | (None,None) -> add_nko_mapping None (MLBDD.dand bdd1 bdd2) acc
+                                          | (Some nk1,Some nk2) -> NKOMap.add (Some (Inter (nk1,nk2))) (MLBDD.dand bdd1 bdd2) acc 
+                                          | _ -> acc
+                                        ) nko_map2 acc) nko_map1 NKOMap.empty                             
+      | Some (Diff(nk1,nk2)) -> let nko_map1 = delta_k man pk1 pk2 (Some nk1) in
+                                  let nko_map2 = delta_k man pk1 pk2 (Some nk2) in
+                                    let epsilon_bdd = MLBDD.dand (folding_epsilon man nko_map1) (MLBDD.dnot (folding_epsilon man nko_map2)) in
+                                      let coverage_bdd = NKOMap.fold (fun nko bdd acc -> MLBDD.dor bdd acc) (filtering_epsilon nko_map2) (bdd_false man) in   
+                                        let nko_dmap1 = determinize_nko_transition (filtering_epsilon nko_map1) in
+                                          let nko_dmap2 = determinize_nko_transition (filtering_epsilon nko_map2) in
+                                            NKOMap.fold (fun nko1 bdd1 acc -> NKOMap.fold 
+                                            (fun nko2 bdd2 acc -> 
+                                               match (nko1,nko2) with
+                                                 | (Some nk1,Some nk2) -> add_nko_mapping (Some (Diff (nk1,nk2))) (MLBDD.dand bdd1 bdd2) acc 
+                                                 | _ -> acc
+                                              ) nko_dmap2 (add_nko_mapping nko1 (MLBDD.dand bdd1 (MLBDD.dnot coverage_bdd)) acc)) nko_dmap1 (NKOMap.singleton None epsilon_bdd)                            
+      | Some (Star nk) -> let pk3 = generate_unused_pk pk1 pk2 in
                       	                      let support = generate_support man pk3 in
                                                 let epsilon = closure_bdd man pk1 pk3 (fun man pk1 pk2 nk 
                                                                                             -> folding_epsilon man (delta_k man pk1 pk2 (Some nk))) nk in                         
@@ -627,17 +693,41 @@ let closure_nkro_map (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (compiler:man
                     | (next,true) -> closure_nkro_map_aux next
                 in let closure_map =  (closure_nkro_map_aux (NKROMap.singleton (nko,None) (MLBDD.dand (produce_id man pk1 pk2) (produce_id man pk3 pk4)))) in
                   union_nkro_mapping (folding_epsilon_r closure_map) (concatenate_nkro_mapping (filtering_epsilon_r closure_map) (None,(Some (StarR r))))                        
-                                      
-(* pk1: x, pk2:x', pk3:y, pk4:y'*)                  
+
+let right_nko_lifting (nko_l:NK.t option) (nko_r:NK.t option):(NK.t option*Rel.t option) =
+  match nko_r with
+    | None -> (nko_l,None)
+    | Some nk -> (nko_l,Some (Right nk))
+
+let left_nko_lifting (nko_l:NK.t option) (nko_r:NK.t option):(NK.t option*Rel.t option) =
+  match nko_r with
+    | None -> (nko_l,None)
+    | Some nk -> (nko_l,Some (Left nk))
+
+
+let id_nko_lifting (nko_l:NK.t option) (nko_r:NK.t option):(NK.t option*Rel.t option) =
+  match nko_r with
+    | None -> (nko_l,None)
+    | Some nk -> (nko_l,Some (Id nk))
+    
+    (* pk1: x, pk2:x', pk3:y, pk4:y'*)                  
 let rec epsilon_kr (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro:(NK.t option*Rel.t option)) :(MLBDD.t)NKROMap.t =
   match nkro with
     | (nko,None) 
-    | (nko,Some (Right _)) 
-    | (nko,Some (Binary _)) -> NKROMap.singleton nkro (MLBDD.dand (produce_id man pk1 pk2) (produce_id man pk3 pk4))
+    | (nko,Some (Right _))
+    | (nko,Some (Id _))
+    | (nko,Some (App _)) -> NKROMap.singleton nkro (MLBDD.dand (produce_id man pk1 pk2) (produce_id man pk3 pk4))
     | (nko,Some (Nil pkr)) -> NKROMap.singleton (nko,None) (MLBDD.dand (compile_pkr_bdd man pk1 pk3 pkr) (MLBDD.dand (produce_id man pk1 pk2) (produce_id man pk3 pk4)))
-    | (nko,Some (Left pkr)) -> let pkr_bdd = compile_pkr_bdd man pk1 pk2 pkr in
-                                  NKOMap.fold (fun nko bdd acc -> NKROMap.add (nko,None) bdd acc) 
-                                    (apply_nko_mapping (fun bdd -> MLBDD.dand (MLBDD.dand bdd (produce_id man pk3 pk4)) pkr_bdd) (delta_k man pk1 pk2 nko)) NKROMap.empty
+    | (nko,Some (Left nk)) -> let (pk5,_) = generate_unused_pk56 pk1 pk2 pk3 pk4 in 
+                                let support = generate_support man pk5 in
+                                  let id34 = produce_id man pk3 pk4 in
+                                    let nko_map = delta_k man pk1 pk5 (Some nk) in
+                                      NKOMap.fold (fun nko bdd acc -> 
+                                         NKOMap.fold (fun nko2 bdd2 acc ->
+                                          union_nkro_mapping (apply_nkro_mapping (fun bdd3 -> MLBDD.exists support (MLBDD.dand (MLBDD.dand bdd bdd2) bdd3))
+                                            (epsilon_kr man pk5 pk2 pk3 pk4 (left_nko_lifting nko nko2))) acc) nko_map acc) 
+                                              (apply_nko_mapping (fun bdd ->MLBDD.dand bdd id34)(delta_k man pk1 pk5 nko)) NKROMap.empty
+    | (nko,Some (Binary (nk1,nk2))) -> epsilon_kr man pk1 pk2 pk3 pk4 (nko,Some (SeqR (Left nk1,Right nk2)))                                          
     | (nko,Some (OrR rs)) -> SR.fold (fun r acc -> union_nkro_mapping (epsilon_kr man pk1 pk2 pk3 pk4 (nko,Some r)) acc) rs NKROMap.empty
     | (nko,Some (SeqR (r1,r2))) -> comp_nkro_map man pk1 pk2 pk3 pk4 epsilon_kr nko r1 r2
     | (nko,Some (StarR r)) -> closure_nkro_map man pk1 pk2 pk3 pk4 epsilon_kr nko r                                       
@@ -656,9 +746,14 @@ let delta_kr (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro:(NK.t option*Re
         | (nko,None)
         | (nko,Some (Left _)) 
         | (nko,Some (Nil _)) -> NKROMap.empty
-        | (nko,Some (Right pkr)) -> let pkr_bdd = (MLBDD.dand (compile_pkr_bdd man pk3 pk6 pkr) (produce_id man pk1 pk5)) in
-                                        NKROMap.singleton (nko,None) pkr_bdd
-        | (nko,Some (Binary pkr)) -> let pkr_bdd = compile_pkr_bdd man pk5 pk6 pkr  in
+        | (nko,Some (Right nk)) -> let id15 = produce_id man pk1 pk5 in
+                                     NKOMap.fold (fun nko2 bdd acc -> add_nkro_mapping (right_nko_lifting nko nko2) (MLBDD.dand bdd id15) acc) (delta_k man pk3 pk6 (Some nk)) NKROMap.empty
+        | (nko,Some (Binary (nk1,nk2))) -> delta_kr_aux man pk1 pk5 pk3 pk6 (nko,Some (SeqR (Left nk1,Right nk2)))
+        | (nko,Some (Id nk)) -> let nko_map = delta_k man pk1 pk5 (Some nk) in
+                                  NKOMap.fold (fun nko bdd acc -> NKOMap.fold (fun nko2 bdd2 acc -> 
+                                     add_nkro_mapping (id_nko_lifting nko nko2) (MLBDD.dand bdd (MLBDD.dand bdd2 (rename_bdd pk1 pk3 (rename_bdd pk5 pk6 bdd2)))) acc
+                                     ) nko_map acc) (delta_k man pk1 pk5 nko) NKROMap.empty                                
+        | (nko,Some (App pkr)) -> let pkr_bdd = compile_pkr_bdd man pk5 pk6 pkr  in
                                         NKOMap.fold (fun nko bdd acc -> NKROMap.add (nko,None) bdd acc) (apply_nko_mapping (fun bdd -> MLBDD.dand bdd pkr_bdd) (delta_k man pk1 pk5 nko)) NKROMap.empty
         | (nko,Some (OrR rs)) -> SR.fold (fun r acc -> union_nkro_mapping (delta_kr_aux man pk1 pk5 pk3 pk6 (nko,Some r)) acc) rs NKROMap.empty                                
      (*Here we already start with the epsilon closure of a (nko,r1), thus we don't need to deal with the epsilon cases*)

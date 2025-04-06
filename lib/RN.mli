@@ -24,27 +24,31 @@ type pkr =
 (* Modules *)
 module rec NK : sig
   type t = 
-    | Pred of pred
-    | Asgn of field * bool
-    | Union of SNK.t
-    | Seq of t * t
-    | Star of t
-    | Dup
+  | Pred of pred
+  | Pkr of pkr
+  | Union of SNK.t
+  | Seq of t * t
+  | Inter of t * t
+  | Diff of t * t
+  | Star of t
+  | Dup
   val compare: t -> t -> int
 end
 and SNK : Set.S with type elt = NK.t
 
 module rec Rel : sig
   type t = 
-    | Left of pkr
-    | Right of pkr
-    | Binary of pkr
-    | Nil of pkr
-    | OrR of SR.t
-    | SeqR of t * t
-    | StarR of t
+  | Left of NK.t
+  | Right of NK.t
+  | Binary of NK.t * NK.t
+  | App of pkr
+  | Id of NK.t
+  | Nil of pkr
+  | OrR of SR.t
+  | SeqR of t * t
+  | StarR of t
   val compare: t -> t -> int
-end 
+end
 and SR : Set.S with type elt = Rel.t
 
 module NKOMap : Map.S with type key = NK.t option
