@@ -728,6 +728,8 @@ let rec epsilon_kr (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro:(NK.t opt
     | (nko,Some (Id _))
     | (nko,Some (App _)) -> NKROMap.singleton nkro (MLBDD.dand (produce_id man pk1 pk2) (produce_id man pk3 pk4))
     | (nko,Some (Nil pkr)) -> NKROMap.singleton (nko,None) (MLBDD.dand (compile_pkr_bdd man pk1 pk3 pkr) (MLBDD.dand (produce_id man pk1 pk2) (produce_id man pk3 pk4)))
+    (* Be careful of the non-termination here! Since we already implements a star operator in closure_nkro_map, thus we would delegate this case to the StarR *)
+    | (nko,Some (Left (Star nk))) -> epsilon_kr man pk1 pk2 pk3 pk4 (nko,Some (StarR (Left nk)))
     | (nko,Some (Left nk)) -> let (pk5,_) = generate_unused_pk56 pk1 pk2 pk3 pk4 in 
                                 let support = generate_support man pk5 in
                                   let id34 = produce_id man pk3 pk4 in

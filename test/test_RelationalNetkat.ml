@@ -231,11 +231,18 @@ let tests = "MLBDD tests" >::: [
         let nkromap17 = RN.epsilon_kr man pk1 pk2 pk3 pk4 (Some (RN.NK.Star RN.NK.Dup), Some (RN.Rel.StarR (RN.Rel.Right (RN.NK.Pkr RN.Id)))) in
         let bdd10 = RN.NKROMap.find (Some (RN.NK.Star RN.NK.Dup),None) nkromap17 in
         assert_equal ~cmp:MLBDD.equal bdd10 id2bdd;
-        let nkromap17 = RN.epsilon_kr man pk1 pk2 pk3 pk4 (Some (RN.NK.Star RN.NK.Dup), 
+        let nkromap18 = RN.epsilon_kr man pk1 pk2 pk3 pk4 (Some (RN.NK.Star RN.NK.Dup), 
         Some (RN.Rel.StarR (RN.Rel.OrR (RN.SR.add (RN.Rel.Left (RN.NK.Pkr (RightAsgn (1,true)))) (RN.SR.add (RN.Rel.Right (RN.NK.Pkr (RightAsgn (2,true)))) RN.SR.empty))))) in
-        let bdd11 = RN.NKROMap.find (None,None) nkromap17 in
+        let bdd11 = RN.NKROMap.find (None,None) nkromap18 in
         let bdd12 = MLBDD.dand (RN.produce_id man pk3 pk4) (RN.compile_pkr_bdd man pk1 pk2 (RN.Test (1, true))) in
         assert_equal ~cmp:MLBDD.equal bdd11 bdd12;
+        let nkromap19 = RN.epsilon_kr man pk1 pk2 pk3 pk4 (Some (RN.NK.Star RN.NK.Dup),Some (RN.Rel.Left (RN.NK.Star RN.NK.Dup))) in
+        let bdd13 = RN.NKROMap.find (None,None) nkromap19 in
+        assert_equal ~cmp:MLBDD.equal bdd13 id2bdd;
+        let nkromap20 = RN.epsilon_kr man pk1 pk2 pk3 pk4 (Some (RN.NK.Star(RN.NK.Union (RN.SNK.add (Asgn (1,true)) (RN.SNK.add RN.NK.Dup RN.SNK.empty)))),
+        Some (RN.Rel.Left (RN.NK.Star(RN.NK.Union (RN.SNK.add (Asgn (1,true)) (RN.SNK.add RN.NK.Dup RN.SNK.empty)))))) in
+        let bdd14 = RN.NKROMap.find (None,None) nkromap20 in
+        assert_equal ~cmp:MLBDD.equal bdd14 (MLBDD.dand (RN.compile_pkr_bdd man pk1 pk2 (RN.OrP (RN.RightAsgn (1, true),RN.Id))) (RN.produce_id man pk3 pk4));
         );
         "delta_kr_test" >:: (fun _ctx ->
           let man = RN.init_man 10 10 in
