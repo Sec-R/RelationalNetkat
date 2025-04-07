@@ -26,6 +26,7 @@ module rec NK : sig
   type t = 
   | Pred of pred
   | Pkr of pkr
+  | Asgn of field * bool
   | Union of SNK.t
   | Seq of t * t
   | Inter of t * t
@@ -103,6 +104,7 @@ val add_nkro_mapping_updated : (NK.t option * Rel.t option) -> MLBDD.t -> MLBDD.
 val union_nko_mapping : MLBDD.t NKOMap.t -> MLBDD.t NKOMap.t -> MLBDD.t NKOMap.t
 val union_nkro_mapping : MLBDD.t NKROMap.t -> MLBDD.t NKROMap.t -> MLBDD.t NKROMap.t
 val union_nkro_mapping_updated : MLBDD.t NKROMap.t -> MLBDD.t NKROMap.t -> (MLBDD.t NKROMap.t * bool)
+val unionize_nko: NK.t option -> NK.t option -> NK.t option
 val apply_nko_mapping : (MLBDD.t -> MLBDD.t) -> MLBDD.t NKOMap.t -> MLBDD.t NKOMap.t
 val apply_nkro_mapping : (MLBDD.t -> MLBDD.t) -> MLBDD.t NKROMap.t -> MLBDD.t NKROMap.t
 val concatenate_nko_mapping : MLBDD.t NKOMap.t -> NK.t option -> MLBDD.t NKOMap.t
@@ -128,5 +130,6 @@ val nkr_to_nkro : (NK.t * Rel.t) -> (NK.t option * Rel.t option)
 val simplify_all_transition : man -> pk -> pk -> pk -> pk -> (NK.t * Rel.t) -> (BSet.t * (BSet.t) NKROMap.t) NKROMap.t -> (MLBDD.t) NKROBMap.t NKROBMap.t
 val is_final_state : (NK.t option * Rel.t option) * MLBDD.t -> bool
 val determinize_transition : MLBDD.t NKROBMap.t -> MLBDD.t NKROBSMap.t
+val determinize_nko_transition : MLBDD.t NKOMap.t -> MLBDD.t NKOMap.t
 val determinization : man -> pk -> pk -> (NK.t option*Rel.t option) -> (MLBDD.t NKROBMap.t) NKROBMap.t -> ((MLBDD.t NKROBSMap.t) NKROBSMap.t*(NKROBSet.t*bool)) 
 val bisim : man -> pk -> pk -> (NKROBSet.t*bool) -> (NKROBSet.t*bool) -> (MLBDD.t NKROBSMap.t) NKROBSMap.t -> (MLBDD.t NKROBSMap.t) NKROBSMap.t -> bool

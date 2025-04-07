@@ -143,7 +143,33 @@ let tests = "MLBDD tests" >::: [
         let nkomap15 = RN.delta_k man pk1 pk2 (Some (RN.NK.Seq (Asgn (1,true), RN.NK.Seq (Asgn (2,true),RN.NK.Dup)))) in
         let nkomap16 = RN.NKOMap.singleton (Some (Pred True)) (RN.compile_pkr_bdd man pk1 pk2 (RN.Comp (RN.RightAsgn (1, true),RN.RightAsgn (2, true)))) in
         assert_equal ~cmp:compare nkomap15 nkomap16;
-      );
+        let nkomap17 = RN.delta_k man pk1 pk2 (Some (RN.NK.Inter (Asgn (1,true), Asgn (2,true)))) in
+        let nkomap18 = RN.NKOMap.singleton None (RN.compile_pkr_bdd man pk1 pk2 (RN.AndP (RN.RightAsgn (1, true),RN.RightAsgn (2, true)))) in
+        assert_equal ~cmp:compare nkomap17 nkomap18;
+        let nkomap19 = RN.delta_k man pk1 pk2 (Some (RN.NK.Inter (RN.NK.Seq (Asgn (1,true),RN.NK.Dup), Asgn (2,true)))) in
+        assert_equal ~cmp:compare nkomap19 RN.NKOMap.empty;
+        let nkomap20 = RN.delta_k man pk1 pk2 (Some (RN.NK.Diff (Asgn (1,true), Asgn (2,true)))) in
+        let nkomap21 = RN.NKOMap.singleton None (MLBDD.dand (RN.compile_pkr_bdd man pk1 pk2 (RN.RightAsgn (1, true))) (MLBDD.dnot (RN.compile_pkr_bdd man pk1 pk2 (RN.RightAsgn (2, true))))) in
+        assert_equal ~cmp:compare nkomap20 nkomap21;
+        let nkomap22 = RN.delta_k man pk1 pk2 (Some (RN.NK.Diff (RN.NK.Seq (Asgn (1,true),RN.NK.Dup), Asgn (2,true)))) in
+        let nkomap23 = RN.NKOMap.singleton (Some (Pred True)) (RN.compile_pkr_bdd man pk1 pk2 (RN.RightAsgn (1, true))) in
+        assert_equal ~cmp:compare nkomap22 nkomap23;
+        let nkomap24 = RN.delta_k man pk1 pk2 (Some (RN.NK.Inter (RN.NK.Union (RN.SNK.add (Asgn (1,true)) (RN.SNK.add (Asgn (3,true)) RN.SNK.empty)), Asgn (2,true)))) in
+        let nkomap25 = RN.NKOMap.singleton None (RN.compile_pkr_bdd man pk1 pk2 (RN.AndP (RN.OrP (RN.RightAsgn (1, true),RN.RightAsgn (3, true)),RN.RightAsgn (2, true)))) in
+        assert_equal ~cmp:compare nkomap24 nkomap25;
+        let nkomap26 = RN.delta_k man pk1 pk2 (Some (RN.NK.Inter (RN.NK.Union (RN.SNK.add (Asgn (1,true)) (RN.SNK.add RN.NK.Dup RN.SNK.empty)), Asgn (2,true)))) in
+        assert_equal ~cmp:compare nkomap26 nkomap18;
+        let nkomap27 = RN.delta_k man pk1 pk2 (Some (RN.NK.Inter (RN.NK.Union (RN.SNK.add (RN.NK.Seq (Asgn (3,true),(RN.NK.Seq (RN.NK.Dup,RN.NK.Dup)))) (RN.SNK.add (RN.NK.Seq (Asgn (1,true),RN.NK.Dup)) RN.SNK.empty)), (RN.NK.Seq (Asgn (2,true),RN.NK.Dup))))) in
+        let nkomap28 = RN.add_nko_mapping (Some (RN.NK.Inter (Pred True,Pred True))) (RN.compile_pkr_bdd man pk1 pk2 (RN.AndP (RN.RightAsgn (1, true),RN.RightAsgn (2, true))))
+          (RN.NKOMap.singleton (Some (RN.NK.Inter (RN.NK.Seq (Pred True,RN.NK.Dup),Pred True))) (RN.compile_pkr_bdd man pk1 pk2 (RN.AndP (RN.RightAsgn (3, true),RN.RightAsgn (2, true))))) in
+        assert_equal ~cmp:compare nkomap27 nkomap28;
+        let nkomap29 = RN.delta_k man pk1 pk2 (Some (RN.NK.Diff (RN.NK.Union (RN.SNK.add (RN.NK.Seq (Asgn (3,true),(RN.NK.Seq (RN.NK.Dup,RN.NK.Dup)))) (RN.SNK.add (RN.NK.Seq (Asgn (1,true),RN.NK.Dup)) RN.SNK.empty)), (RN.NK.Seq (Asgn (2,true),RN.NK.Dup))))) in
+        let nkomap30 = RN.add_nko_mapping (Some (RN.NK.Diff (Pred True,Pred True))) (RN.compile_pkr_bdd man pk1 pk2 (RN.AndP (RN.RightAsgn (1, true),RN.RightAsgn (2, true))))
+          (RN.add_nko_mapping (Some (RN.NK.Diff (RN.NK.Seq (Pred True,RN.NK.Dup),Pred True))) (RN.compile_pkr_bdd man pk1 pk2 (RN.AndP (RN.RightAsgn (3, true),RN.RightAsgn (2, true))))
+          (RN.add_nko_mapping (Some (RN.NK.Seq (Pred True,RN.NK.Dup))) (MLBDD.dand (RN.compile_pkr_bdd man pk1 pk2 (RN.RightAsgn (3, true))) (MLBDD.dnot (RN.compile_pkr_bdd man pk1 pk2 (RN.RightAsgn (2, true)))))
+          (RN.NKOMap.singleton (Some (Pred True)) (MLBDD.dand (RN.compile_pkr_bdd man pk1 pk2 (RN.RightAsgn (1, true))) (MLBDD.dnot (RN.compile_pkr_bdd man pk1 pk2 (RN.RightAsgn (2, true)))))))) in
+        assert_equal ~cmp:compare nkomap29 nkomap30;
+        );
       "epsilon_kr_test" >:: (fun _ctx ->
         let man = RN.init_man 10 10 in
         let pk1 = 0 in
@@ -384,6 +410,26 @@ let tests = "MLBDD tests" >::: [
           let bdd7 = RN.NKROBSMap.find (RN.NKROBSet.singleton ((None,Some (RN.Rel.StarR (RN.Rel.Left (RN.NK.Pkr RN.Id)))),RN.bdd_true man),false) dmap4 in
           assert_equal ~cmp:MLBDD.equal bdd6 (MLBDD.dand (MLBDD.dnot (RN.produce_id man pk2 pk3)) bdd3);
           assert_equal ~cmp:MLBDD.equal bdd7 (MLBDD.dand (RN.produce_id man pk2 pk3) (MLBDD.dnot (MLBDD.dor (RN.produce_id man pk1 pk2) (RN.produce_id man pk3 pk4))));
+          let map5 = RN.NKOMap.singleton (Some (Pred True)) (RN.produce_id man pk1 pk2) in
+          let dmap5 = RN.determinize_nko_transition map5 in
+          let (nk5,bdd5) = RN.NKOMap.choose dmap5 in
+          assert_equal nk5 (Some (Pred True));
+          assert_equal ~cmp:MLBDD.equal bdd5 (RN.produce_id man pk1 pk2);
+          let map6 = RN.NKOMap.add (Some (RN.NK.Asgn (1,true))) (RN.produce_id man pk1 pk2) map5 in
+          let dmap6 = RN.determinize_nko_transition map6 in
+          let (nk6,bdd6) = RN.NKOMap.choose dmap6 in
+          assert_equal 0 (Option.compare RN.NK.compare nk6 (Some (RN.NK.Union (RN.SNK.add (RN.NK.Asgn (1,true)) (RN.SNK.singleton (Pred True))))));
+          assert_equal ~cmp:MLBDD.equal bdd6 (RN.produce_id man pk1 pk2);
+          let map7 = RN.NKOMap.add (Some (RN.NK.Asgn (2,true))) (RN.produce_id man pk3 pk4) map5 in
+          let dmap7 = RN.determinize_nko_transition map7 in
+          let bdd8 = RN.NKOMap.find (Some (Pred True)) dmap7 in
+          let bdd9 = RN.NKOMap.find (Some (RN.NK.Asgn (2,true))) dmap7 in 
+          assert_equal ~cmp:MLBDD.equal bdd8 (MLBDD.dand (RN.produce_id man pk1 pk2) (MLBDD.dnot (RN.produce_id man pk3 pk4)));
+          assert_equal ~cmp:MLBDD.equal bdd9 (MLBDD.dand (MLBDD.dnot (RN.produce_id man pk1 pk2)) (RN.produce_id man pk3 pk4));
+          let bdd10 = RN.NKOMap.find (RN.unionize_nko (Some (Pred True)) (Some (RN.NK.Asgn (2,true)))) dmap7 in
+          let bdd11 = RN.NKOMap.find (Some (RN.NK.Union (RN.SNK.add (RN.NK.Asgn (2,true)) (RN.SNK.singleton (Pred True))))) dmap7 in
+          assert_equal ~cmp:MLBDD.equal bdd10 (MLBDD.dand (RN.produce_id man pk1 pk2) (RN.produce_id man pk3 pk4));
+          assert_equal ~cmp:MLBDD.equal bdd10 bdd11;
         );
         "determinization_test" >:: (fun _ctx ->
           let man = RN.init_man 10 10 in
