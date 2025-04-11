@@ -114,7 +114,6 @@ module rec NK : sig
     type t = 
     | Pred of pred
     | Pkr of pkr
-    | Asgn of field * bool
     | Union of SNK.t
     | Seq of t * t
     | Inter of t * t
@@ -127,7 +126,6 @@ module rec NK : sig
    type t = 
     | Pred of pred
     | Pkr of pkr
-    | Asgn of field * bool
     | Union of SNK.t
     | Seq of t * t
     | Inter of t * t
@@ -142,9 +140,6 @@ module rec NK : sig
       | (Pkr p1,Pkr p2) -> Stdlib.compare p1 p2
       | (Pkr _, _) -> 1
       | (_, Pkr _) -> -1
-      | (Asgn (f1, b1), Asgn (f2, b2)) -> let c = Stdlib.compare f1 f2 in if c = 0 then Stdlib.compare b1 b2 else c
-      | (Asgn _, _) -> 1
-      | (_, Asgn _) -> -1
       | (Union sk1, Union sk2) -> SNK.compare sk1 sk2
       | (Union _, _) -> 1
       | (_, Union _) -> -1
@@ -224,25 +219,21 @@ and SR : Set.S with type elt = Rel.t
 
 module NKOMap = Map.Make(
   struct type t = NK.t option 
-  let compare = (Option.compare NK.compare) end)
+  let compare = compare end)
 
 module BMap = Map.Make(
   struct type t = MLBDD.t 
   let compare a b = compare (MLBDD.id a) (MLBDD.id b) 
 end)  
 
-let nkro_compare a b = 
-  let c = Option.compare NK.compare (fst a) (fst b) in
-  if c = 0 then Option.compare Rel.compare (snd a) (snd b) else c
-
 module NKROMap = Map.Make(
   struct type t = (NK.t option*Rel.t option) 
-  let compare = nkro_compare
-  end)
+  let compare = compare
+end)
 
 module NKROBMap = Map.Make(
   struct type t = (NK.t option*Rel.t option)*MLBDD.t 
-  let compare a b = let c = nkro_compare (fst a) (fst b) in if c = 0 then compare (MLBDD.id (snd a)) (MLBDD.id (snd b)) else c
+  let compare a b = let c = compare (fst a) (fst b) in if c = 0 then compare (MLBDD.id (snd a)) (MLBDD.id (snd b)) else c
 end)
 
 module BSet = Set.Make(
@@ -252,7 +243,7 @@ end)
 
 module NKROBSet = Set.Make(
   struct type t = (NK.t option*Rel.t option)*MLBDD.t 
-  let compare a b = let c = nkro_compare (fst a) (fst b) in if c = 0 then compare (MLBDD.id (snd a)) (MLBDD.id (snd b)) else c
+  let compare a b = let c = compare (fst a) (fst b) in if c = 0 then compare (MLBDD.id (snd a)) (MLBDD.id (snd b)) else c
 end)
 
 module NKROBSMap = Map.Make(
@@ -296,7 +287,6 @@ let rec nk_to_string (nk:NK.t):string=
   match nk with
   | Pred pred -> "Pred " ^ (pred_to_string pred)
   | Pkr pkr -> "Pkr " ^ (pkr_to_string pkr)
-  | Asgn (field, b) -> "Asgn " ^ (string_of_int field) ^ " " ^ (string_of_bool b)
   | Union sk -> "Union " ^ (SNK.fold (fun nk acc -> acc ^ (nk_to_string nk) ^ " ") sk "")
   | Seq (nk1, nk2) -> "Seq " ^ (nk_to_string nk1) ^ " " ^ (nk_to_string nk2)
   | Inter (nk1, nk2) -> "Inter " ^ (nk_to_string nk1) ^ " " ^ (nk_to_string nk2)
@@ -630,7 +620,6 @@ let rec delta_k (man:man)(pk1:pk)(pk2:pk)(nko:NK.t option): (MLBDD.t)NKOMap.t=
       | None -> NKOMap.empty
     	| Some (Pred pred) -> NKOMap.singleton None (MLBDD.dand (compile_pred_bdd man pk1 pred) (produce_id man pk1 pk2))  
       | Some (Pkr pkr) -> NKOMap.singleton None (compile_pkr_bdd man pk1 pk2 pkr)
-      | Some (Asgn (field, b)) -> NKOMap.singleton None (produce_assign man pk1 pk2 field b false)
       | Some (Union nks) -> SNK.fold (fun nk acc -> union_nko_mapping (delta_k man pk1 pk2 (Some nk)) acc) nks NKOMap.empty
   	  | Some (Seq(nk1,nk2)) -> let pk3 =  generate_unused_pk pk1 pk2 in
                                   let support = generate_support man pk3 in
@@ -650,13 +639,14 @@ let rec delta_k (man:man)(pk1:pk)(pk2:pk)(nko:NK.t option): (MLBDD.t)NKOMap.t=
                                   let nko_map2 = delta_k man pk1 pk2 (Some nk2) in
                                     let epsilon_bdd = MLBDD.dand (folding_epsilon man nko_map1) (MLBDD.dnot (folding_epsilon man nko_map2)) in
                                       let coverage_bdd = NKOMap.fold (fun nko bdd acc -> MLBDD.dor bdd acc) (filtering_epsilon nko_map2) (bdd_false man) in   
-                                        let nko_dmap2 = determinize_nko_transition (filtering_epsilon nko_map2) in
+                                        let nko_dmap1 = determinize_nko_transition (filtering_epsilon nko_map1) in
+                                          let nko_dmap2 = determinize_nko_transition (filtering_epsilon nko_map2) in
                                             NKOMap.fold (fun nko1 bdd1 acc -> NKOMap.fold 
                                             (fun nko2 bdd2 acc -> 
                                                match (nko1,nko2) with
                                                  | (Some nk1,Some nk2) -> add_nko_mapping (Some (Diff (nk1,nk2))) (MLBDD.dand bdd1 bdd2) acc 
                                                  | _ -> acc
-                                              ) nko_dmap2 (add_nko_mapping nko1 (MLBDD.dand bdd1 (MLBDD.dnot coverage_bdd)) acc)) (filtering_epsilon nko_map1) (add_nko_mapping None epsilon_bdd NKOMap.empty)                            
+                                              ) nko_dmap2 (add_nko_mapping nko1 (MLBDD.dand bdd1 (MLBDD.dnot coverage_bdd)) acc)) nko_dmap1 (NKOMap.singleton None epsilon_bdd)                            
       | Some (Star nk) -> let pk3 = generate_unused_pk pk1 pk2 in
                       	                      let support = generate_support man pk3 in
                                                 let epsilon = closure_bdd man pk1 pk3 (fun man pk1 pk2 nk 
@@ -728,8 +718,6 @@ let rec epsilon_kr (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro:(NK.t opt
     | (nko,Some (Id _))
     | (nko,Some (App _)) -> NKROMap.singleton nkro (MLBDD.dand (produce_id man pk1 pk2) (produce_id man pk3 pk4))
     | (nko,Some (Nil pkr)) -> NKROMap.singleton (nko,None) (MLBDD.dand (compile_pkr_bdd man pk1 pk3 pkr) (MLBDD.dand (produce_id man pk1 pk2) (produce_id man pk3 pk4)))
-    (* Be careful of the non-termination here! Since we already implements a star operator in closure_nkro_map, thus we would delegate this case to the StarR *)
-    | (nko,Some (Left (Star nk))) -> epsilon_kr man pk1 pk2 pk3 pk4 (nko,Some (StarR (Left nk)))
     | (nko,Some (Left nk)) -> let (pk5,_) = generate_unused_pk56 pk1 pk2 pk3 pk4 in 
                                 let support = generate_support man pk5 in
                                   let id34 = produce_id man pk3 pk4 in
