@@ -26,6 +26,7 @@ module rec NK : sig
   type t = 
   | Pred of pred
   | Pkr of pkr
+  | Asgn of field * bool
   | Union of SNK.t
   | Seq of t * t
   | Inter of t * t
@@ -52,6 +53,7 @@ end
 and SR : Set.S with type elt = Rel.t
 
 module NKOMap : Map.S with type key = NK.t option
+module ROMap : Map.S with type key = Rel.t option
 module BMap : Map.S with type key = MLBDD.t
 module NKROMap : Map.S with type key = (NK.t option * Rel.t option)
 module NKROBMap : Map.S with type key = ((NK.t option * Rel.t option) * MLBDD.t)
@@ -72,6 +74,7 @@ val nk_to_string : NK.t -> string
 val rel_to_string : Rel.t -> string
 val nkro_to_string : (NK.t option * Rel.t option) -> string
 val nko_map_to_string : MLBDD.t NKOMap.t -> string
+val ro_map_to_string : MLBDD.t ROMap.t -> string
 val nkro_map_to_string : MLBDD.t NKROMap.t -> string
 val bset_to_string : BSet.t -> string
 val nkrob_map_to_string : MLBDD.t NKROBMap.t -> string
@@ -98,19 +101,20 @@ val compile_pkr_bdd : man -> pk -> pk -> pkr -> MLBDD.t
 val rename_bdd : pk -> pk -> MLBDD.t -> MLBDD.t
 val closure_bdd : man -> pk -> pk -> (man -> pk -> pk -> 'a -> MLBDD.t) -> 'a -> MLBDD.t
 val add_nko_mapping : NK.t option -> MLBDD.t -> MLBDD.t NKOMap.t -> MLBDD.t NKOMap.t
+val add_ro_mapping : Rel.t option -> MLBDD.t -> MLBDD.t ROMap.t -> MLBDD.t ROMap.t
 val add_nkro_mapping : (NK.t option * Rel.t option) -> MLBDD.t -> MLBDD.t NKROMap.t -> MLBDD.t NKROMap.t
 val add_nkro_mapping_updated : (NK.t option * Rel.t option) -> MLBDD.t -> MLBDD.t NKROMap.t -> (MLBDD.t NKROMap.t * bool)
 val union_nko_mapping : MLBDD.t NKOMap.t -> MLBDD.t NKOMap.t -> MLBDD.t NKOMap.t
 val union_nkro_mapping : MLBDD.t NKROMap.t -> MLBDD.t NKROMap.t -> MLBDD.t NKROMap.t
 val union_nkro_mapping_updated : MLBDD.t NKROMap.t -> MLBDD.t NKROMap.t -> (MLBDD.t NKROMap.t * bool)
+val unionize_nko: NK.t option -> NK.t option -> NK.t option
 val apply_nko_mapping : (MLBDD.t -> MLBDD.t) -> MLBDD.t NKOMap.t -> MLBDD.t NKOMap.t
 val apply_nkro_mapping : (MLBDD.t -> MLBDD.t) -> MLBDD.t NKROMap.t -> MLBDD.t NKROMap.t
 val concatenate_nko_mapping : MLBDD.t NKOMap.t -> NK.t option -> MLBDD.t NKOMap.t
 val concatenate_nkro_mapping : MLBDD.t NKROMap.t -> (NK.t option * Rel.t option) -> MLBDD.t NKROMap.t
 val folding_epsilon : man -> MLBDD.t NKOMap.t -> MLBDD.t
 val delta_k : man -> pk -> pk -> NK.t option -> MLBDD.t NKOMap.t
-val comp_nkro_map : man -> pk -> pk -> pk -> pk -> (man -> pk -> pk -> pk -> pk -> (NK.t option * Rel.t option) -> MLBDD.t NKROMap.t) -> NK.t option -> Rel.t -> Rel.t -> MLBDD.t NKROMap.t
-val closure_nkro_map : man -> pk -> pk -> pk -> pk -> (man -> pk -> pk -> pk -> pk -> (NK.t option * Rel.t option) -> MLBDD.t NKROMap.t) -> NK.t option -> Rel.t -> MLBDD.t NKROMap.t
+val delta_r : man -> pk -> pk -> pk -> pk -> Rel.t option -> MLBDD.t ROMap.t
 val epsilon_kr : man -> pk -> pk -> pk -> pk -> (NK.t option * Rel.t option) -> MLBDD.t NKROMap.t
 val generate_unused_pk56 : pk -> pk -> pk -> pk -> pk * pk 
 val delta_kr : man -> pk -> pk -> pk -> pk -> (NK.t option * Rel.t option) -> MLBDD.t NKROMap.t
@@ -128,5 +132,6 @@ val nkr_to_nkro : (NK.t * Rel.t) -> (NK.t option * Rel.t option)
 val simplify_all_transition : man -> pk -> pk -> pk -> pk -> (NK.t * Rel.t) -> (BSet.t * (BSet.t) NKROMap.t) NKROMap.t -> (MLBDD.t) NKROBMap.t NKROBMap.t
 val is_final_state : (NK.t option * Rel.t option) * MLBDD.t -> bool
 val determinize_transition : MLBDD.t NKROBMap.t -> MLBDD.t NKROBSMap.t
+val determinize_nko_transition : MLBDD.t NKOMap.t -> MLBDD.t NKOMap.t
 val determinization : man -> pk -> pk -> (NK.t option*Rel.t option) -> (MLBDD.t NKROBMap.t) NKROBMap.t -> ((MLBDD.t NKROBSMap.t) NKROBSMap.t*(NKROBSet.t*bool)) 
 val bisim : man -> pk -> pk -> (NKROBSet.t*bool) -> (NKROBSet.t*bool) -> (MLBDD.t NKROBSMap.t) NKROBSMap.t -> (MLBDD.t NKROBSMap.t) NKROBSMap.t -> bool
