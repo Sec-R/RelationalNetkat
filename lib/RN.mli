@@ -21,6 +21,11 @@ type pkr =
   | Binary of pred * pred
   | FMap of field * field
 
+  type next_step =
+   | X  
+   | Y
+   | XY
+
 (* Modules *)
 module rec NK : sig
   type t = 
