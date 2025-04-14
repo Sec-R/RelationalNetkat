@@ -602,17 +602,25 @@ let tests = "MLBDD tests" >::: [
           assert_equal true (RN.bisim man pk3 pk4 start9 start10 nkrobsmap5 nkrobsmap6);
           let nk1 = (RN.NK.Seq (Pred True, RN.NK.Star(RN.NK.Union (RN.SNK.add (Asgn (1,true)) (RN.SNK.add RN.NK.Dup RN.SNK.empty))))) in
           let nk2 = (RN.NK.Seq (Asgn (2,true), RN.NK.Seq (RN.NK.Dup,(RN.NK.Union (RN.SNK.add (RN.NK.Seq (Asgn (3,true),RN.NK.Dup)) (RN.SNK.add (Asgn (4,true)) RN.SNK.empty)))))) in
-          let nkro7 = (Some (RN.NK.Inter (nk1,nk2)), Some (RN.Rel.SeqR (RN.Rel.Nil Id,RN.Rel.StarR (RN.Rel.App (Id,Id))))) in
+          (* Inter (nk1,nk2) |> Id *)
+          (* nil (Id) = (pk,pk) *)
+          (* App (Id,Id) = (pk1pk2,pk1pk2) *)
+          (* nil(Id) App (Id,Id) = {(pk,pk)|pk\in PK} . {(pk1pk2,pk1pk2)|pk1,pk2 \in PK} = {(pk.pk1pk2,pk.pk1pk2)|pk,pk1,pk2 \in PK} *)
+          (* = {(pk.pk1pk2,pk.pk1pk2)|pk,pk1,pk2 \in PK /\ pk = pk1} = {(pk1pk2,pk1pk2)|pk1,pk2 \in PK} = App (Id,Id)*)
+          let nkro7 = (Some (RN.NK.Inter (nk1,nk2)), Some (RN.Rel.StarR (RN.Rel.App (Id,Id)))) in
           let nkrosmap7 = RN.generate_all_transition man pk1 pk2 pk3 pk4 nkro7  in
           let nkrobmap7 = RN.simplify_all_transition man pk1 pk2 pk3 pk4 nkrosmap7 in
           let (nkrobsmap7,start11) = RN.determinization nkro7 nkrobmap7 in
+          (* nk1 |> Id (nk2) *)
           let nkro8 = (Some nk1, Some (RN.Rel.Id nk2)) in
           let nkrosmap8 = RN.generate_all_transition man pk1 pk2 pk3 pk4 nkro8  in
           let nkrobmap8 = RN.simplify_all_transition man pk1 pk2 pk3 pk4 nkrosmap8 in
           let (nkrobsmap8,start12) = RN.determinization nkro8 nkrobmap8 in
           assert_equal true (RN.bisim man pk3 pk4 start11 start12 nkrobsmap7 nkrobsmap8);
-          let nkro9 = (Some nk2, Some (RN.Rel.SeqR (RN.Rel.Nil Id, RN.Rel.StarR (RN.Rel.App (Id,Id))))) in
+          (* nk2 |> Id *)
+          let nkro9 = (Some nk2, Some (RN.Rel.StarR (RN.Rel.App (Id,Id)))) in
           let (nkrobsmap9,start13) = RN.projection_compiler man pk1 pk2 pk3 pk4 nkro9 in
+          (* nk1 |> nk1 X nk2 *)
           let nkro10 = (Some nk1, Some (RN.Rel.SeqR (RN.Rel.Nil Id, Binary (nk1,nk2)))) in
           let (nkrobsmap10,start14) = RN.projection_compiler man pk1 pk2 pk3 pk4 nkro10 in
           assert_equal true (RN.bisim man pk3 pk4 start13 start14 nkrobsmap9 nkrobsmap10);
