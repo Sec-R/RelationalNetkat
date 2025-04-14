@@ -77,10 +77,6 @@
   - let determinization: Determinizes a NetKAT automaton.
   - let bisim: Checks if two NetKAT automata are bisimilar.
 *)
-  [@@@ocaml.warning "-37"] 
-  [@@@ocaml.warning "-32"] 
-  [@@@ocaml.warning "-27"] 
-  
   
   
   (* The first r denote the state, as we use residual string to represent states *)
@@ -100,6 +96,7 @@
 
 
   type next_step =
+   | E
    | X  
    | Y
    | XY
@@ -245,34 +242,35 @@
     let c = Option.compare NK.compare (fst a) (fst b) in
     if c = 0 then Option.compare Rel.compare (snd a) (snd b) else c
   
-  module NKROBMap = Map.Make(
-    struct type t = (NK.t option*Rel.t option)*MLBDD.t 
-    let compare a b = let c = nkro_compare (fst a) (fst b) in if c = 0 then compare (MLBDD.id (snd a)) (MLBDD.id (snd b)) else c
-    end)
-  
-  module NKROBBMap = Map.Make(
-    struct type t = ((NK.t option*Rel.t option)*MLBDD.t)*MLBDD.t 
-    let compare a b = let c = nkro_compare (fst (fst a)) (fst (fst b)) in if c = 0 then let d = compare (MLBDD.id (snd (fst a))) (MLBDD.id (snd (fst b))) in if d = 0 then compare (MLBDD.id (snd a)) (MLBDD.id (snd b)) else d else c
+
+  module NKROMap = Map.Make(
+  struct type t = (NK.t option*Rel.t option) 
+  let compare = nkro_compare
   end)
-  
+
+  module NKROBMap = Map.Make(
+  struct type t = (NK.t option*Rel.t option)*MLBDD.t 
+  let compare a b = let c = nkro_compare (fst a) (fst b) in if c = 0 then compare (MLBDD.id (snd a)) (MLBDD.id (snd b)) else c
+end)
+
   module BSet = Set.Make(
     struct type t = MLBDD.t 
     let compare a b = compare (MLBDD.id a) (MLBDD.id b)
   end)
   
-  module NKROBBSet = Set.Make(
-    struct type t = ((NK.t option*Rel.t option)*MLBDD.t)*MLBDD.t 
-    let compare a b = let c = nkro_compare (fst (fst a)) (fst (fst b)) in if c = 0 then let d = compare (MLBDD.id (snd (fst a))) (MLBDD.id (snd (fst b))) in if d = 0 then compare (MLBDD.id (snd a)) (MLBDD.id (snd b)) else d else c
+  module NKROBSet = Set.Make(
+    struct type t = (NK.t option*Rel.t option)*MLBDD.t 
+    let compare a b = let c = nkro_compare (fst a) (fst b) in if c = 0 then compare (MLBDD.id (snd a)) (MLBDD.id (snd b)) else c
+  end)
+    
+  module NKROBSMap = Map.Make(
+    struct type t = NKROBSet.t
+    let compare = NKROBSet.compare
   end)
   
-  module NKROBBSMap = Map.Make(
-    struct type t = NKROBBSet.t
-    let compare = NKROBBSet.compare
-  end)
-  
-  module NKROBBSSMap = Map.Make(
-    struct type t = (NKROBBSet.t*NKROBBSet.t) 
-    let compare a b = let c = NKROBBSet.compare (fst a) (fst b) in if c = 0 then NKROBBSet.compare (snd a) (snd b) else c
+  module NKROBSSMap = Map.Make(
+    struct type t = (NKROBSet.t*NKROBSet.t) 
+    let compare a b = let c = NKROBSet.compare (fst a) (fst b) in if c = 0 then NKROBSet.compare (snd a) (snd b) else c
   end)
   
   type man = {
@@ -354,22 +352,22 @@
       BSet.iter (fun bdd -> str := !str ^ (string_of_int (MLBDD.id bdd)) ^ " ") bset;
       !str
   
+  let nkro_map_to_string (mapping:(MLBDD.t)NKROMap.t):string=
+    let str = ref "" in
+      NKROMap.iter (fun (nko,ro) bdd -> str := !str ^ (match nko with
+                                                        | None -> "None"
+                                                        | Some nk -> nk_to_string nk) ^ ", " ^ (match ro with
+                                                                                                    | None -> "None"
+                                                                                                    | Some r -> rel_to_string r) ^" bdd id: "^(string_of_int (MLBDD.id bdd)) ^ "\n") mapping;
+    !str
+
   let nkrob_map_to_string (mapping:(MLBDD.t)NKROBMap.t):string=
     let str = ref "" in
       NKROBMap.iter (fun ((nko,ro),bdd) bdd' -> str := !str ^ (match nko with
                                                           | None -> "None"
                                                           | Some nk -> nk_to_string nk) ^ ", " ^ (match ro with
                                                                                                       | None -> "None"
-                                                                                                      | Some r -> rel_to_string r) ^" epsilon bdd id: "^(string_of_int (MLBDD.id bdd)) ^" transition bdd id: "^(string_of_int (MLBDD.id bdd')) ^ "\n") mapping;
-      !str
-
-  let nkrobb_map_to_string (mapping:(MLBDD.t)NKROBBMap.t):string=
-    let str = ref "" in
-      NKROBBMap.iter (fun (((nko,ro),bdd1),bdd2) bdd' -> str := !str ^ (match nko with
-                                                          | None -> "None"
-                                                          | Some nk -> nk_to_string nk) ^ ", " ^ (match ro with
-                                                                                                      | None -> "None"
-                                                                                                      | Some r -> rel_to_string r) ^" epsilon bdd id: "^(string_of_int (MLBDD.id bdd1)) ^" tag bdd id: "^(string_of_int (MLBDD.id bdd2)) ^" transition bdd id: "^(string_of_int (MLBDD.id bdd')) ^ "\n") mapping;
+                                                                                                      | Some r -> rel_to_string r) ^" tag bdd id: "^(string_of_int (MLBDD.id bdd)) ^" transition bdd id: "^(string_of_int (MLBDD.id bdd')) ^ "\n") mapping;
       !str
 
   let nkrobs_to_string (nkrobs:NKROBSet.t):string=
@@ -380,29 +378,29 @@
                                                                                                       | None -> "None"
                                                                                                       | Some r -> rel_to_string r) ^" tag bdd id: "^(string_of_int (MLBDD.id bdd)) ^ "\n") nkrobs;
       !str
-  
+    
   let nkrobs_map_to_string (mapping:(MLBDD.t)NKROBSMap.t):string=
     let str = ref "" in
-      NKROBSMap.iter (fun (nkrobs,flag) bdd -> str := !str ^ "\n" ^ (nkrobs_to_string nkrobs) ^"transition bdd id: "^(string_of_int (MLBDD.id bdd)) ^ "\naccept: " ^ (string_of_bool flag) ^ "\n") mapping;
+      NKROBSMap.iter (fun nkrobs bdd -> str := !str ^ "\n" ^ (nkrobs_to_string nkrobs) ^"transition bdd id: "^(string_of_int (MLBDD.id bdd)) ^ "\n") mapping;
       !str
   
-  let nkros_map_to_string (mapping:(BSet.t)NKROBMap.t):string=
+  let nkros_map_to_string (mapping:(BSet.t)NKROMap.t):string=
     let str = ref "" in
-      NKROBMap.iter (fun ((nko,ro),bdd) bdd_set -> str := !str ^ (match nko with
-                                                          | None -> "None"
-                                                          | Some nk -> nk_to_string nk) ^ ", " ^ (match ro with
-                                                                                                      | None -> "None"
-                                                                                                      | Some r -> rel_to_string r) ^" epsilon bdd id: "^(string_of_int (MLBDD.id bdd))^ "\n" ^ (BSet.fold (fun bdd acc  -> acc ^ (string_of_int (MLBDD.id bdd) ^ " ")) bdd_set "") ^ "\n") mapping;
+      NKROMap.iter (fun (nko,ro) bdd_set -> str := !str ^ (match nko with
+                                                            | None -> "None"
+                                                            | Some nk -> nk_to_string nk) ^ ", " ^ (match ro with
+                                                                                                        | None -> "None"
+                                                                                                        | Some r -> rel_to_string r) ^ "\n" ^ (BSet.fold (fun bdd acc  -> acc ^ (string_of_int (MLBDD.id bdd) ^ " ")) bdd_set "") ^ "\n") mapping;
       !str
-  
-  let transition_set_map_to_string (mapping:(BSet.t*(BSet.t)NKROBMap.t)NKROBMap.t):string=
+       
+  let transition_set_map_to_string (mapping:(BSet.t*(BSet.t)NKROMap.t)NKROMap.t):string=
     let str = ref "" in
-      NKROBMap.iter (fun ((nko,ro),bdd) (bdd_set,bdd_map) -> str := !str ^ "Source node: \n" ^(match nko with
-                                                                      | None -> "None"
-                                                                      | Some nk -> nk_to_string nk) ^ ", " ^ (match ro with
-                                                                                                      | None -> "None"
-                                                                                                      | Some r -> rel_to_string r) ^" epsilon bdd id: "^(string_of_int (MLBDD.id bdd))^ "\nSource bdd sets:\n" ^ (BSet.fold (fun bdd acc  -> acc ^ (string_of_int (MLBDD.id bdd) ^ " ")) bdd_set "") ^ "\nDest nodes:\n" ^ (nkros_map_to_string bdd_map) ^ "\n") mapping;
-      !str
+      NKROMap.iter (fun (nko,ro) (bdd_set,bdd_map) -> str := !str ^ "Source node: \n" ^(match nko with
+                                                                    | None -> "None"
+                                                                    | Some nk -> nk_to_string nk) ^ ", " ^ (match ro with
+                                                                                                    | None -> "None"
+                                                                                                    | Some r -> rel_to_string r) ^ "\nSource bdd sets:\n" ^ (BSet.fold (fun bdd acc  -> acc ^ (string_of_int (MLBDD.id bdd) ^ " ")) bdd_set "") ^ "\nDest nodes:\n" ^ (nkros_map_to_string bdd_map) ^ "\n") mapping;
+    !str
   
   let transition_map_to_string (mapping:((MLBDD.t)NKROBMap.t)NKROBMap.t):string=
      let str = ref "" in
@@ -415,17 +413,17 @@
   
   let determinized_transition_map_to_string (mapping:((MLBDD.t)NKROBSMap.t)NKROBSMap.t):string=
       let str = ref ""
-      in NKROBSMap.iter (fun (nkrobs,flag) nkrobs_map -> str := !str ^ "\nSource node: \n" ^ (nkrobs_to_string nkrobs) ^ "accept: " ^ (string_of_bool flag) ^ "\nDest nodes:\n" ^ (nkrobs_map_to_string nkrobs_map) ^ "\n") mapping;
+      in NKROBSMap.iter (fun nkrobs nkrobs_map -> str := !str ^ "\nSource node: \n" ^ (nkrobs_to_string nkrobs)  ^ "\nDest nodes:\n" ^ (nkrobs_map_to_string nkrobs_map) ^ "\n") mapping;
       !str
       
   let init_man (field_max:field) (bman_cache:int) = 
     let bman = MLBDD.init ~cache:bman_cache () in
     {field_max = field_max; bman = bman;split_hist = MLBDD.fold_init bman}
   (* The variable is in order of x x' y y' --> 6k, 6k+1, 6k+2, 6k+3*)
-  let bddvar (man:man) (pk:pk) (field:field) = field*6 + pk
+  let bddvar (pk:pk) (field:field) = field*6 + pk
   
   let generate_single_var (man:man) (pk:pk) (field:field):MLBDD.t =
-      MLBDD.ithvar (man.bman) (bddvar man pk field)
+      MLBDD.ithvar (man.bman) (bddvar pk field)
   
   let bdd_true (man:man):MLBDD.t = MLBDD.dtrue man.bman    
   
@@ -490,13 +488,13 @@
   let generate_support (man:man) (pk:pk):MLBDD.support =
     let rec generate_list (cur:field):int list =
        if cur >= man.field_max then []
-       else (bddvar man pk cur)::(generate_list (cur+1))
+       else (bddvar pk cur)::(generate_list (cur+1))
     in MLBDD.support_of_list (generate_list 0)
   
   let generate_double_support (man:man) (pk1:pk) (pk2:pk):MLBDD.support =
     let rec generate_list (cur:field):int list =
         if cur >= man.field_max then []
-        else (bddvar man pk1 cur)::(bddvar man pk2 cur)::(generate_list (cur+1))
+        else (bddvar pk1 cur)::(bddvar pk2 cur)::(generate_list (cur+1))
     in MLBDD.support_of_list (generate_list 0)
     
     
@@ -528,20 +526,37 @@
     else var
     in MLBDD.permutef permute bdd
   
+  (* pk1: x, pk2:x',*)
+  let comp_bdd_2 (man:man) (pk1:pk) (pk2:pk)  (bdd1:MLBDD.t) (bdd2:MLBDD.t):MLBDD.t =
+    let pk3 = generate_unused_pk pk1 pk2 in
+      let support = generate_support man pk3 in
+      (* bdd1 now is pk1 pk3 *)
+        let rename_bdd1 = rename_bdd pk3 pk2 bdd1 in
+      (* bdd2 now is pk3 pk2 *)
+          let rename_bdd2 = rename_bdd pk1 pk3 bdd2 in
+            MLBDD.exists support (MLBDD.dand rename_bdd1 rename_bdd2)
+
+
+  (* pk1: x, pk2:x', pk3:y, pk4:y'*)
+  let comp_bdd_4 (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (bdd1:MLBDD.t) (bdd2:MLBDD.t):MLBDD.t =
+    let (pk5,pk6) = generate_unused_pk56 pk1 pk2 pk3 pk4 in
+      let support = generate_double_support man pk5 pk6 in
+      (* bdd1 now is pk1 pk5 pk3 pk6 *)
+        let rename_bdd1 = rename_bdd pk5 pk2 (rename_bdd pk6 pk4 bdd1) in
+      (* bdd2 now is pk5 pk2 pk6 pk4 *)
+          let rename_bdd2 = rename_bdd pk1 pk5 (rename_bdd pk3 pk6 bdd2) in
+            MLBDD.exists support (MLBDD.dand rename_bdd1 rename_bdd2)
     
   (* A naive implementation, to be optimized*)    
-  let closure_bdd (man:man) (pk1:pk) (pk2:pk) (compiler:man -> pk -> pk -> 'a -> MLBDD.t) (con:'a) :MLBDD.t =
+  let closure_bdd (man:man) (pk1:pk) (pk2:pk) (bdd: MLBDD.t) :MLBDD.t =
     (* input cur is of pk1 and pk2 *)
-    let pk3 = generate_unused_pk pk1 pk2 in
-      let support2 = generate_support man pk2 in
-        let con_bdd_23 = compiler man pk2 pk3 con in
-         let rec closure_bdd_aux (cur_12:MLBDD.t):MLBDD.t =
-           let next = MLBDD.dor cur_12 (rename_bdd pk3 pk2 (MLBDD.exists support2 (MLBDD.dand cur_12 con_bdd_23))) in
-             if MLBDD.equal cur_12 next then
-                 cur_12
-             else 
-                 closure_bdd_aux next
-            in closure_bdd_aux (produce_id man pk1 pk2)  	 
+    let rec closure_bdd_aux (cur:MLBDD.t):MLBDD.t =
+      let next = MLBDD.dor cur (comp_bdd_2 man pk1 pk2 cur bdd) in
+        if MLBDD.equal cur next then
+           cur
+        else 
+          closure_bdd_aux next
+    in closure_bdd_aux (produce_id man pk1 pk2)  	 
   
   let add_nko_mapping (con:NK.t option) (bdd:MLBDD.t) (mapping:(MLBDD.t)NKOMap.t):(MLBDD.t)NKOMap.t=
       if MLBDD.is_false bdd then
@@ -561,23 +576,31 @@
           | Some bdd' -> Some (MLBDD.dor bdd bdd')) mapping
   
   
-  let add_nkrob_mapping (con:NK.t option*Rel.t option) (bdd:MLBDD.t) (mapping:(MLBDD.t)NKROBMap.t):(MLBDD.t)NKROBMap.t=
+  let add_nkro_mapping (con:NK.t option*Rel.t option) (bdd:MLBDD.t) (mapping:(MLBDD.t)NKROMap.t):(MLBDD.t)NKROMap.t=
       if MLBDD.is_false bdd then
             mapping
       else
-        NKROBMap.update con (function
+        NKROMap.update con (function
           | None -> Some bdd
           | Some bdd' -> Some (MLBDD.dor bdd bdd')) mapping
-          
-  let add_nkrob_mapping_updated (con:NK.t option*Rel.t option) (bdd:MLBDD.t) (mapping:(MLBDD.t)NKROBMap.t):((MLBDD.t)NKROBMap.t*bool)=
+
+  let add_nkrobs_mapping (con:NKROBSet.t) (bdd:MLBDD.t) (mapping:(MLBDD.t)NKROBSMap.t):(MLBDD.t)NKROBSMap.t=
+      if MLBDD.is_false bdd then
+            mapping
+      else
+        NKROBSMap.update con (function
+          | None -> Some bdd
+          | Some bdd' -> Some (MLBDD.dor bdd bdd')) mapping        
+
+  let add_nkro_mapping_updated (con:NK.t option*Rel.t option) (bdd:MLBDD.t) (mapping:(MLBDD.t)NKROMap.t):((MLBDD.t)NKROMap.t*bool)=
       if MLBDD.is_false bdd then
             (mapping,false)
       else
-        match NKROBMap.find_opt con mapping with
-          | None -> (NKROBMap.add con bdd mapping,true)
+        match NKROMap.find_opt con mapping with
+          | None -> (NKROMap.add con bdd mapping,true)
           | Some bdd' -> if MLBDD.equal (MLBDD.dor bdd bdd') bdd' then
                             (mapping,false)
-                         else (NKROBMap.add con (MLBDD.dor bdd bdd') mapping,true)
+                         else (NKROMap.add con (MLBDD.dor bdd bdd') mapping,true)
         
   let union_nko_mapping (mapping1:(MLBDD.t)NKOMap.t) (mapping2:(MLBDD.t)NKOMap.t):(MLBDD.t)NKOMap.t=
      NKOMap.union (fun _ bdd1 bdd2 -> Some (MLBDD.dor bdd1 bdd2)) mapping1 mapping2
@@ -585,16 +608,19 @@
   let union_ro_mapping (mapping1:(MLBDD.t)ROMap.t) (mapping2:(MLBDD.t)ROMap.t):(MLBDD.t)ROMap.t=
      ROMap.union (fun _ bdd1 bdd2 -> Some (MLBDD.dor bdd1 bdd2)) mapping1 mapping2
      
-  let union_nkrob_mapping (mapping1:(MLBDD.t)NKROBMap.t) (mapping2:(MLBDD.t)NKROBMap.t):(MLBDD.t)NKROBMap.t=
-     NKROBMap.union (fun _ bdd1 bdd2 -> Some (MLBDD.dor bdd1 bdd2)) mapping1 mapping2
+  let union_nkro_mapping (mapping1:(MLBDD.t)NKROMap.t) (mapping2:(MLBDD.t)NKROMap.t):(MLBDD.t)NKROMap.t=
+     NKROMap.union (fun _ bdd1 bdd2 -> Some (MLBDD.dor bdd1 bdd2)) mapping1 mapping2
   
-  let union_nkrob_mapping_updated (mapping1:(MLBDD.t)NKROBMap.t) (mapping2:(MLBDD.t)NKROBMap.t):((MLBDD.t)NKROBMap.t*bool)=
-     NKROBMap.fold (fun con bdd (mapping,changed) -> 
+  let union_nkro_mapping_updated (mapping1:(MLBDD.t)NKROMap.t) (mapping2:(MLBDD.t)NKROMap.t):((MLBDD.t)NKROMap.t*bool)=
+     NKROMap.fold (fun con bdd (mapping,changed) -> 
               match add_nkro_mapping_updated con bdd mapping with
                 | (mapping',true) -> (mapping',true)
                 | (mapping',false) -> (mapping',changed)
               ) mapping1 (mapping2,false)
-  
+
+  let union_nkrob_mapping (mapping1:(MLBDD.t)NKROBMap.t) (mapping2:(MLBDD.t)NKROBMap.t):(MLBDD.t)NKROBMap.t=
+     NKROBMap.union (fun _ bdd1 bdd2 -> Some (MLBDD.dor bdd1 bdd2)) mapping1 mapping2
+
   let apply_nko_mapping (tobdd:MLBDD.t->MLBDD.t) (mapping:(MLBDD.t)NKOMap.t):(MLBDD.t)NKOMap.t=
     NKOMap.filter_map (fun _ bdd-> let nbdd = tobdd bdd in 
                                       if (MLBDD.is_false nbdd) then
@@ -607,11 +633,11 @@
                                          None
                                       else Some nbdd) mapping
   
-  let apply_nkrob_mapping (tobdd:MLBDD.t->MLBDD.t) (mapping:(MLBDD.t)NKROBMap.t):(MLBDD.t)NKROBMap.t=
-    NKROBMap.filter_map (fun _ bdd-> let nbdd = tobdd bdd in 
-                                      if (MLBDD.is_false nbdd) then
-                                         None
-                                      else Some nbdd) mapping
+  let apply_nkro_mapping (tobdd:MLBDD.t->MLBDD.t) (mapping:(MLBDD.t)NKROMap.t):(MLBDD.t)NKROMap.t=
+  NKROMap.filter_map (fun _ bdd-> let nbdd = tobdd bdd in 
+                                    if (MLBDD.is_false nbdd) then
+                                       None
+                                    else Some nbdd) mapping
   
                                       
   let concatenate_nko_mapping (mapping:(MLBDD.t)NKOMap.t) (nko2:NK.t option):(MLBDD.t)NKOMap.t=
@@ -628,17 +654,18 @@
                                                       | (Some r1,Some r2) -> Some (SeqR (r1,r2))
                                                      ) bdd acc) mapping ROMap.empty
   
-  let concatenate_nkrob_mapping (mapping:(MLBDD.t)NKROBMap.t) (nkro2:NK.t option*Rel.t option):(MLBDD.t)NKROBMap.t=
-    NKROBMap.fold (fun nkrob1 bdd acc -> NKROBMap.add (((match (fst (fst nkrob1),fst nkro2) with
-                                                                | (None,nko2) -> nko2
-                                                                | (nko1, None) -> nko1
-                                                                | (Some nk1,Some nk2) -> Some (Seq (nk1,nk2))),
-                                                                (match (snd (fst nkrob1),snd nkro2) with
-                                                                | (None,ro2) -> ro2
-                                                                | (ro1, None) -> ro1
-                                                                | (Some r1,Some r2) -> Some (SeqR (r1,r2))                                                             
-                                                                ),snd nkrob1)) bdd acc) mapping NKROBMap.empty
-  
+
+  let concatenate_nkro_mapping (mapping:(MLBDD.t)NKROMap.t) (nkro2:NK.t option*Rel.t option):(MLBDD.t)NKROMap.t=
+    NKROMap.fold (fun nkro1 bdd acc -> NKROMap.add ((match (fst nkro1,fst nkro2) with
+                                                              | (None,nko2) -> nko2
+                                                              | (nko1, None) -> nko1
+                                                              | (Some nk1,Some nk2) -> Some (Seq (nk1,nk2))),
+                                                              (match (snd nkro1,snd nkro2) with
+                                                              | (None,ro2) -> ro2
+                                                              | (ro1, None) -> ro1
+                                                              | (Some r1,Some r2) -> Some (SeqR (r1,r2))                                                             
+                                                              )) bdd acc) mapping NKROMap.empty
+
   let folding_epsilon_k (man:man) (nkom:(MLBDD.t)NKOMap.t):MLBDD.t =
     match (NKOMap.find_opt None nkom) with
       | None -> (bdd_false man)
@@ -668,7 +695,7 @@
         if MLBDD.is_false bdd then
           acc
         else
-          let new_bdd = NKOMap.fold (fun nko bddh acc -> MLBDD.dand (MLBDD.dnot bddh) acc) acc bdd in
+          let new_bdd = NKOMap.fold (fun _ bddh acc -> MLBDD.dand (MLBDD.dnot bddh) acc) acc bdd in
           let next_map =
             NKOMap.fold (fun nko2 bddh acc -> 
               let ibdd = MLBDD.dand bdd bddh in
@@ -678,26 +705,6 @@
     in NKOMap.fold (fun nko bdd acc -> add_transition nko bdd acc) nexts NKOMap.empty
    
 
-  (* pk1: x, pk2:x',*)
-  let comp_bdd_2 (man:man) (pk1:pk) (pk2:pk)  (bdd1:MLBDD.t) (bdd2:MLBDD.t):MLBDD.t =
-    let pk3 = generate_unused_pk pk1 pk2 in
-      let support = generate_support man pk3 in
-      (* bdd1 now is pk1 pk3 *)
-        let rename_bdd1 = rename_bdd pk3 pk2 bdd1 in
-      (* bdd2 now is pk3 pk2 *)
-          let rename_bdd2 = rename_bdd pk1 pk3 bdd2 in
-            MLBDD.exists support (MLBDD.dand rename_bdd1 rename_bdd2)
-
-
-  (* pk1: x, pk2:x', pk3:y, pk4:y'*)
-  let comp_bdd_4 (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (bdd1:MLBDD.t) (bdd2:MLBDD.t):MLBDD.t =
-    let (pk5,pk6) = generate_unused_pk56 pk1 pk2 pk3 pk4 in
-      let support = generate_double_support man pk5 pk6 in
-      (* bdd1 now is pk1 pk5 pk3 pk6 *)
-        let rename_bdd1 = rename_bdd pk5 pk2 (rename_bdd pk6 pk4 bdd1) in
-      (* bdd2 now is pk5 pk2 pk6 pk4 *)
-          let rename_bdd2 = rename_bdd pk1 pk5 (rename_bdd pk3 pk6 bdd2) in
-            MLBDD.exists support (MLBDD.dand rename_bdd1 rename_bdd2)
   (* For simplicity, we combine the epsilon_k and delta_k in the paper into one function *)                            
   (* Where for all nk_1,nk_2, delta_k (Some nk1) (Some nk2) is the delta_k in the paper *)                            
   (* And for all nk, delta_k (Some nk) None is the epsilon_k in the paper *)                            
@@ -725,7 +732,7 @@
         | Some (Diff(nk1,nk2)) -> let nko_map1 = delta_k man pk1 pk2 (Some nk1) in
                                     let nko_map2 = delta_k man pk1 pk2 (Some nk2) in
                                       let epsilon_bdd = MLBDD.dand (folding_epsilon_k man nko_map1) (MLBDD.dnot (folding_epsilon_k man nko_map2)) in
-                                        let coverage_bdd = NKOMap.fold (fun nko bdd acc -> MLBDD.dor bdd acc) (filtering_epsilon_k nko_map2) (bdd_false man) in   
+                                        let coverage_bdd = NKOMap.fold (fun _ bdd acc -> MLBDD.dor bdd acc) (filtering_epsilon_k nko_map2) (bdd_false man) in   
                                           let nko_dmap2 = determinize_nko_transition (filtering_epsilon_k nko_map2) in
                                               NKOMap.fold (fun nko1 bdd1 acc -> NKOMap.fold 
                                               (fun nko2 bdd2 acc -> 
@@ -733,7 +740,7 @@
                                                    | (Some nk1,Some nk2) -> add_nko_mapping (Some (Diff (nk1,nk2))) (MLBDD.dand bdd1 bdd2) acc 
                                                    | _ -> acc
                                                 ) nko_dmap2 (add_nko_mapping nko1 (MLBDD.dand bdd1 (MLBDD.dnot coverage_bdd)) acc)) (filtering_epsilon_k nko_map1) (add_nko_mapping None epsilon_bdd NKOMap.empty)                            
-        | Some (Star nk) -> let epsilon = closure_bdd man pk1 pk2 (fun man pk1 pk2 nk -> folding_epsilon_k man (delta_k man pk1 pk2 (Some nk))) nk in                         
+        | Some (Star nk) -> let epsilon = closure_bdd man pk1 pk2 (folding_epsilon_k man (delta_k man pk1 pk2 (Some nk))) in                         
                                             apply_nko_mapping (comp_bdd_2 man pk1 pk2 epsilon) 
                                               (add_nko_mapping None (produce_id man pk1 pk2)
                                                 (concatenate_nko_mapping (filtering_epsilon_k (delta_k man pk1 pk2 (Some nk))) (Some (Star nk)))) 
@@ -757,98 +764,107 @@
   let produce_double_id (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk):MLBDD.t =
     MLBDD.dand (produce_id man pk1 pk2) (produce_id man pk3 pk4)
 
-  let closure_bdd_r (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (compiler:man -> pk -> pk -> pk -> pk -> 'a -> MLBDD.t) (con:'a) :MLBDD.t =
+  let closure_bdd_r (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (bdd:MLBDD.t):MLBDD.t =
     (* input cur is of pk1 and pk2 *)
-    let con_bdd = compiler man pk1 pk2 pk3 pk4 con in
-      let rec closure_bdd_aux (cur:MLBDD.t):MLBDD.t =
-        let next = MLBDD.dor cur (comp_bdd_4 man pk1 pk2 pk3 pk4 cur con_bdd) in
+    let rec closure_bdd_aux (cur:MLBDD.t):MLBDD.t =
+        let next = MLBDD.dor cur (comp_bdd_4 man pk1 pk2 pk3 pk4 cur bdd) in
           if MLBDD.equal cur next then
             cur
           else 
             closure_bdd_aux next
-      in closure_bdd_aux (produce_double_id man pk1 pk2 pk3 pk4) 	 
+    in closure_bdd_aux (produce_double_id man pk1 pk2 pk3 pk4) 	 
   
   (* pk1: x, pk2:x', pk3:y, pk4:y'*)
-  (* This is the tranisiton that only involves one step of transition on x tape but not proceeding on y tape, used to construct delta_re1 transition *)                  
+  (* This is the tranisiton that indicate if the next step is of E/X/Y/XY *) 
+  (* Note that for E, we directly calculate the transitive closure of it *)                 
+  (* But for X/Y/XY, we calculate only one step *)                 
   let rec delta_r (man:man)(pk1:pk)(pk2:pk)(pk3:pk)(pk4:pk)(ro:Rel.t option)(ns:next_step): (MLBDD.t)ROMap.t=
+    let id1234 = produce_double_id man pk1 pk2 pk3 pk4 in
       match ro with
-        | None -> ROMap.empty
-        | Some (Nil pkr) -> add_ro_mapping None (MLBDD.dand (compile_pkr_bdd man pk1 pk3 pkr) (produce_double_id man pk1 pk2 pk3 pk4)) ROMap.empty
+        | None -> (match ns with
+                      | E -> add_ro_mapping ro id1234 ROMap.empty
+                      | _ -> ROMap.empty)
+        | Some (Nil pkr) ->  (match ns with
+                              | E -> add_ro_mapping None (MLBDD.dand (compile_pkr_bdd man pk1 pk3 pkr) id1234) ROMap.empty
+                              | _ -> ROMap.empty)
         | Some (Right nk) -> let id12 = produce_id man pk1 pk2 in
-                              match ns with
+                              (match ns with
                                 | Y -> NKOMap.fold (fun nko bdd acc -> add_ro_mapping (right_nko_lifting nko) (MLBDD.dand bdd id12) acc) (delta_k man pk3 pk4 (Some nk)) ROMap.empty
-                                | _ -> add_ro_mapping None (MLBDD.dand id12 (folding_epsilon_k man (delta_k man pk3 pk4 (Some nk)))) ROMap.empty
+                                | E -> add_ro_mapping ro id1234 ROMap.empty
+                                | _ -> ROMap.empty)
         | Some (Id nk) -> let id1324 = produce_double_id man pk1 pk3 pk2 pk4 in
-                            match ns with
-                              | XY -> NKOMap.fold (fun nko bdd acc -> add_ro_mapping (right_nko_lifting nko) (MLBDD.dand bdd id1324) acc) (delta_k man pk3 pk4 (Some nk)) ROMap.empty
-                              | _ ->  add_ro_mapping None (MLBDD.dand id1324 (folding_epsilon_k man (delta_k man pk3 pk4 (Some nk)))) ROMap.empty
+                              (match ns with
+                              | XY -> NKOMap.fold (fun nko bdd acc -> add_ro_mapping (id_nko_lifting nko) (MLBDD.dand bdd id1324) acc) (delta_k man pk3 pk4 (Some nk)) ROMap.empty
+                              | E -> add_ro_mapping ro id1234 ROMap.empty
+                              | _ ->  ROMap.empty)
         | Some (Left nk) -> let id34 = produce_id man pk3 pk4 in
-                             match ns with
+                              (match ns with
                               | X -> NKOMap.fold (fun nko bdd acc -> add_ro_mapping (left_nko_lifting nko) (MLBDD.dand bdd id34) acc) (delta_k man pk1 pk2 (Some nk)) ROMap.empty
-                              | _ -> add_ro_mapping None (MLBDD.dand id34 (folding_epsilon_k man (delta_k man pk1 pk2 (Some nk)))) ROMap.empty
+                              | E -> add_ro_mapping ro id1234 ROMap.empty
+                              | _ -> ROMap.empty)
         | Some (Binary (nk1,nk2))-> delta_r man pk1 pk2 pk3 pk4 (Some (SeqR (Left nk1,Right nk2))) ns
-        | Some (App (pkr1,pkr2)) -> delta_r man pk1 pk2 pk3 pk4 (Some (SeqR (Nil pkr1, SeqR (SeqR (Left Dup, Right Dup), Nil pkr2)))) ns
+        | Some (App (pkr1,pkr2)) -> delta_r man pk1 pk2 pk3 pk4 (Some (SeqR (Nil pkr1, SeqR (SeqR (Left (Pkr (Binary (True,True))), Right (Pkr (Binary (True,True)))), Nil pkr2)))) ns
         | Some (OrR rs) -> SR.fold (fun r acc -> union_ro_mapping (delta_r man pk1 pk2 pk3 pk4 (Some r) ns) acc) rs ROMap.empty                                       
-        | Some (SeqR (r1,r2)) -> let ro_map1 = delta_r man pk1 pk2 pk3 pk4 (Some r1) ns in
-                                    let ro_map2 = delta_r man pk1 pk2 pk3 pk4 (Some r2) ns in
-                                      union_ro_mapping (concatenate_ro_mapping (filtering_epsilon_r ro_map1) (Some r2))
-                                      (let epsilon = folding_epsilon_r man ro_map1 in
-                                        apply_ro_mapping (comp_bdd_4 man pk1 pk2 pk3 pk4 epsilon) ro_map2)
-        | Some (StarR r) -> let epsilon = closure_bdd_r man pk1 pk2 pk3 pk4 (fun man pk1 pk2 pk3 pk4 r -> folding_epsilon_r man (delta_r man pk1 pk2 pk3 pk4 (Some r) ns)) r in                         
-                                            apply_ro_mapping (comp_bdd_4 man pk1 pk2 pk3 pk4 epsilon) 
-                                              (add_ro_mapping None (produce_double_id man pk1 pk2 pk3 pk4)
-                                                (concatenate_ro_mapping (filtering_epsilon_r (delta_r man pk1 pk2 pk3 pk4 (Some r) ns)) (Some (StarR r))))
+        | Some (SeqR (r1,r2)) ->   let ro_map1 = delta_r man pk1 pk2 pk3 pk4 (Some r1) ns in
+                                    (match ns with
+                                      | E ->  let ro_map2 = delta_r man pk1 pk2 pk3 pk4 (Some r2) ns in
+                                              union_ro_mapping (concatenate_ro_mapping (filtering_epsilon_r ro_map1) (Some r2))
+                                                (apply_ro_mapping (comp_bdd_4 man pk1 pk2 pk3 pk4 (folding_epsilon_r man ro_map1)) ro_map2) 
+                                      | _ ->  concatenate_ro_mapping ro_map1 (Some r2))
+        | Some (StarR r) -> let ro_map = delta_r man pk1 pk2 pk3 pk4 (Some r) ns in
+                            (match ns with
+                              | E -> let epsilon = closure_bdd_r man pk1 pk2 pk3 pk4 (folding_epsilon_r man ro_map) in
+                                       add_ro_mapping None epsilon (concatenate_ro_mapping 
+                                       (apply_ro_mapping (comp_bdd_4 man pk1 pk2 pk3 pk4 epsilon) (filtering_epsilon_r ro_map)) (Some (StarR r)))
+                              | _ ->  concatenate_ro_mapping ro_map (Some (StarR r)))
                                                 
   (* pk1: x, pk2:x', pk3:y, pk4:y'*)
-  (* Correspond to delta_re1^+ transistion in the paper *)
-  (* Unresolved bdd is the residual transition on x tape left to be resolved, ordered by pk1 pk2 pk3 pk4 *)
-  (* In our setting, to make residual tranisiton idempotent on y tape, we set up a relation (produce_id man pk3 pk4) on y tape *)
-  let delta_krx (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkrob:(NK.t option*Rel.t option)*MLBDD.t):(MLBDD.t)NKROBMap.t =
+  (* Correspond to delta_re1^* transistion in the paper *)
+  let delta_krx (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro:(NK.t option*Rel.t option)):(MLBDD.t)NKROMap.t =
    let worklist = Queue.create() in
-   let id1234 = produce_double_id man pk1 pk2 pk3 pk4 in
-   let rec delta_krx_aux (cur:(MLBDD.t)NKROBMap.t) :(MLBDD.t)NKROBMap.t =
+   let rec delta_krx_aux (cur:(MLBDD.t)NKROMap.t) :(MLBDD.t)NKROMap.t =
     match Queue.take_opt worklist with
       | None -> cur
-      (* bdd is in order of pk1 pk2 pk3 pk4*)
-      | Some (nkrob,transition_bdd) -> let ((nko,ro),unresolved_bdd) = nkrob in 
+      (* transition_bdd is in order of pk1 pk2 pk3 pk4*)
+      | Some (nkro,transition_bdd) -> let (nko,ro) = nkro in 
                             let nko_map = delta_k man pk1 pk2 nko in
                             let ro_map = delta_r man pk1 pk2 pk3 pk4 ro X in
-                            delta_krx_aux (NKOMap.fold (fun nko kbdd acc -> ROMap.fold 
-                                 (fun ro rbdd acc -> let transition_bdd' = 
-                                 (* The composition of two unresolved with rbdd (from ROMap) is one step transition of the current bdd*)
-                                 (* Then we intersect the kbdd on the first tape, and then compose with the current transition bdd*)
-                                 comp_bdd_4 man pk1 pk2 pk3 pk4 transition_bdd (MLBDD.dand kbdd (comp_bdd_4 man pk1 pk2 pk3 pk4 unresolved_bdd rbdd))
-                                in match add_nkro_mapping_updated ((nko,ro),id1234) transition_bdd' acc with
-                                    | (mapping',true) -> Queue.add (((nko,ro),id1234),transition_bdd') worklist; mapping'
-                                    | (mapping',false) -> mapping' ) ro_map acc) nko_map cur)
-   in Queue.add (nkrob,id1234) worklist;
-      delta_krx_aux (add_nkrob_mapping nkrob id1234 NKROBMap.empty)
+                            (* The right epsilon closure on the result *)
+                            let epsilon_closure_ro_map_right = ROMap.fold (fun ro bdd acc -> union_ro_mapping (apply_ro_mapping
+                               (comp_bdd_4 man pk1 pk2 pk3 pk4 bdd) (delta_r man pk1 pk2 pk3 pk4 ro E)) acc) ro_map ROMap.empty in
+                                delta_krx_aux (NKOMap.fold (fun nko kbdd acc -> ROMap.fold (fun ro rbdd acc -> 
+                                    let transition_bdd' = comp_bdd_4 man pk1 pk2 pk3 pk4 transition_bdd (MLBDD.dand kbdd rbdd)
+                                      in match add_nkro_mapping_updated (nko,ro) transition_bdd' acc with
+                                          | (mapping',true) -> Queue.add ((nko,ro),transition_bdd') worklist; mapping'
+                                          | (mapping',false) -> mapping' ) epsilon_closure_ro_map_right acc) nko_map cur)
+   in let (nko,ro) = nkro in
+        let epsilon_closure_ro_map_left = delta_r man pk1 pk2 pk3 pk4 ro E in
+          delta_krx_aux (ROMap.fold (fun ro bdd acc -> Queue.add ((nko,ro),bdd) worklist;
+                          add_nkro_mapping (nko,ro) bdd acc) epsilon_closure_ro_map_left NKROMap.empty)
    
    
   (* pk1: x, pk2:x', pk3:y, pk4:y'*)
   (* Each computation starts from the epsilon closure of the the nkro, which means we first do the delta_re1^* transition, and then
     do the delta_re transition.
   *)
-  let delta_kr (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkrob:(NK.t option*Rel.t option)*MLBDD.t): (MLBDD.t)NKROBMap.t=
-        (* Each calling context of delta_kr_aux starts from a epsilon clusure *)
-        (* The calculation down there is to calculate the delta_re transition *)
-        let id1234 = produce_double_id man pk1 pk2 pk3 pk4 in
-          let id34 = produce_id man pk3 pk4 in
-            let epsilon_closure = delta_krx man pk1 pk2 pk3 pk4 nkro in
-              let delta_krx_aux (nkrob:(NK.t option*Rel.t option)*MLBDD.t) :(MLBDD.t)NKROBMap.t =
-                let ((nko,ro),unresolved_bdd) = nkrob in
-                  let nko_map = delta_k man pk1 pk2 nko in
-                  let ro_y_map = delta_r man pk1 pk2 pk3 pk4 ro Y in
-                  let ro_xy_map = delta_r man pk1 pk2 pk3 pk4 ro XY in
-                    union_nkro_mapping ()
+  let delta_kr (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro:NK.t option*Rel.t option) (start_flag:bool): (MLBDD.t)NKROMap.t=
+    let delta_kr_aux (nkro:NK.t option*Rel.t option) :(MLBDD.t)NKROMap.t =
+      let (nko,ro)= nkro in
+        let nko_map = delta_k man pk1 pk2 nko in
+        let ro_y_map = delta_r man pk1 pk2 pk3 pk4 ro Y in
+        let ro_xy_map = delta_r man pk1 pk2 pk3 pk4 ro XY in
+          let next_y_map = ROMap.fold (fun ro rbdd acc -> add_nkro_mapping (nko,ro) rbdd acc) ro_y_map NKROMap.empty in
+          let next_xy_map = NKOMap.fold (fun nko kbdd acc -> ROMap.fold (fun ro rbdd acc -> add_nkro_mapping (nko,ro) (MLBDD.dand kbdd rbdd) acc) ro_xy_map acc) nko_map NKROMap.empty in
+          let next_map = union_nkro_mapping next_y_map next_xy_map in
+              NKROMap.fold (fun nkro bdd acc -> union_nkro_mapping (apply_nkro_mapping (comp_bdd_4 man pk1 pk2 pk3 pk4 bdd) (delta_krx man pk1 pk2 pk3 pk4 nkro)) acc) next_map NKROMap.empty
+      in let start_closure =
+          if start_flag then delta_krx man pk1 pk2 pk3 pk4 nkro
+          else (add_nkro_mapping nkro (produce_double_id man pk1 pk2 pk3 pk4) NKROMap.empty) in
+           NKROMap.fold (fun nkro bdd acc -> union_nkro_mapping (apply_nkro_mapping (comp_bdd_4 man pk1 pk2 pk3 pk4 bdd) (delta_kr_aux nkro)) acc) start_closure NKROMap.empty
 
-             
-            in       (NKROBMap.fold (fun nkrob bdd acc -> union_nkro_mapping (apply_nkro_mapping (comp_bdd_4 man pk1 pk2 pk3 pk4 bdd) 
-                      (delta_kr_aux nkrob)) acc) epsilon_closure NKROBMap.empty)
-      
   (* pk1: x, pk2:x', pk3:y, pk4:y'*)
   (* The reachable set is the x y pair on each state, thus the pk1 pk3 pair on each state*)            
-  let calculate_reachable_set (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkr:NK.t*Rel.t):(MLBDD.t)NKROMap.t =
+  let calculate_reachable_set (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (start:NK.t option*Rel.t option):(MLBDD.t)NKROMap.t =
     let support13 = generate_double_support man pk1 pk3 in
     let worklist = Queue.create() in
         let rec calculate_reachable_set_aux (cur:(MLBDD.t)NKROMap.t): (MLBDD.t)NKROMap.t=
@@ -860,13 +876,13 @@
                                                   | (next,false) -> next) 
                                                   (apply_nkro_mapping 
                     (fun nbdd -> (rename_bdd pk2 pk1 (rename_bdd pk4 pk3 (MLBDD.exists support13 (MLBDD.dand nbdd bdd)))))
-                      (delta_kr man pk1 pk2 pk3 pk4 nkro)) cur)
-       in Queue.add ((Some (fst nkr),Some (snd nkr)),(bdd_true man)) worklist;
-         calculate_reachable_set_aux (add_nkro_mapping (Some (fst nkr),Some (snd nkr)) (bdd_true man) NKROMap.empty) 
+                      (delta_kr man pk1 pk2 pk3 pk4 nkro (nkro_compare start nkro = 0))) cur)
+       in Queue.add (start,(bdd_true man)) worklist;
+         calculate_reachable_set_aux (add_nkro_mapping start (bdd_true man) NKROMap.empty) 
       
   (* pk1: x, pk2:x', pk3:y, pk4:y'*)
   (*But should be re-ordered to 0:y, 1:x, 2:y', 3:x'*)
-  let re_ordering (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (bdd:MLBDD.t):MLBDD.t=
+  let re_ordering (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (bdd:MLBDD.t):MLBDD.t=
   let permute var = if var mod 6 = pk1 then
                         var - pk1 + 1
                       else if var mod 6 = pk2 then
@@ -878,7 +894,7 @@
                       else failwith "Unexpected variable"
                       in MLBDD.permutef permute bdd
   
-  let back_ordering (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (bdd:MLBDD.t):MLBDD.t=
+  let back_ordering (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (bdd:MLBDD.t):MLBDD.t=
     let permute var = if var mod 6 = 0 then
                         var - 0 + pk3
                       else if var mod 6 = 1 then
@@ -915,30 +931,36 @@
         if MLBDD.is_false bdd then cur
         else let low = MLBDD.foldb_cont man.split_hist splitting_bdd_aux bdd in
               loop (BSet.add low cur) (MLBDD.dand bdd (MLBDD.dnot low)) in
-      BSet.map (fun bdd -> back_ordering man pk1 pk2 pk3 pk4 bdd) (loop BSet.empty (re_ordering man pk1 pk2 pk3 pk4 bdd))                         
+      BSet.map (fun bdd -> back_ordering pk1 pk2 pk3 pk4 bdd) (loop BSet.empty (re_ordering pk1 pk2 pk3 pk4 bdd))                         
   
-  let is_final (nkro:NK.t option*Rel.t option):bool =
+  let is_final_nkro (nkro:NK.t option*Rel.t option):bool =
     Option.is_none (fst nkro)&& Option.is_none (snd nkro)
+
+  let is_final_nkrob (nkrob:(NK.t option*Rel.t option)*MLBDD.t):bool =
+    is_final_nkro (fst nkrob)
+    
+  let is_final_nkrobs (nkrobs:NKROBSet.t):bool =
+    NKROBSet.exists (fun nkrob -> is_final_nkrob nkrob) nkrobs
   
   let nkr_to_nkro (nkr:NK.t*Rel.t):NK.t option*Rel.t option=
     (Some (fst nkr),Some (snd nkr))   
   (* pk1: x, pk2:x', pk3:y, pk4:y'*)
-  let generate_all_transition(man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkr:NK.t*Rel.t):(BSet.t*(BSet.t)NKROMap.t)NKROMap.t=
+  let generate_all_transition(man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (start:NK.t option*Rel.t option):(BSet.t*(BSet.t)NKROMap.t)NKROMap.t=
     let support24 = generate_double_support man pk2 pk4 in
     NKROMap.mapi (fun nkro bdd -> let new_delta = NKROMap.map (fun bdd -> splitting_bdd man pk1 pk2 pk3 pk4 bdd) 
-                                      (apply_nkro_mapping (fun tbdd -> (MLBDD.dand tbdd bdd)) (delta_kr man pk1 pk2 pk3 pk4 nkro)) in
+                                      (apply_nkro_mapping (fun tbdd -> (MLBDD.dand tbdd bdd)) (delta_kr man pk1 pk2 pk3 pk4 nkro (nkro_compare start nkro = 0))) in
                                     let hidden_state_set = 
-                                          if is_final nkro 
+                                          if is_final_nkro nkro 
                                             then BSet.singleton (bdd_true man)
-                                          else (NKROMap.fold (fun nkro bset acc -> BSet.union (BSet.map (fun bdd -> MLBDD.exists support24 bdd) bset) acc) new_delta BSet.empty) in
-                                        (hidden_state_set,new_delta)) (calculate_reachable_set man pk1 pk2 pk3 pk4 nkr)
+                                          else (NKROMap.fold (fun _ bset acc -> BSet.union (BSet.map (fun bdd -> MLBDD.exists support24 bdd) bset) acc) new_delta BSet.empty) in
+                                        (hidden_state_set,new_delta)) (calculate_reachable_set man pk1 pk2 pk3 pk4 start)
   
   let find_bdds (nkro:NK.t option*Rel.t option)(transition:(BSet.t*(BSet.t)NKROMap.t)NKROMap.t):BSet.t=
     match NKROMap.find_opt nkro transition with
       | None -> failwith "Transition not found"
       | Some (bdds,_) -> bdds                           
   
-  let simplify_all_transition(man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk)(nkr:NK.t*Rel.t) (all_transition:(BSet.t*(BSet.t)NKROMap.t)NKROMap.t):((MLBDD.t)NKROBMap.t)NKROBMap.t=
+  let simplify_all_transition(man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk)(all_transition:(BSet.t*(BSet.t)NKROMap.t)NKROMap.t):((MLBDD.t)NKROBMap.t)NKROBMap.t=
     let support12 = generate_double_support man pk1 pk2 in
     let support24 = generate_double_support man pk2 pk4 in
       NKROMap.fold (fun nkro1 (_,nkrom) acc -> NKROMap.fold (fun nkro2 hbdds1 acc ->
@@ -965,28 +987,19 @@
           if MLBDD.is_false bdd then
             acc
           else
-            let new_bdd = NKROBSMap.fold (fun nkrobs bddh acc -> MLBDD.dand (MLBDD.dnot bddh) acc) acc bdd in
+            let new_bdd = NKROBSMap.fold (fun _ bddh acc -> MLBDD.dand (MLBDD.dnot bddh) acc) acc bdd in
             let next_map =
             NKROBSMap.fold (fun nkrobs bddh acc -> 
               let ibdd = MLBDD.dand bdd bddh in
               let dbdd = MLBDD.dand (MLBDD.dnot bdd) bddh in
-              let temp = if MLBDD.is_false ibdd then
-                           acc
-                         else
-                           NKROBSMap.add (NKROBSet.add nkrob (fst nkrobs),(snd nkrobs)||is_final_state nkrob) ibdd acc in
-                if MLBDD.is_false dbdd then
-                           temp
-                else NKROBSMap.add nkrobs dbdd temp) acc NKROBSMap.empty in
-            if MLBDD.is_false new_bdd then
-              next_map
-            else
-              NKROBSMap.add ((NKROBSet.singleton nkrob),is_final_state nkrob) new_bdd next_map
+               add_nkrobs_mapping (NKROBSet.add nkrob nkrobs) ibdd
+                (add_nkrobs_mapping nkrobs dbdd acc)) acc NKROBSMap.empty in
+                  add_nkrobs_mapping (NKROBSet.singleton nkrob) new_bdd next_map
       in NKROBMap.fold (fun nkrob bdd acc -> add_transition nkrob bdd acc) nexts NKROBSMap.empty
       
-  let determinization (man:man) (pk1:pk) (pk2:pk) (start:NK.t option*Rel.t option) (transition:((MLBDD.t)NKROBMap.t)NKROBMap.t):((MLBDD.t)NKROBSMap.t)NKROBSMap.t*(NKROBSet.t*bool)=
+  let determinization (start:NK.t option*Rel.t option) (transition:((MLBDD.t)NKROBMap.t)NKROBMap.t):((MLBDD.t)NKROBSMap.t)NKROBSMap.t*NKROBSet.t=
      let worklist = Queue.create() in
-       let is_start_final_state = is_final_state (start,bdd_true man) in
-        let set_of_start = (NKROBMap.fold (fun nkrob _ acc -> if (fst nkrob) = start then NKROBSet.add nkrob acc else acc) transition NKROBSet.empty,is_start_final_state) in
+       let set_of_start = NKROBMap.fold (fun nkrob _ acc -> if nkro_compare (fst nkrob) start = 0 then NKROBSet.add nkrob acc else acc) transition NKROBSet.empty in
          let rec determinization_aux (acc:((MLBDD.t)NKROBSMap.t)NKROBSMap.t):((MLBDD.t)NKROBSMap.t)NKROBSMap.t=
           match Queue.take_opt worklist with
             | None -> acc
@@ -994,19 +1007,22 @@
                       if NKROBSMap.mem nkrobs acc then
                         determinization_aux acc
                       else
-                        let nexts = NKROBSet.fold (fun nkrob acc -> NKROBMap.union (fun _ bdd1 bdd2 -> Some (MLBDD.dor bdd1 bdd2)) 
+                        let nexts = NKROBSet.fold (fun nkrob acc -> union_nkrob_mapping 
                         (* Merge the bdd when they reach the same destination *)
                         (match (NKROBMap.find_opt nkrob transition) with
                           | None -> NKROBMap.empty
                           | Some nexts -> nexts)
-                        acc) (fst nkrobs) NKROBMap.empty in
+                        acc) nkrobs NKROBMap.empty in
                       let dnexts = determinize_transition nexts in
                       NKROBSMap.iter (fun nkrobs_next _ -> Queue.add nkrobs_next worklist) dnexts;
                       determinization_aux (NKROBSMap.add nkrobs dnexts acc)
          in Queue.add set_of_start worklist;
            (determinization_aux NKROBSMap.empty,set_of_start)      
-  
-  let bisim (man:man)(pk1:pk)(pk2:pk)(start1:NKROBSet.t*bool)(start2:NKROBSet.t*bool)(aut1:((MLBDD.t)NKROBSMap.t)NKROBSMap.t) (aut2:((MLBDD.t)NKROBSMap.t)NKROBSMap.t):bool =
+
+  let projection_compiler (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro:(NK.t option*Rel.t option)):((MLBDD.t)NKROBSMap.t)NKROBSMap.t*NKROBSet.t =
+    determinization nkro (simplify_all_transition man pk1 pk2 pk3 pk4 (generate_all_transition man pk1 pk2 pk3 pk4 nkro))    
+
+  let bisim (man:man)(pk1:pk)(pk2:pk)(start1:NKROBSet.t)(start2:NKROBSet.t)(aut1:((MLBDD.t)NKROBSMap.t)NKROBSMap.t) (aut2:((MLBDD.t)NKROBSMap.t)NKROBSMap.t):bool =
     let worklist = Queue.create() in
     let support1 = generate_support man pk1 in
     let rec bisim_aux (donelist:(MLBDD.t)NKROBSSMap.t):bool =
@@ -1018,7 +1034,7 @@
                                   if MLBDD.is_false bdd then
                                     bisim_aux newdonelist
                                   else
-                                    if snd nkros1 <> snd nkros2 then
+                                    if is_final_nkrobs nkros1 <> is_final_nkrobs nkros2 then
                                       false
                                     else
                                       let next1 = 
@@ -1032,12 +1048,12 @@
                                         NKROBSMap.iter (fun nkros1 bdd1 -> 
                                           NKROBSMap.iter (fun nkros2 bdd2 -> 
                                             Queue.add ((nkros1,nkros2),(rename_bdd pk2 pk1 (MLBDD.exists support1 (MLBDD.dand bdd (MLBDD.dand bdd1 bdd2))))) worklist) next2) next1;
-                                            (let reachable_bdd = (NKROBSMap.fold (fun nkros2 bdd2 acc -> MLBDD.dor acc bdd2) next2 (bdd_false man)) in
+                                            (let reachable_bdd = (NKROBSMap.fold (fun _ bdd2 acc -> MLBDD.dor acc bdd2) next2 (bdd_false man)) in
                                               NKROBSMap.iter (fun nkros1 bdd1 -> 
-                                                Queue.add ((nkros1,(NKROBSet.empty,false)),(rename_bdd pk2 pk1 (MLBDD.exists support1 (MLBDD.dand bdd (MLBDD.dand bdd1 (MLBDD.dnot reachable_bdd)))))) worklist) next1);
-                                            (let reachable_bdd = (NKROBSMap.fold (fun nkros1 bdd1 acc -> MLBDD.dor acc bdd1) next1 (bdd_false man)) in
+                                                Queue.add ((nkros1,NKROBSet.empty),(rename_bdd pk2 pk1 (MLBDD.exists support1 (MLBDD.dand bdd (MLBDD.dand bdd1 (MLBDD.dnot reachable_bdd)))))) worklist) next1);
+                                            (let reachable_bdd = (NKROBSMap.fold (fun _ bdd1 acc -> MLBDD.dor acc bdd1) next1 (bdd_false man)) in
                                               NKROBSMap.iter (fun nkros2 bdd2 -> 
-                                                Queue.add (((NKROBSet.empty,false),nkros2),(rename_bdd pk2 pk1 (MLBDD.exists support1 (MLBDD.dand bdd (MLBDD.dand (MLBDD.dnot reachable_bdd) bdd2))))) worklist) next2);    
+                                                Queue.add ((NKROBSet.empty,nkros2),(rename_bdd pk2 pk1 (MLBDD.exists support1 (MLBDD.dand bdd (MLBDD.dand (MLBDD.dnot reachable_bdd) bdd2))))) worklist) next2);    
                                             bisim_aux newdonelist
     in
      Queue.add ((start1,start2),bdd_true man) worklist;
