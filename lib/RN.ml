@@ -187,6 +187,7 @@ module rec Rel : sig
   | OrR of SR.t
   | SeqR of t * t
   | StarR of t
+  | IdComp of NK.t option * t
   val compare: t -> t -> int
 end
 = struct
@@ -200,7 +201,8 @@ end
  | OrR of SR.t
  | SeqR of t * t
  | StarR of t
-let rec compare t1 t2 =
+ | IdComp of NK.t option * t
+ let rec compare t1 t2 =
   match (t1, t2) with
   | (Left nk1, Left nk2) -> NK.compare nk1 nk2
   | (Left _, _) -> 1
@@ -227,7 +229,10 @@ let rec compare t1 t2 =
   | (SeqR _, _) -> 1
   | (_, SeqR _) -> -1
   | (StarR t1, StarR t2) -> compare t1 t2
-end
+  | (StarR _, _) -> 1
+  | (_, StarR _) -> -1
+  | (IdComp (nko1, t1), IdComp (nko2, t2)) -> let c = Option.compare NK.compare nko1 nko2 in if c = 0 then compare t1 t2 else c
+  end
 and SR : Set.S with type elt = Rel.t
 = Set.Make(Rel)
 
@@ -329,8 +334,9 @@ let rec rel_to_string (rel:Rel.t):string =
   | OrR sr -> "OrR " ^ (SR.fold (fun rel acc -> acc ^ (rel_to_string rel) ^ " ") sr "")
   | SeqR (rel1, rel2) -> "SeqR " ^ (rel_to_string rel1) ^ " " ^ (rel_to_string rel2)
   | StarR rel -> "StarR " ^ (rel_to_string rel)
-
-
+  | IdComp (None, rel) -> "IdComp None " ^ (rel_to_string rel)
+  | IdComp (Some nk, rel) -> "IdComp " ^ (nk_to_string nk) ^ " " ^ (rel_to_string rel)
+ 
 let nkro_to_string (nkro:NK.t option*Rel.t option):string=
   match nkro with
   | (None, None) -> "None, None"
@@ -823,6 +829,21 @@ let rec delta_r (man:man)(pk1:pk)(pk2:pk)(pk3:pk)(pk4:pk)(ro:Rel.t option)(ns:ne
                                      add_ro_mapping None epsilon (concatenate_ro_mapping 
                                      (apply_ro_mapping (comp_bdd_4 man pk1 pk2 pk3 pk4 epsilon) (filtering_epsilon_r ro_map)) (Some (StarR r)))
                             | _ ->  concatenate_ro_mapping ro_map (Some (StarR r)))
+      | Some (IdComp (nko,r)) -> let ro_map = delta_r man pk1 pk2 pk3 pk4 (Some r) ns in
+                                  (match ns with
+                                    | Y 
+                                    | E -> ROMap.fold (fun ro bdd acc -> match (nko,ro) with
+                                        | (None,None) -> add_ro_mapping None bdd acc
+                                        | (Some _ ,None) -> acc
+                                        | (_, Some r) -> add_ro_mapping (Some (IdComp (nko,r))) bdd acc) ro_map ROMap.empty  
+                                    | X
+                                    | XY -> let nko_map = delta_k man pk1 pk2 nko in
+                                        NKOMap.fold (fun nko bdd acc -> ROMap.fold (fun ro rbdd acc -> match (nko,ro) with
+                                            | (None,None) -> add_ro_mapping None (MLBDD.dand bdd rbdd) acc
+                                            | (Some _,None) -> acc
+                                            | (_, Some r) -> add_ro_mapping (Some (IdComp (nko,r))) (MLBDD.dand bdd rbdd) acc) ro_map acc) nko_map ROMap.empty                                              
+                                  )
+                                                                      
                                               
 (* pk1: x, pk2:x', pk3:y, pk4:y'*)
 (* Correspond to delta_re1^* transistion in the paper *)
@@ -847,7 +868,6 @@ let delta_krx (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro:(NK.t option*R
       let epsilon_closure_ro_map_left = delta_r man pk1 pk2 pk3 pk4 ro E in
         delta_krx_aux (ROMap.fold (fun ro bdd acc -> Queue.add ((nko,ro),bdd) worklist;
                         add_nkro_mapping (nko,ro) bdd acc) epsilon_closure_ro_map_left NKROMap.empty)
- 
  
 (* pk1: x, pk2:x', pk3:y, pk4:y'*)
 (* Each computation starts from the epsilon closure of the the nkro, which means we first do the delta_re1^* transition, and then

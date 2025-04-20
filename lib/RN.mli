@@ -143,7 +143,7 @@ module rec Rel : sig
     | OrR of SR.t
     | SeqR of t * t
     | StarR of t
-
+    | IdComp of NK.t option * t
   val compare : t -> t -> int
 end
 and SR : Set.S with type elt = Rel.t
