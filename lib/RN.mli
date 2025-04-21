@@ -241,3 +241,5 @@ val determinize_transition : MLBDD.t NKROBMap.t -> MLBDD.t NKROBSMap.t
 val determinization : NK.t option * Rel.t option -> MLBDD.t NKROBMap.t NKROBMap.t -> MLBDD.t NKROBSMap.t NKROBSMap.t * NKROBSet.t
 val projection_compiler : man -> pk -> pk -> pk ->  pk -> (NK.t option * Rel.t option) -> MLBDD.t NKROBSMap.t NKROBSMap.t * NKROBSet.t
 val bisim : man -> pk -> pk -> NKROBSet.t -> NKROBSet.t -> MLBDD.t NKROBSMap.t NKROBSMap.t -> MLBDD.t NKROBSMap.t NKROBSMap.t -> bool
+
+val parse_char_to_pred : char -> pred

@@ -1085,3 +1085,16 @@ let bisim (man:man)(pk1:pk)(pk2:pk)(start1:NKROBSet.t)(start2:NKROBSet.t)(aut1:(
    Queue.add ((start1,start2),bdd_true man) worklist;
      bisim_aux NKROBSSMap.empty 
   
+
+let parse_char_to_pred (c:char):pred=
+  let i = ref (Char.code c) in
+    let pred = ref (True) in
+      for j = 0 to 7 do
+        (if !i mod 2 = 1 then
+          pred := And (!pred,Test (j,true))
+        else
+          pred := And (!pred,Test (j,false))
+          );
+          i := !i / 2
+      done;
+      !pred  
