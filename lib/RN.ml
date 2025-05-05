@@ -188,6 +188,7 @@ module rec Rel : sig
   | SeqR of t * t
   | StarR of t
   | IdComp of NK.t option * t
+  | Apply of pkr * NK.t
   val compare: t -> t -> int
 end
 = struct
@@ -202,6 +203,7 @@ end
  | SeqR of t * t
  | StarR of t
  | IdComp of NK.t option * t
+ | Apply of pkr * NK.t
  let rec compare t1 t2 =
   match (t1, t2) with
   | (Left nk1, Left nk2) -> NK.compare nk1 nk2
@@ -232,6 +234,9 @@ end
   | (StarR _, _) -> 1
   | (_, StarR _) -> -1
   | (IdComp (nko1, t1), IdComp (nko2, t2)) -> let c = Option.compare NK.compare nko1 nko2 in if c = 0 then compare t1 t2 else c
+  | (IdComp _, _) -> 1
+  | (_, IdComp _) -> -1
+  | (Apply (pkr1, nk), Apply (pkr2, nk2)) -> let c = Stdlib.compare pkr1 pkr2 in if c = 0 then NK.compare nk nk2 else c
   end
 and SR : Set.S with type elt = Rel.t
 = Set.Make(Rel)
@@ -336,6 +341,7 @@ let rec rel_to_string (rel:Rel.t):string =
   | StarR rel -> "StarR " ^ (rel_to_string rel)
   | IdComp (None, rel) -> "IdComp None " ^ (rel_to_string rel)
   | IdComp (Some nk, rel) -> "IdComp " ^ (nk_to_string nk) ^ " " ^ (rel_to_string rel)
+  | Apply (pkr, nk) -> "Apply " ^ (pkr_to_string pkr) ^ " " ^ (nk_to_string nk)
  
 let nkro_to_string (nkro:NK.t option*Rel.t option):string=
   match nkro with
@@ -773,6 +779,12 @@ let id_nko_lifting (nko:NK.t option):(Rel.t option) =
     | None -> None
     | Some nk -> Some (Id nk)
 
+let apply_nko_lifting (nko:NK.t option) (pkr:pkr):(Rel.t option) =
+  match nko with
+    | None -> None
+    | Some nk -> Some (Apply (pkr,nk))
+
+
 let produce_double_id (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk):MLBDD.t =
   MLBDD.dand (produce_id man pk1 pk2) (produce_id man pk3 pk4)
 
@@ -843,6 +855,11 @@ let rec delta_r (man:man)(pk1:pk)(pk2:pk)(pk3:pk)(pk4:pk)(ro:Rel.t option)(ns:ne
                                             | (Some _,None) -> acc
                                             | (_, Some r) -> add_ro_mapping (Some (IdComp (nko,r))) (MLBDD.dand bdd rbdd) acc) ro_map acc) nko_map ROMap.empty                                              
                                   )
+      | Some (Apply (pkr,nk)) -> let pkr_rel = (MLBDD.dand (compile_pkr_bdd man pk1 pk3 pkr) (compile_pkr_bdd man pk2 pk4 pkr)) in
+                                  (match ns with
+                                     | XY -> NKOMap.fold (fun nko bdd acc -> add_ro_mapping (apply_nko_lifting nko pkr) (MLBDD.dand bdd pkr_rel) acc) (delta_k man pk3 pk4 (Some nk)) ROMap.empty
+                                     | E -> add_ro_mapping ro id1234 ROMap.empty
+                                     | _ ->  ROMap.empty)                             
                                                                       
                                               
 (* pk1: x, pk2:x', pk3:y, pk4:y'*)
