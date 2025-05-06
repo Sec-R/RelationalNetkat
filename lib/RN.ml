@@ -818,7 +818,7 @@ let rec delta_r (man:man)(pk1:pk)(pk2:pk)(pk3:pk)(pk4:pk)(ro:Rel.t option)(ns:ne
                               | _ -> ROMap.empty)
       | Some (Id nk) -> let id1324 = produce_double_id man pk1 pk3 pk2 pk4 in
                             (match ns with
-                            | XY -> NKOMap.fold (fun nko bdd acc -> add_ro_mapping (id_nko_lifting nko) (MLBDD.dand bdd id1324) acc) (delta_k man pk3 pk4 (Some nk)) ROMap.empty
+                            | XY -> NKOMap.fold (fun nko bdd acc -> add_ro_mapping (id_nko_lifting nko) (MLBDD.dand bdd id1324) acc) (delta_k man pk1 pk2 (Some nk)) ROMap.empty
                             | E -> add_ro_mapping ro id1234 ROMap.empty
                             | _ ->  ROMap.empty)
       | Some (Left nk) -> let id34 = produce_id man pk3 pk4 in
@@ -857,7 +857,7 @@ let rec delta_r (man:man)(pk1:pk)(pk2:pk)(pk3:pk)(pk4:pk)(ro:Rel.t option)(ns:ne
                                   )
       | Some (Apply (pkr,nk)) -> let pkr_rel = (MLBDD.dand (compile_pkr_bdd man pk1 pk3 pkr) (compile_pkr_bdd man pk2 pk4 pkr)) in
                                   (match ns with
-                                     | XY -> NKOMap.fold (fun nko bdd acc -> add_ro_mapping (apply_nko_lifting nko pkr) (MLBDD.dand bdd pkr_rel) acc) (delta_k man pk3 pk4 (Some nk)) ROMap.empty
+                                     | XY -> NKOMap.fold (fun nko bdd acc -> add_ro_mapping (apply_nko_lifting nko pkr) (MLBDD.dand bdd pkr_rel) acc) (delta_k man pk1 pk2 (Some nk)) ROMap.empty
                                      | E -> add_ro_mapping ro id1234 ROMap.empty
                                      | _ ->  ROMap.empty)                             
                                                                       
