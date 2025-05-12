@@ -638,13 +638,25 @@ let tests = "MLBDD tests" >::: [
           assert_equal netmask 24;
           assert_equal ip (1 lsl 24 + 2 lsl 16 + 3 lsl 8 + 4);
           let edgesmap = Eval.parse_edges_to_map json2 in
+          let man = RN.init_man (33+(Eval.NodesMap.cardinal nodesmap)) (33+Eval.NodesMap.cardinal nodesmap) in
           (*
           let json3 = Yojson.Basic.from_file "../../../dataset/test-node.json" in
           let nodesmap2 = Eval.parse_nodes_to_map json3 in
           let edgesmap = Eval.parse_edges_to_map json2 in
           print_endline (RN.pkr_to_string (Eval.parse_routing_table json3 nodesmap2 edgesmap));*)
           let network1 = Eval.json_to_network json1 nodesmap edgesmap ["border1";"border2"] ["host-db"] in
-          assert_equal true true
+          let core1_loc = Eval.parse_location_to_pred "core1" 0 false nodesmap in
+          let empty_map = RN.NKROBSMap.empty in
+          let core1_filter = RN.Binary (core1_loc, True) in
+          let id = RN.Rel.StarR (RN.Rel.App (Id,Id)) in
+          let relation = RN.Rel.SeqR (id, RN.Rel.SeqR (RN.Rel.Nil core1_filter, id)) in
+          let t = Sys.time() in
+          let (nkrobsmap1, start1) = RN.projection_compiler man 0 1 2 3 (Some network1, Some relation) in
+          Printf.printf "Execution time 1: %fs\n" (Sys.time() -. t);
+          let t = Sys.time() in
+          let boolean = (RN.bisim man 2 3 start1 start1 nkrobsmap1 empty_map) in
+          Printf.printf "Execution time 2: %fs\n" (Sys.time() -. t);
+          assert_equal true boolean; 
           (* print to see! *)
      (*     let open Yojson.Basic.Util in
           let jkeys = Yojson.Basic.Util.keys json1 in

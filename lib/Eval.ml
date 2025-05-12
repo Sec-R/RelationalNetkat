@@ -72,7 +72,7 @@ let parse_nodes_to_map (nodes:Yojson.Basic.t) : int NodesMap.t =
 
 let rec binary_to_pred (start:int) (length:int) (shifter:int) (num:int) : pred =
   match length with
-  | 0 -> failwith "Length must be greater than 0"
+  | 0 -> True (* Invoked by netmask = 0, suggesting not bound by anything *)
   | 1 -> if (num lsr shifter) land 1 = 0 then
            Test (start,false)
          else
@@ -85,7 +85,7 @@ let rec binary_to_pred (start:int) (length:int) (shifter:int) (num:int) : pred =
 
 let rec binary_to_pkr (start:int) (length:int) (shifter:int) (num:int) : pkr =
   match length with
-  | 0 -> failwith "Length must be greater than 0"
+  | 0 -> Id (* Invoked by netmask = 0, suggesting not bound by anything *)
   | 1 -> if (num lsr shifter) land 1 = 0 then
            RightAsgn (start,false)
          else
@@ -146,16 +146,19 @@ let parse_routing_table (table:Yojson.Basic.t) (nodes: int NodesMap.t) (edges: (
         | (_, entry)::xs ->
             let ip = entry |> member "Network" |> to_string in
             let (ip, mask) = parse_ip_string ip in
-            let ip_filter = binary_to_pred 0 mask 31 ip in
+            let ip_filter = binary_to_pred (1 + (length_of_int (NodesMap.cardinal nodes))) mask 31 ip in
             let loc = entry |> member "Node" |> to_string in
-            let loc_filter = parse_location_to_pred loc 32 false nodes in
+            let loc_filter = parse_location_to_pred loc 0 false nodes in
             let interface = entry |> member "Next_Hop_Interface" |> to_string in
             let next_loc_pkr = 
                   if String.equal interface "local"
-                    then parse_location_to_pkr loc 32 true nodes
+                    then parse_location_to_pkr loc 0 true nodes
+                    (* Setting the discard the testing interface *)
                   else if (String.equal interface "null_interface" || String.equal interface "Loopback0")
                     then Binary (False,False)
-                  else parse_location_to_pkr (find_next_loc loc interface edges) 32 false nodes in
+                    (* Neglect the interface sending to nowhere/outside network *)
+                  else try (parse_location_to_pkr (find_next_loc loc interface edges) 0 false nodes)
+                    with _ -> Binary (False,False) in
             let new_entry_filter = And (ip_filter,loc_filter) in
             let new_entry_action = AndP (Binary (And (Neg filter,new_entry_filter),True), next_loc_pkr) in       
             aux (OrP (acc, new_entry_action)) (Or (filter, new_entry_filter)) xs
