@@ -1,6 +1,6 @@
 (test
   (name test_RelationalNetkat)
-  (libraries RelationalNetkat mlbdd ounit2)
+  (libraries RelationalNetkat mlbdd ounit2 yojson)
 )
 
 (env

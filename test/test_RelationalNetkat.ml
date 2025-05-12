@@ -420,7 +420,7 @@ let tests = "MLBDD tests" >::: [
           let bdd4 = RN.BSet.fold (fun acc x -> MLBDD.dor acc x) bddset (RN.bdd_false man) in
           assert_equal ~cmp:MLBDD.equal bdd3 bdd4;
           assert_equal (RN.BSet.cardinal bddset) 512;
-          let man2 = RN.init_man 64 64 in
+          let man2 = RN.init_man 128 128 in
           let bdd5 = RN.produce_id man2 pk1 pk3 in
           let bdd6 = RN.BSet.choose (RN.splitting_bdd man2 pk1 pk2 pk3 pk4 bdd5) in
           assert_equal ~cmp:MLBDD.equal bdd5 bdd6;
@@ -627,6 +627,34 @@ let tests = "MLBDD tests" >::: [
           let nkro11 = (Some nk1, (Some (RN.Rel.IdComp ((Some nk2),(RN.Rel.StarR (RN.Rel.App (Id,Id))))))) in
           let (nkrobsmap11,start15) = RN.projection_compiler man pk1 pk2 pk3 pk4 nkro11 in
           assert_equal true (RN.bisim man pk3 pk4 start12 start15 nkrobsmap8 nkrobsmap11);
+          );
+        "json_test" >:: (fun _ctx ->
+          assert_equal (RN.And (RN.Test (0,true),RN.And (RN.Test (1,true),RN.Test (2,false)))) (Eval.binary_to_pred 0 3 2 6);
+          let json1 = Yojson.Basic.from_file "../../../dataset/change1-node.json" in
+          let json2 = Yojson.Basic.from_file "../../../dataset/change1-edge.json" in
+          let nodesmap = Eval.parse_nodes_to_map json1 in
+          assert_equal ((Eval.binary_to_pred 0 5 4 12)) (Eval.parse_location_to_pred "leaf1" 0 false nodesmap);
+          let (ip,netmask) = Eval.parse_ip_string "1.2.3.4/24" in
+          assert_equal netmask 24;
+          assert_equal ip (1 lsl 24 + 2 lsl 16 + 3 lsl 8 + 4);
+          let edgesmap = Eval.parse_edges_to_map json2 in
+          (*
+          let json3 = Yojson.Basic.from_file "../../../dataset/test-node.json" in
+          let nodesmap2 = Eval.parse_nodes_to_map json3 in
+          let edgesmap = Eval.parse_edges_to_map json2 in
+          print_endline (RN.pkr_to_string (Eval.parse_routing_table json3 nodesmap2 edgesmap));*)
+          let network1 = Eval.json_to_network json1 nodesmap edgesmap ["border1";"border2"] ["host-db"] in
+          assert_equal true true
+          (* print to see! *)
+     (*     let open Yojson.Basic.Util in
+          let jkeys = Yojson.Basic.Util.keys json1 in
+          List.iter (fun key -> print_endline key) jkeys;
+          let nodes = json1 |> member "0" |> Yojson.Basic.pretty_to_string in
+          print_endline nodes; 
+          let edgesmap = Eval.parse_edges_to_map json2 in
+          print_endline (Eval.edgesMap_to_string edgesmap);
+          print_endline (Eval.nodesMap_to_string nodesmap);*)
+
           );
 
       ]

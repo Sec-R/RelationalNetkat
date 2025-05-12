@@ -964,7 +964,7 @@ let splitting_bdd (man:man)(pk1:pk)(pk2:pk)(pk3:pk)(pk4:pk) (bdd:MLBDD.t): BSet.
     match b with
       | MLBDD.BFalse -> bdd_false man
       | MLBDD.BTrue -> bdd_true man
-      | MLBDD.BIf (low,var,high) -> if var mod 6 != 1 then
+      | MLBDD.BIf (low,var,high) -> if var mod 6 <> 1 then
                                        var_if man var low high
                                     else if MLBDD.is_false low then
                                         var_high_branch man var high

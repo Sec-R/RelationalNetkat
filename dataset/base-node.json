@@ -1,0 +1,1031 @@
+{
+    "0": {
+        "Node": "border1",
+        "Network": "2.1.1.1/32",
+        "Next_Hop_Interface": "Loopback0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "1": {
+        "Node": "border1",
+        "Network": "2.1.1.2/32",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 3,
+        "Admin_Distance": 110
+    },
+    "2": {
+        "Node": "border1",
+        "Network": "2.1.2.1/32",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 2,
+        "Admin_Distance": 110
+    },
+    "3": {
+        "Node": "border1",
+        "Network": "2.1.2.2/32",
+        "Next_Hop_Interface": "GigabitEthernet2/0",
+        "Metric": 2,
+        "Admin_Distance": 110
+    },
+    "4": {
+        "Node": "border1",
+        "Network": "2.1.3.1/32",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 3,
+        "Admin_Distance": 110
+    },
+    "5": {
+        "Node": "border1",
+        "Network": "2.1.3.2/32",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 3,
+        "Admin_Distance": 110
+    },
+    "6": {
+        "Node": "border1",
+        "Network": "2.12.11.0/24",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "7": {
+        "Node": "border1",
+        "Network": "2.12.11.1/32",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "8": {
+        "Node": "border1",
+        "Network": "2.12.12.0/24",
+        "Next_Hop_Interface": "GigabitEthernet2/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "9": {
+        "Node": "border1",
+        "Network": "2.12.12.1/32",
+        "Next_Hop_Interface": "GigabitEthernet2/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "10": {
+        "Node": "border1",
+        "Network": "2.12.21.0/24",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 2,
+        "Admin_Distance": 110
+    },
+    "11": {
+        "Node": "border1",
+        "Network": "2.12.22.0/24",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 3,
+        "Admin_Distance": 110
+    },
+    "12": {
+        "Node": "border1",
+        "Network": "2.23.11.0/24",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 2,
+        "Admin_Distance": 110
+    },
+    "13": {
+        "Node": "border1",
+        "Network": "2.23.12.0/24",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 2,
+        "Admin_Distance": 110
+    },
+    "14": {
+        "Node": "border1",
+        "Network": "2.23.21.0/24",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 3,
+        "Admin_Distance": 110
+    },
+    "15": {
+        "Node": "border1",
+        "Network": "2.23.22.0/24",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 3,
+        "Admin_Distance": 110
+    },
+    "16": {
+        "Node": "border1",
+        "Network": "2.34.201.0/24",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 20,
+        "Admin_Distance": 110
+    },
+    "17": {
+        "Node": "border1",
+        "Network": "2.128.0.0/16",
+        "Next_Hop_Interface": "null_interface",
+        "Metric": 0,
+        "Admin_Distance": 200
+    },
+    "20": {
+        "Node": "border1",
+        "Network": "10.12.11.0/24",
+        "Next_Hop_Interface": "GigabitEthernet0/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "21": {
+        "Node": "border1",
+        "Network": "10.12.11.2/32",
+        "Next_Hop_Interface": "GigabitEthernet0/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "22": {
+        "Node": "border1",
+        "Network": "10.23.21.0/24",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 20,
+        "Admin_Distance": 110
+    },
+    "23": {
+        "Node": "border2",
+        "Network": "2.1.1.1/32",
+        "Next_Hop_Interface": "GigabitEthernet2/0",
+        "Metric": 3,
+        "Admin_Distance": 110
+    },
+    "24": {
+        "Node": "border2",
+        "Network": "2.1.1.2/32",
+        "Next_Hop_Interface": "Loopback0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "25": {
+        "Node": "border2",
+        "Network": "2.1.2.1/32",
+        "Next_Hop_Interface": "GigabitEthernet2/0",
+        "Metric": 2,
+        "Admin_Distance": 110
+    },
+    "26": {
+        "Node": "border2",
+        "Network": "2.1.2.2/32",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 2,
+        "Admin_Distance": 110
+    },
+    "27": {
+        "Node": "border2",
+        "Network": "2.1.3.1/32",
+        "Next_Hop_Interface": "GigabitEthernet2/0",
+        "Metric": 3,
+        "Admin_Distance": 110
+    },
+    "28": {
+        "Node": "border2",
+        "Network": "2.1.3.2/32",
+        "Next_Hop_Interface": "GigabitEthernet2/0",
+        "Metric": 3,
+        "Admin_Distance": 110
+    },
+    "29": {
+        "Node": "border2",
+        "Network": "2.12.11.0/24",
+        "Next_Hop_Interface": "GigabitEthernet2/0",
+        "Metric": 2,
+        "Admin_Distance": 110
+    },
+    "30": {
+        "Node": "border2",
+        "Network": "2.12.12.0/24",
+        "Next_Hop_Interface": "GigabitEthernet2/0",
+        "Metric": 3,
+        "Admin_Distance": 110
+    },
+    "31": {
+        "Node": "border2",
+        "Network": "2.12.21.0/24",
+        "Next_Hop_Interface": "GigabitEthernet2/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "32": {
+        "Node": "border2",
+        "Network": "2.12.21.1/32",
+        "Next_Hop_Interface": "GigabitEthernet2/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "33": {
+        "Node": "border2",
+        "Network": "2.12.22.0/24",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "34": {
+        "Node": "border2",
+        "Network": "2.12.22.1/32",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "35": {
+        "Node": "border2",
+        "Network": "2.23.11.0/24",
+        "Next_Hop_Interface": "GigabitEthernet2/0",
+        "Metric": 2,
+        "Admin_Distance": 110
+    },
+    "36": {
+        "Node": "border2",
+        "Network": "2.23.12.0/24",
+        "Next_Hop_Interface": "GigabitEthernet2/0",
+        "Metric": 2,
+        "Admin_Distance": 110
+    },
+    "37": {
+        "Node": "border2",
+        "Network": "2.23.21.0/24",
+        "Next_Hop_Interface": "GigabitEthernet2/0",
+        "Metric": 3,
+        "Admin_Distance": 110
+    },
+    "38": {
+        "Node": "border2",
+        "Network": "2.23.22.0/24",
+        "Next_Hop_Interface": "GigabitEthernet2/0",
+        "Metric": 3,
+        "Admin_Distance": 110
+    },
+    "39": {
+        "Node": "border2",
+        "Network": "2.34.201.0/24",
+        "Next_Hop_Interface": "GigabitEthernet2/0",
+        "Metric": 20,
+        "Admin_Distance": 110
+    },
+    "40": {
+        "Node": "border2",
+        "Network": "2.128.0.0/16",
+        "Next_Hop_Interface": "null_interface",
+        "Metric": 0,
+        "Admin_Distance": 200
+    },
+    "43": {
+        "Node": "border2",
+        "Network": "10.12.11.0/24",
+        "Next_Hop_Interface": "GigabitEthernet2/0",
+        "Metric": 20,
+        "Admin_Distance": 110
+    },
+    "44": {
+        "Node": "border2",
+        "Network": "10.23.21.0/24",
+        "Next_Hop_Interface": "GigabitEthernet0/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "45": {
+        "Node": "border2",
+        "Network": "10.23.21.2/32",
+        "Next_Hop_Interface": "GigabitEthernet0/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "46": {
+        "Node": "core1",
+        "Network": "2.1.1.1/32",
+        "Next_Hop_Interface": "GigabitEthernet0/0",
+        "Metric": 2,
+        "Admin_Distance": 110
+    },
+    "47": {
+        "Node": "core1",
+        "Network": "2.1.1.2/32",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 2,
+        "Admin_Distance": 110
+    },
+    "48": {
+        "Node": "core1",
+        "Network": "2.1.2.1/32",
+        "Next_Hop_Interface": "Loopback0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "49": {
+        "Node": "core1",
+        "Network": "2.1.2.2/32",
+        "Next_Hop_Interface": "GigabitEthernet0/0",
+        "Metric": 3,
+        "Admin_Distance": 110
+    },
+    "50": {
+        "Node": "core1",
+        "Network": "2.1.2.2/32",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 3,
+        "Admin_Distance": 110
+    },
+    "51": {
+        "Node": "core1",
+        "Network": "2.1.2.2/32",
+        "Next_Hop_Interface": "GigabitEthernet2/0",
+        "Metric": 3,
+        "Admin_Distance": 110
+    },
+    "52": {
+        "Node": "core1",
+        "Network": "2.1.2.2/32",
+        "Next_Hop_Interface": "GigabitEthernet3/0",
+        "Metric": 3,
+        "Admin_Distance": 110
+    },
+    "53": {
+        "Node": "core1",
+        "Network": "2.1.3.1/32",
+        "Next_Hop_Interface": "GigabitEthernet2/0",
+        "Metric": 2,
+        "Admin_Distance": 110
+    },
+    "54": {
+        "Node": "core1",
+        "Network": "2.1.3.2/32",
+        "Next_Hop_Interface": "GigabitEthernet3/0",
+        "Metric": 2,
+        "Admin_Distance": 110
+    },
+    "55": {
+        "Node": "core1",
+        "Network": "2.12.11.0/24",
+        "Next_Hop_Interface": "GigabitEthernet0/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "56": {
+        "Node": "core1",
+        "Network": "2.12.11.2/32",
+        "Next_Hop_Interface": "GigabitEthernet0/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "57": {
+        "Node": "core1",
+        "Network": "2.12.12.0/24",
+        "Next_Hop_Interface": "GigabitEthernet0/0",
+        "Metric": 2,
+        "Admin_Distance": 110
+    },
+    "58": {
+        "Node": "core1",
+        "Network": "2.12.21.0/24",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "59": {
+        "Node": "core1",
+        "Network": "2.12.21.2/32",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "60": {
+        "Node": "core1",
+        "Network": "2.12.22.0/24",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 2,
+        "Admin_Distance": 110
+    },
+    "61": {
+        "Node": "core1",
+        "Network": "2.23.11.0/24",
+        "Next_Hop_Interface": "GigabitEthernet2/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "62": {
+        "Node": "core1",
+        "Network": "2.23.11.2/32",
+        "Next_Hop_Interface": "GigabitEthernet2/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "63": {
+        "Node": "core1",
+        "Network": "2.23.12.0/24",
+        "Next_Hop_Interface": "GigabitEthernet3/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "64": {
+        "Node": "core1",
+        "Network": "2.23.12.2/32",
+        "Next_Hop_Interface": "GigabitEthernet3/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "65": {
+        "Node": "core1",
+        "Network": "2.23.21.0/24",
+        "Next_Hop_Interface": "GigabitEthernet2/0",
+        "Metric": 2,
+        "Admin_Distance": 110
+    },
+    "66": {
+        "Node": "core1",
+        "Network": "2.23.22.0/24",
+        "Next_Hop_Interface": "GigabitEthernet3/0",
+        "Metric": 2,
+        "Admin_Distance": 110
+    },
+    "67": {
+        "Node": "core1",
+        "Network": "2.34.201.0/24",
+        "Next_Hop_Interface": "GigabitEthernet3/0",
+        "Metric": 20,
+        "Admin_Distance": 110
+    },
+    "71": {
+        "Node": "core1",
+        "Network": "10.12.11.0/24",
+        "Next_Hop_Interface": "GigabitEthernet0/0",
+        "Metric": 20,
+        "Admin_Distance": 110
+    },
+    "72": {
+        "Node": "core1",
+        "Network": "10.23.21.0/24",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 20,
+        "Admin_Distance": 110
+    },
+    "73": {
+        "Node": "core2",
+        "Network": "2.1.1.1/32",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 101,
+        "Admin_Distance": 110
+    },
+    "74": {
+        "Node": "core2",
+        "Network": "2.1.1.2/32",
+        "Next_Hop_Interface": "GigabitEthernet0/0",
+        "Metric": 101,
+        "Admin_Distance": 110
+    },
+    "75": {
+        "Node": "core2",
+        "Network": "2.1.2.1/32",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 102,
+        "Admin_Distance": 110
+    },
+    "76": {
+        "Node": "core2",
+        "Network": "2.1.2.1/32",
+        "Next_Hop_Interface": "GigabitEthernet0/0",
+        "Metric": 102,
+        "Admin_Distance": 110
+    },
+    "77": {
+        "Node": "core2",
+        "Network": "2.1.2.1/32",
+        "Next_Hop_Interface": "GigabitEthernet3/0",
+        "Metric": 102,
+        "Admin_Distance": 110
+    },
+    "78": {
+        "Node": "core2",
+        "Network": "2.1.2.1/32",
+        "Next_Hop_Interface": "GigabitEthernet2/0",
+        "Metric": 102,
+        "Admin_Distance": 110
+    },
+    "79": {
+        "Node": "core2",
+        "Network": "2.1.2.2/32",
+        "Next_Hop_Interface": "Loopback0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "80": {
+        "Node": "core2",
+        "Network": "2.1.3.1/32",
+        "Next_Hop_Interface": "GigabitEthernet3/0",
+        "Metric": 101,
+        "Admin_Distance": 110
+    },
+    "81": {
+        "Node": "core2",
+        "Network": "2.1.3.2/32",
+        "Next_Hop_Interface": "GigabitEthernet2/0",
+        "Metric": 101,
+        "Admin_Distance": 110
+    },
+    "82": {
+        "Node": "core2",
+        "Network": "2.12.11.0/24",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 101,
+        "Admin_Distance": 110
+    },
+    "83": {
+        "Node": "core2",
+        "Network": "2.12.12.0/24",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "84": {
+        "Node": "core2",
+        "Network": "2.12.12.2/32",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "85": {
+        "Node": "core2",
+        "Network": "2.12.21.0/24",
+        "Next_Hop_Interface": "GigabitEthernet0/0",
+        "Metric": 101,
+        "Admin_Distance": 110
+    },
+    "86": {
+        "Node": "core2",
+        "Network": "2.12.22.0/24",
+        "Next_Hop_Interface": "GigabitEthernet0/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "87": {
+        "Node": "core2",
+        "Network": "2.12.22.2/32",
+        "Next_Hop_Interface": "GigabitEthernet0/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "88": {
+        "Node": "core2",
+        "Network": "2.23.11.0/24",
+        "Next_Hop_Interface": "GigabitEthernet3/0",
+        "Metric": 101,
+        "Admin_Distance": 110
+    },
+    "89": {
+        "Node": "core2",
+        "Network": "2.23.12.0/24",
+        "Next_Hop_Interface": "GigabitEthernet2/0",
+        "Metric": 101,
+        "Admin_Distance": 110
+    },
+    "90": {
+        "Node": "core2",
+        "Network": "2.23.21.0/24",
+        "Next_Hop_Interface": "GigabitEthernet3/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "91": {
+        "Node": "core2",
+        "Network": "2.23.21.2/32",
+        "Next_Hop_Interface": "GigabitEthernet3/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "92": {
+        "Node": "core2",
+        "Network": "2.23.22.0/24",
+        "Next_Hop_Interface": "GigabitEthernet2/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "93": {
+        "Node": "core2",
+        "Network": "2.23.22.2/32",
+        "Next_Hop_Interface": "GigabitEthernet2/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "94": {
+        "Node": "core2",
+        "Network": "2.34.201.0/24",
+        "Next_Hop_Interface": "GigabitEthernet2/0",
+        "Metric": 20,
+        "Admin_Distance": 110
+    },
+    "98": {
+        "Node": "core2",
+        "Network": "2.128.1.1/32",
+        "Next_Hop_Interface": "null_interface",
+        "Metric": 0,
+        "Admin_Distance": 1
+    },
+    "99": {
+        "Node": "core2",
+        "Network": "10.12.11.0/24",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 20,
+        "Admin_Distance": 110
+    },
+    "100": {
+        "Node": "core2",
+        "Network": "10.23.21.0/24",
+        "Next_Hop_Interface": "GigabitEthernet0/0",
+        "Metric": 20,
+        "Admin_Distance": 110
+    },
+    "101": {
+        "Node": "host-db",
+        "Network": "0.0.0.0/0",
+        "Next_Hop_Interface": "eth0",
+        "Metric": 0,
+        "Admin_Distance": 1
+    },
+    "102": {
+        "Node": "host-db",
+        "Network": "2.128.0.0/30",
+        "Next_Hop_Interface": "eth0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "103": {
+        "Node": "host-db",
+        "Network": "2.128.0.1/32",
+        "Next_Hop_Interface": "eth0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "104": {
+        "Node": "host-www",
+        "Network": "0.0.0.0/0",
+        "Next_Hop_Interface": "eth0",
+        "Metric": 0,
+        "Admin_Distance": 1
+    },
+    "105": {
+        "Node": "host-www",
+        "Network": "2.128.1.0/30",
+        "Next_Hop_Interface": "eth0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "106": {
+        "Node": "host-www",
+        "Network": "2.128.1.1/32",
+        "Next_Hop_Interface": "eth0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "107": {
+        "Node": "leaf1",
+        "Network": "2.1.1.2/32",
+        "Next_Hop_Interface": "Loopback0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "108": {
+        "Node": "leaf1",
+        "Network": "2.34.101.0/24",
+        "Next_Hop_Interface": "GigabitEthernet0/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "109": {
+        "Node": "leaf1",
+        "Network": "2.34.101.4/32",
+        "Next_Hop_Interface": "GigabitEthernet0/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "110": {
+        "Node": "leaf1",
+        "Network": "2.34.201.0/24",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "111": {
+        "Node": "leaf1",
+        "Network": "2.34.201.4/32",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "112": {
+        "Node": "leaf1",
+        "Network": "2.128.0.0/30",
+        "Next_Hop_Interface": "GigabitEthernet2/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "113": {
+        "Node": "leaf1",
+        "Network": "2.128.0.2/32",
+        "Next_Hop_Interface": "GigabitEthernet2/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "114": {
+        "Node": "leaf1",
+        "Network": "2.128.1.0/30",
+        "Next_Hop_Interface": "GigabitEthernet3/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "115": {
+        "Node": "leaf1",
+        "Network": "2.128.1.2/32",
+        "Next_Hop_Interface": "GigabitEthernet3/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "116": {
+        "Node": "spine1",
+        "Network": "2.1.1.1/32",
+        "Next_Hop_Interface": "GigabitEthernet0/0",
+        "Metric": 3,
+        "Admin_Distance": 110
+    },
+    "117": {
+        "Node": "spine1",
+        "Network": "2.1.1.2/32",
+        "Next_Hop_Interface": "GigabitEthernet0/0",
+        "Metric": 3,
+        "Admin_Distance": 110
+    },
+    "118": {
+        "Node": "spine1",
+        "Network": "2.1.2.1/32",
+        "Next_Hop_Interface": "GigabitEthernet0/0",
+        "Metric": 2,
+        "Admin_Distance": 110
+    },
+    "119": {
+        "Node": "spine1",
+        "Network": "2.1.2.2/32",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 2,
+        "Admin_Distance": 110
+    },
+    "120": {
+        "Node": "spine1",
+        "Network": "2.1.3.1/32",
+        "Next_Hop_Interface": "Loopback0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "121": {
+        "Node": "spine1",
+        "Network": "2.1.3.2/32",
+        "Next_Hop_Interface": "GigabitEthernet0/0",
+        "Metric": 3,
+        "Admin_Distance": 110
+    },
+    "122": {
+        "Node": "spine1",
+        "Network": "2.12.11.0/24",
+        "Next_Hop_Interface": "GigabitEthernet0/0",
+        "Metric": 2,
+        "Admin_Distance": 110
+    },
+    "123": {
+        "Node": "spine1",
+        "Network": "2.12.12.0/24",
+        "Next_Hop_Interface": "GigabitEthernet0/0",
+        "Metric": 3,
+        "Admin_Distance": 110
+    },
+    "124": {
+        "Node": "spine1",
+        "Network": "2.12.21.0/24",
+        "Next_Hop_Interface": "GigabitEthernet0/0",
+        "Metric": 2,
+        "Admin_Distance": 110
+    },
+    "125": {
+        "Node": "spine1",
+        "Network": "2.12.22.0/24",
+        "Next_Hop_Interface": "GigabitEthernet0/0",
+        "Metric": 3,
+        "Admin_Distance": 110
+    },
+    "126": {
+        "Node": "spine1",
+        "Network": "2.23.11.0/24",
+        "Next_Hop_Interface": "GigabitEthernet0/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "127": {
+        "Node": "spine1",
+        "Network": "2.23.11.3/32",
+        "Next_Hop_Interface": "GigabitEthernet0/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "128": {
+        "Node": "spine1",
+        "Network": "2.23.12.0/24",
+        "Next_Hop_Interface": "GigabitEthernet0/0",
+        "Metric": 2,
+        "Admin_Distance": 110
+    },
+    "129": {
+        "Node": "spine1",
+        "Network": "2.23.21.0/24",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "130": {
+        "Node": "spine1",
+        "Network": "2.23.21.3/32",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "131": {
+        "Node": "spine1",
+        "Network": "2.23.22.0/24",
+        "Next_Hop_Interface": "GigabitEthernet0/0",
+        "Metric": 3,
+        "Admin_Distance": 110
+    },
+    "132": {
+        "Node": "spine1",
+        "Network": "2.34.101.0/24",
+        "Next_Hop_Interface": "GigabitEthernet2/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "133": {
+        "Node": "spine1",
+        "Network": "2.34.101.3/32",
+        "Next_Hop_Interface": "GigabitEthernet2/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "134": {
+        "Node": "spine1",
+        "Network": "2.34.201.0/24",
+        "Next_Hop_Interface": "GigabitEthernet0/0",
+        "Metric": 20,
+        "Admin_Distance": 110
+    },
+    "138": {
+        "Node": "spine1",
+        "Network": "10.12.11.0/24",
+        "Next_Hop_Interface": "GigabitEthernet0/0",
+        "Metric": 20,
+        "Admin_Distance": 110
+    },
+    "139": {
+        "Node": "spine1",
+        "Network": "10.23.21.0/24",
+        "Next_Hop_Interface": "GigabitEthernet0/0",
+        "Metric": 20,
+        "Admin_Distance": 110
+    },
+    "140": {
+        "Node": "spine2",
+        "Network": "2.1.1.1/32",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 3,
+        "Admin_Distance": 110
+    },
+    "141": {
+        "Node": "spine2",
+        "Network": "2.1.1.2/32",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 3,
+        "Admin_Distance": 110
+    },
+    "142": {
+        "Node": "spine2",
+        "Network": "2.1.2.1/32",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 2,
+        "Admin_Distance": 110
+    },
+    "143": {
+        "Node": "spine2",
+        "Network": "2.1.2.2/32",
+        "Next_Hop_Interface": "GigabitEthernet0/0",
+        "Metric": 2,
+        "Admin_Distance": 110
+    },
+    "144": {
+        "Node": "spine2",
+        "Network": "2.1.3.1/32",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 3,
+        "Admin_Distance": 110
+    },
+    "145": {
+        "Node": "spine2",
+        "Network": "2.1.3.2/32",
+        "Next_Hop_Interface": "Loopback0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "146": {
+        "Node": "spine2",
+        "Network": "2.12.11.0/24",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 2,
+        "Admin_Distance": 110
+    },
+    "147": {
+        "Node": "spine2",
+        "Network": "2.12.12.0/24",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 3,
+        "Admin_Distance": 110
+    },
+    "148": {
+        "Node": "spine2",
+        "Network": "2.12.21.0/24",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 2,
+        "Admin_Distance": 110
+    },
+    "149": {
+        "Node": "spine2",
+        "Network": "2.12.22.0/24",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 3,
+        "Admin_Distance": 110
+    },
+    "150": {
+        "Node": "spine2",
+        "Network": "2.23.11.0/24",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 2,
+        "Admin_Distance": 110
+    },
+    "151": {
+        "Node": "spine2",
+        "Network": "2.23.12.0/24",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "152": {
+        "Node": "spine2",
+        "Network": "2.23.12.3/32",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "153": {
+        "Node": "spine2",
+        "Network": "2.23.21.0/24",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 3,
+        "Admin_Distance": 110
+    },
+    "154": {
+        "Node": "spine2",
+        "Network": "2.23.22.0/24",
+        "Next_Hop_Interface": "GigabitEthernet0/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "155": {
+        "Node": "spine2",
+        "Network": "2.23.22.3/32",
+        "Next_Hop_Interface": "GigabitEthernet0/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "156": {
+        "Node": "spine2",
+        "Network": "2.34.201.0/24",
+        "Next_Hop_Interface": "GigabitEthernet2/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "157": {
+        "Node": "spine2",
+        "Network": "2.34.201.3/32",
+        "Next_Hop_Interface": "GigabitEthernet2/0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    },
+    "161": {
+        "Node": "spine2",
+        "Network": "10.12.11.0/24",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 20,
+        "Admin_Distance": 110
+    },
+    "162": {
+        "Node": "spine2",
+        "Network": "10.23.21.0/24",
+        "Next_Hop_Interface": "GigabitEthernet1/0",
+        "Metric": 20,
+        "Admin_Distance": 110
+    }
+}

@@ -1,0 +1,242 @@
+{
+    "0": {
+        "Interface": {
+            "hostname": "border1",
+            "interface": "GigabitEthernet1/0"
+        },
+        "Remote_Interface": {
+            "hostname": "core1",
+            "interface": "GigabitEthernet0/0"
+        }
+    },
+    "1": {
+        "Interface": {
+            "hostname": "border1",
+            "interface": "GigabitEthernet2/0"
+        },
+        "Remote_Interface": {
+            "hostname": "core2",
+            "interface": "GigabitEthernet1/0"
+        }
+    },
+    "2": {
+        "Interface": {
+            "hostname": "border2",
+            "interface": "GigabitEthernet1/0"
+        },
+        "Remote_Interface": {
+            "hostname": "core2",
+            "interface": "GigabitEthernet0/0"
+        }
+    },
+    "3": {
+        "Interface": {
+            "hostname": "border2",
+            "interface": "GigabitEthernet2/0"
+        },
+        "Remote_Interface": {
+            "hostname": "core1",
+            "interface": "GigabitEthernet1/0"
+        }
+    },
+    "4": {
+        "Interface": {
+            "hostname": "core1",
+            "interface": "GigabitEthernet0/0"
+        },
+        "Remote_Interface": {
+            "hostname": "border1",
+            "interface": "GigabitEthernet1/0"
+        }
+    },
+    "5": {
+        "Interface": {
+            "hostname": "core1",
+            "interface": "GigabitEthernet1/0"
+        },
+        "Remote_Interface": {
+            "hostname": "border2",
+            "interface": "GigabitEthernet2/0"
+        }
+    },
+    "6": {
+        "Interface": {
+            "hostname": "core1",
+            "interface": "GigabitEthernet2/0"
+        },
+        "Remote_Interface": {
+            "hostname": "spine1",
+            "interface": "GigabitEthernet0/0"
+        }
+    },
+    "7": {
+        "Interface": {
+            "hostname": "core1",
+            "interface": "GigabitEthernet3/0"
+        },
+        "Remote_Interface": {
+            "hostname": "spine2",
+            "interface": "GigabitEthernet1/0"
+        }
+    },
+    "8": {
+        "Interface": {
+            "hostname": "core2",
+            "interface": "GigabitEthernet0/0"
+        },
+        "Remote_Interface": {
+            "hostname": "border2",
+            "interface": "GigabitEthernet1/0"
+        }
+    },
+    "9": {
+        "Interface": {
+            "hostname": "core2",
+            "interface": "GigabitEthernet1/0"
+        },
+        "Remote_Interface": {
+            "hostname": "border1",
+            "interface": "GigabitEthernet2/0"
+        }
+    },
+    "10": {
+        "Interface": {
+            "hostname": "core2",
+            "interface": "GigabitEthernet2/0"
+        },
+        "Remote_Interface": {
+            "hostname": "spine2",
+            "interface": "GigabitEthernet0/0"
+        }
+    },
+    "11": {
+        "Interface": {
+            "hostname": "core2",
+            "interface": "GigabitEthernet3/0"
+        },
+        "Remote_Interface": {
+            "hostname": "spine1",
+            "interface": "GigabitEthernet1/0"
+        }
+    },
+    "12": {
+        "Interface": {
+            "hostname": "host-db",
+            "interface": "eth0"
+        },
+        "Remote_Interface": {
+            "hostname": "leaf1",
+            "interface": "GigabitEthernet2/0"
+        }
+    },
+    "13": {
+        "Interface": {
+            "hostname": "host-www",
+            "interface": "eth0"
+        },
+        "Remote_Interface": {
+            "hostname": "leaf1",
+            "interface": "GigabitEthernet3/0"
+        }
+    },
+    "14": {
+        "Interface": {
+            "hostname": "leaf1",
+            "interface": "GigabitEthernet0/0"
+        },
+        "Remote_Interface": {
+            "hostname": "spine1",
+            "interface": "GigabitEthernet2/0"
+        }
+    },
+    "15": {
+        "Interface": {
+            "hostname": "leaf1",
+            "interface": "GigabitEthernet1/0"
+        },
+        "Remote_Interface": {
+            "hostname": "spine2",
+            "interface": "GigabitEthernet2/0"
+        }
+    },
+    "16": {
+        "Interface": {
+            "hostname": "leaf1",
+            "interface": "GigabitEthernet2/0"
+        },
+        "Remote_Interface": {
+            "hostname": "host-db",
+            "interface": "eth0"
+        }
+    },
+    "17": {
+        "Interface": {
+            "hostname": "leaf1",
+            "interface": "GigabitEthernet3/0"
+        },
+        "Remote_Interface": {
+            "hostname": "host-www",
+            "interface": "eth0"
+        }
+    },
+    "18": {
+        "Interface": {
+            "hostname": "spine1",
+            "interface": "GigabitEthernet0/0"
+        },
+        "Remote_Interface": {
+            "hostname": "core1",
+            "interface": "GigabitEthernet2/0"
+        }
+    },
+    "19": {
+        "Interface": {
+            "hostname": "spine1",
+            "interface": "GigabitEthernet1/0"
+        },
+        "Remote_Interface": {
+            "hostname": "core2",
+            "interface": "GigabitEthernet3/0"
+        }
+    },
+    "20": {
+        "Interface": {
+            "hostname": "spine1",
+            "interface": "GigabitEthernet2/0"
+        },
+        "Remote_Interface": {
+            "hostname": "leaf1",
+            "interface": "GigabitEthernet0/0"
+        }
+    },
+    "21": {
+        "Interface": {
+            "hostname": "spine2",
+            "interface": "GigabitEthernet0/0"
+        },
+        "Remote_Interface": {
+            "hostname": "core2",
+            "interface": "GigabitEthernet2/0"
+        }
+    },
+    "22": {
+        "Interface": {
+            "hostname": "spine2",
+            "interface": "GigabitEthernet1/0"
+        },
+        "Remote_Interface": {
+            "hostname": "core1",
+            "interface": "GigabitEthernet3/0"
+        }
+    },
+    "23": {
+        "Interface": {
+            "hostname": "spine2",
+            "interface": "GigabitEthernet2/0"
+        },
+        "Remote_Interface": {
+            "hostname": "leaf1",
+            "interface": "GigabitEthernet1/0"
+        }
+    }
+}

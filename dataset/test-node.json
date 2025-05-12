@@ -1,0 +1,10 @@
+{
+    "0": {
+        "Node": "border1",
+        "Network": "2.1.1.1/32",
+        "Next_Hop_Interface": "Loopback0",
+        "Metric": 0,
+        "Admin_Distance": 0
+    }
+
+}
