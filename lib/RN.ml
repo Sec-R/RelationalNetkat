@@ -462,6 +462,7 @@ let init_man (field_max:field) (bman_cache:int) =
    delta_kr_start_cache = Hashtbl.create bman_cache;
    split_bdd_cache = Hashtbl.create bman_cache;
    }
+   
 (* The variable is in order of x x' y y' --> 6k, 6k+1, 6k+2, 6k+3*)
 let bddvar (pk:pk) (field:field) = field*6 + pk
 
