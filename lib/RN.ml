@@ -293,6 +293,8 @@ type man = {
   field_max: field;
   bman:MLBDD.man;
   split_hist:MLBDD.t MLBDD.hist;
+  comp_bdd_2: (pk*pk*MLBDD.t*MLBDD.t,MLBDD.t)Hashtbl.t;
+  comp_bdd_4: (pk*pk*pk*pk*MLBDD.t*MLBDD.t,MLBDD.t)Hashtbl.t;
   pred_cache: (pk*pred,MLBDD.t)Hashtbl.t;
   pkr_cache: (pk*pk*pkr,MLBDD.t)Hashtbl.t;
   delta_k_cache: (pk*pk*NK.t option,MLBDD.t NKOMap.t)Hashtbl.t;
@@ -445,7 +447,10 @@ let determinized_transition_map_to_string (mapping:((MLBDD.t)NKROBSMap.t)NKROBSM
     
 let init_man (field_max:field) (bman_cache:int) = 
   let bman = MLBDD.init ~cache:bman_cache () in
-  {field_max = field_max; bman = bman;split_hist = MLBDD.fold_init bman;
+  {field_max = field_max; bman = bman;
+  split_hist = MLBDD.fold_init bman;
+  comp_bdd_2 = Hashtbl.create bman_cache;
+  comp_bdd_4 = Hashtbl.create bman_cache;
    pred_cache = Hashtbl.create bman_cache;
    pkr_cache = Hashtbl.create bman_cache;
    delta_k_cache = Hashtbl.create bman_cache;
@@ -461,9 +466,78 @@ let bddvar (pk:pk) (field:field) = field*6 + pk
 let generate_single_var (man:man) (pk:pk) (field:field):MLBDD.t =
     MLBDD.ithvar (man.bman) (bddvar pk field)
 
+let generate_unused_pk (pk1:pk) (pk2:pk):pk =
+  match (pk1,pk2) with
+  |(0,1) ->2   
+  |(1,0) ->2   
+  |(0,_) ->1   
+  |(_,0) ->1
+  | _ -> 0
+
+let generate_unused_pk56 (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk):pk*pk =
+  let all_pks = [0; 1; 2; 3; 4; 5] in
+  let used_pks = [pk1; pk2; pk3; pk4] in
+  let unused_pks = List.filter (fun pk -> not (List.mem pk used_pks)) all_pks in
+match unused_pks with
+  | [pk5; pk6] -> (pk5, pk6)
+  | _ -> failwith "Unexpected number of unused packet indices"
+  
+let generate_support (man:man) (pk:pk):MLBDD.support =
+  let rec generate_list (cur:field):int list =
+     if cur >= man.field_max then []
+     else (bddvar pk cur)::(generate_list (cur+1))
+  in MLBDD.support_of_list (generate_list 0)
+
+let generate_double_support (man:man) (pk1:pk) (pk2:pk):MLBDD.support =
+  let rec generate_list (cur:field):int list =
+      if cur >= man.field_max then []
+      else (bddvar pk1 cur)::(bddvar pk2 cur)::(generate_list (cur+1))
+  in MLBDD.support_of_list (generate_list 0)
+
+let rename_bdd  (pk1:pk) (pk2:pk) (bdd:MLBDD.t):MLBDD.t =
+  let permute var = if var mod 6 = pk1 then
+    var - pk1 + pk2 
+  else if var mod 6 = pk2 then
+    var - pk2 + pk1 
+  else var
+  in MLBDD.permutef permute bdd
+
 let bdd_true (man:man):MLBDD.t = MLBDD.dtrue man.bman    
 
 let bdd_false (man:man):MLBDD.t = MLBDD.dfalse man.bman    
+
+(* pk1: x, pk2:x',*)
+let comp_bdd_2 (man:man) (pk1:pk) (pk2:pk)  (bdd1:MLBDD.t) (bdd2:MLBDD.t):MLBDD.t =
+  try Hashtbl.find man.comp_bdd_2 (pk1, pk2, bdd1, bdd2)
+  with Not_found ->
+    let bdd =
+      let pk3 = generate_unused_pk pk1 pk2 in
+       let support = generate_support man pk3 in
+        (* bdd1 now is pk1 pk3 *)
+          let rename_bdd1 = rename_bdd pk3 pk2 bdd1 in
+        (* bdd2 now is pk3 pk2 *)
+          let rename_bdd2 = rename_bdd pk1 pk3 bdd2 in
+            MLBDD.exists support (MLBDD.dand rename_bdd1 rename_bdd2)
+    in
+      Hashtbl.replace man.comp_bdd_2 (pk1, pk2, bdd1, bdd2) bdd;
+      bdd
+
+
+(* pk1: x, pk2:x', pk3:y, pk4:y'*)
+let comp_bdd_4 (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (bdd1:MLBDD.t) (bdd2:MLBDD.t):MLBDD.t =
+  try Hashtbl.find man.comp_bdd_4 (pk1, pk2, pk3, pk4, bdd1, bdd2)
+  with Not_found ->
+    let bdd =
+      let (pk5,pk6) = generate_unused_pk56 pk1 pk2 pk3 pk4 in
+       let support = generate_double_support man pk5 pk6 in
+        (* bdd1 now is pk1 pk5 pk3 pk6 *)
+          let rename_bdd1 = rename_bdd pk5 pk2 (rename_bdd pk6 pk4 bdd1) in
+        (* bdd2 now is pk5 pk2 pk6 pk4 *)
+           let rename_bdd2 = rename_bdd pk1 pk5 (rename_bdd pk3 pk6 bdd2) in
+              MLBDD.exists support (MLBDD.dand rename_bdd1 rename_bdd2)
+    in
+      Hashtbl.replace man.comp_bdd_4 (pk1, pk2, pk3, pk4, bdd1, bdd2) bdd;
+      bdd
 
 let compile_pred_bdd (man:man)(pk:pk) (predicate:pred):MLBDD.t = 
   let rec compile_pred_bdd_aux (predicate:pred):MLBDD.t =
@@ -510,41 +584,8 @@ let produce_assign (man:man) (pk1:pk) (pk2:pk) (field:field)(asgn:bool) (left:bo
          else 
             MLBDD.dand (MLBDD.nxor (generate_single_var man pk1 cur) (generate_single_var man pk2 cur)) (produce_assign_aux (cur+1))
      in produce_assign_aux 0
-     
-let generate_unused_pk (pk1:pk) (pk2:pk):pk =
-  match (pk1,pk2) with
-  |(0,1) ->2   
-  |(1,0) ->2   
-  |(0,_) ->1   
-  |(_,0) ->1
-  | _ -> 0
-
-let generate_unused_pk56 (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk):pk*pk =
-  let all_pks = [0; 1; 2; 3; 4; 5] in
-  let used_pks = [pk1; pk2; pk3; pk4] in
-  let unused_pks = List.filter (fun pk -> not (List.mem pk used_pks)) all_pks in
-match unused_pks with
-  | [pk5; pk6] -> (pk5, pk6)
-  | _ -> failwith "Unexpected number of unused packet indices"
-  
-let generate_support (man:man) (pk:pk):MLBDD.support =
-  let rec generate_list (cur:field):int list =
-     if cur >= man.field_max then []
-     else (bddvar pk cur)::(generate_list (cur+1))
-  in MLBDD.support_of_list (generate_list 0)
-
-let generate_double_support (man:man) (pk1:pk) (pk2:pk):MLBDD.support =
-  let rec generate_list (cur:field):int list =
-      if cur >= man.field_max then []
-      else (bddvar pk1 cur)::(bddvar pk2 cur)::(generate_list (cur+1))
-  in MLBDD.support_of_list (generate_list 0)
-  
-  
-let comp_bdd (man:man) (pk1:pk) (pk2:pk) (compiler:man -> pk -> pk -> 'a -> MLBDD.t) (con1: 'a) (con2: 'a):MLBDD.t =
-  let pk3 = generate_unused_pk pk1 pk2 in
-    MLBDD.exists (generate_support man pk3) (MLBDD.dand (compiler man pk1 pk3 con1) (compiler man pk3 pk2 con2))    
-      
-let rec compile_pkr_bdd (man:man)(pk1:pk) (pk2:pk) (pkr:pkr):MLBDD.t = 
+               
+let compile_pkr_bdd (man:man)(pk1:pk) (pk2:pk) (pkr:pkr):MLBDD.t = 
   let rec compile_pkr_bdd_aux (pkr:pkr):MLBDD.t =
     try Hashtbl.find man.pkr_cache (pk1, pk2, pkr)
     with Not_found ->
@@ -556,7 +597,7 @@ let rec compile_pkr_bdd (man:man)(pk1:pk) (pk2:pk) (pkr:pkr):MLBDD.t =
       | Test (field, true) -> (MLBDD.dand (produce_id man pk1 pk2) (generate_single_var man pk1 field))
       | LeftAsgn (field, b) -> produce_assign man pk1 pk2 field b true
       | RightAsgn (field, b) -> produce_assign man pk1 pk2 field b false
-      | Comp (pkr1, pkr2) -> comp_bdd man pk1 pk2 compile_pkr_bdd pkr1 pkr2
+      | Comp (pkr1, pkr2) -> comp_bdd_2 man pk1 pk2 (compile_pkr_bdd_aux pkr1) (compile_pkr_bdd_aux pkr2)
       | OrP (pkr1,pkr2)-> MLBDD.dor (compile_pkr_bdd_aux pkr1) (compile_pkr_bdd_aux pkr2)
       | AndP (pkr1,pkr2)-> MLBDD.dand (compile_pkr_bdd_aux pkr1) (compile_pkr_bdd_aux pkr2)
       | Binary (pred1,pred2) -> MLBDD.dand (compile_pred_bdd man pk1 pred1) (compile_pred_bdd man pk2 pred2)
@@ -565,36 +606,7 @@ let rec compile_pkr_bdd (man:man)(pk1:pk) (pk2:pk) (pkr:pkr):MLBDD.t =
         bdd
   in compile_pkr_bdd_aux pkr
 
-let rename_bdd  (pk1:pk) (pk2:pk) (bdd:MLBDD.t):MLBDD.t =
-  let permute var = if var mod 6 = pk1 then
-    var - pk1 + pk2 
-  else if var mod 6 = pk2 then
-    var - pk2 + pk1 
-  else var
-  in MLBDD.permutef permute bdd
-
-(* pk1: x, pk2:x',*)
-let comp_bdd_2 (man:man) (pk1:pk) (pk2:pk)  (bdd1:MLBDD.t) (bdd2:MLBDD.t):MLBDD.t =
-  let pk3 = generate_unused_pk pk1 pk2 in
-    let support = generate_support man pk3 in
-    (* bdd1 now is pk1 pk3 *)
-      let rename_bdd1 = rename_bdd pk3 pk2 bdd1 in
-    (* bdd2 now is pk3 pk2 *)
-        let rename_bdd2 = rename_bdd pk1 pk3 bdd2 in
-          MLBDD.exists support (MLBDD.dand rename_bdd1 rename_bdd2)
-
-
-(* pk1: x, pk2:x', pk3:y, pk4:y'*)
-let comp_bdd_4 (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (bdd1:MLBDD.t) (bdd2:MLBDD.t):MLBDD.t =
-  let (pk5,pk6) = generate_unused_pk56 pk1 pk2 pk3 pk4 in
-    let support = generate_double_support man pk5 pk6 in
-    (* bdd1 now is pk1 pk5 pk3 pk6 *)
-      let rename_bdd1 = rename_bdd pk5 pk2 (rename_bdd pk6 pk4 bdd1) in
-    (* bdd2 now is pk5 pk2 pk6 pk4 *)
-        let rename_bdd2 = rename_bdd pk1 pk5 (rename_bdd pk3 pk6 bdd2) in
-          MLBDD.exists support (MLBDD.dand rename_bdd1 rename_bdd2)
-  
-(* A naive implementation, to be optimized*)    
+(* A naive implementation, to be optimized*)
 let closure_bdd (man:man) (pk1:pk) (pk2:pk) (bdd: MLBDD.t) :MLBDD.t =
   (* input cur is of pk1 and pk2 *)
   let rec closure_bdd_aux (cur:MLBDD.t):MLBDD.t =
@@ -952,10 +964,9 @@ let delta_kr (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro:NK.t option*Rel
              NKROMap.fold (fun nkro bdd acc -> union_nkro_mapping (apply_nkro_mapping (comp_bdd_4 man pk1 pk2 pk3 pk4 bdd) (delta_krx man pk1 pk2 pk3 pk4 nkro)) acc) next_map NKROMap.empty
     in Hashtbl.replace man.delta_kr_cache (pk1, pk2, pk3, pk4, nkro) nkromap;
      nkromap
-    in let start_closure =
-        if start_flag then delta_krx man pk1 pk2 pk3 pk4 nkro
-        else (add_nkro_mapping nkro (produce_double_id man pk1 pk2 pk3 pk4) NKROMap.empty) in
-         NKROMap.fold (fun nkro bdd acc -> union_nkro_mapping (apply_nkro_mapping (comp_bdd_4 man pk1 pk2 pk3 pk4 bdd) (delta_kr_aux nkro)) acc) start_closure NKROMap.empty
+    in if start_flag then
+         NKROMap.fold (fun nkro bdd acc -> union_nkro_mapping (apply_nkro_mapping (comp_bdd_4 man pk1 pk2 pk3 pk4 bdd) (delta_kr_aux nkro)) acc) (delta_krx man pk1 pk2 pk3 pk4 nkro) NKROMap.empty
+       else delta_kr_aux nkro
 
 (* pk1: x, pk2:x', pk3:y, pk4:y'*)
 (* The reachable set is the x y pair on each state, thus the pk1 pk3 pair on each state*)            

@@ -629,6 +629,10 @@ let tests = "MLBDD tests" >::: [
           assert_equal true (RN.bisim man pk3 pk4 start12 start15 nkrobsmap8 nkrobsmap11);
           );
         "json_test" >:: (fun _ctx ->
+          let pk1 = 0 in
+          let pk2 = 1 in
+          let pk3 = 2 in
+          let pk4 = 3 in
           assert_equal (RN.And (RN.Test (0,true),RN.And (RN.Test (1,true),RN.Test (2,false)))) (Eval.binary_to_pred 0 3 2 6);
           let json1 = Yojson.Basic.from_file "../../../dataset/change1-node.json" in
           let json2 = Yojson.Basic.from_file "../../../dataset/change1-edge.json" in
@@ -657,6 +661,24 @@ let tests = "MLBDD tests" >::: [
           let boolean = (RN.bisim man 2 3 start1 start1 nkrobsmap1 empty_map) in
           Printf.printf "Execution time 2: %fs\n" (Sys.time() -. t);
           assert_equal true boolean; 
+          (* Currently the cache has all been trained, so any derivative calculation can be reused*)
+          let t = Sys.time () in
+          let nkromap1 = RN.calculate_reachable_set man pk1 pk2 pk3 pk4 (Some network1, Some relation) in
+          Printf.printf "Calculate reachable states Execution time: %fs\n" (Sys.time() -. t);
+          let t = Sys.time() in
+          let nkrobsmap1 = RN.generate_all_transition man pk1 pk2 pk3 pk4 (Some network1, Some relation) in
+          Printf.printf "Generate Transition (after caching) Execution time: %fs\n" (Sys.time() -. t);
+          let t = Sys.time() in
+          let nkrobmap1 = RN.simplify_all_transition man pk1 pk2 pk3 pk4 nkrobsmap1 in
+          Printf.printf "Simplify Transition (after caching) Execution time: %fs\n" (Sys.time() -. t);
+          let t = Sys.time() in
+          let (nkrobbmap1,start1) = RN.determinization (Some network1, Some relation) nkrobmap1 in
+          Printf.printf "Determinization Execution time: %fs\n" (Sys.time() -. t);
+          Printf.printf "Cardinal of nkrobbmap1: %d\n" (RN.NKROBSMap.cardinal nkrobbmap1);
+          let t = Sys.time() in
+          let boolean = (RN.bisim man 2 3 start1 start1 nkrobbmap1 empty_map) in
+          Printf.printf "Bisimulation Execution time: %fs\n" (Sys.time() -. t);
+          assert_equal true boolean;
           let epsilon = RN.Rel.Left (RN.NK.Seq (RN.NK.Pkr (Binary (True,True)) ,RN.NK.Star (RN.NK.Seq (RN.NK.Dup,(RN.NK.Pkr (Binary (True,True))))))) in
           let relation2 = RN.Rel.SeqR (epsilon, RN.Rel.SeqR (RN.Rel.Nil core1_filter, epsilon)) in
           let t = Sys.time() in

@@ -189,7 +189,6 @@ val produce_assign : man -> pk -> pk -> field -> bool -> bool -> MLBDD.t
 val generate_unused_pk : pk -> pk -> pk
 val generate_support : man -> pk -> MLBDD.support
 val generate_double_support : man -> pk -> pk -> MLBDD.support
-val comp_bdd : man -> pk -> pk -> (man -> pk -> pk -> 'a -> MLBDD.t) -> 'a -> 'a -> MLBDD.t
 val compile_pkr_bdd : man -> pk -> pk -> pkr -> MLBDD.t
 val rename_bdd : pk -> pk -> MLBDD.t -> MLBDD.t
 val closure_bdd : man -> pk -> pk -> MLBDD.t -> MLBDD.t
