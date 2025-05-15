@@ -302,6 +302,7 @@ type man = {
   delta_krx_atomic_cache: (pk*pk*pk*pk*(NK.t option*Rel.t option),MLBDD.t NKROMap.t)Hashtbl.t;
   delta_krx_cache: (pk*pk*pk*pk*(NK.t option*Rel.t option),MLBDD.t NKROMap.t)Hashtbl.t;
   delta_kr_cache: (pk*pk*pk*pk*(NK.t option*Rel.t option),MLBDD.t NKROMap.t)Hashtbl.t;
+  delta_kr_start_cache: (pk*pk*pk*pk*(NK.t option*Rel.t option),MLBDD.t NKROMap.t)Hashtbl.t;
   split_bdd_cache: (MLBDD.t,BSet.t)Hashtbl.t;
 }
 
@@ -458,6 +459,7 @@ let init_man (field_max:field) (bman_cache:int) =
    delta_krx_atomic_cache = Hashtbl.create bman_cache;
    delta_krx_cache = Hashtbl.create bman_cache;
    delta_kr_cache = Hashtbl.create bman_cache;
+   delta_kr_start_cache = Hashtbl.create bman_cache;
    split_bdd_cache = Hashtbl.create bman_cache;
    }
 (* The variable is in order of x x' y y' --> 6k, 6k+1, 6k+2, 6k+3*)
@@ -965,7 +967,13 @@ let delta_kr (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro:NK.t option*Rel
     in Hashtbl.replace man.delta_kr_cache (pk1, pk2, pk3, pk4, nkro) nkromap;
      nkromap
     in if start_flag then
-         NKROMap.fold (fun nkro bdd acc -> union_nkro_mapping (apply_nkro_mapping (comp_bdd_4 man pk1 pk2 pk3 pk4 bdd) (delta_kr_aux nkro)) acc) (delta_krx man pk1 pk2 pk3 pk4 nkro) NKROMap.empty
+        try Hashtbl.find man.delta_kr_start_cache (pk1, pk2, pk3, pk4, nkro)
+         with Not_found ->
+         let nkromap = 
+           NKROMap.fold (fun nkro bdd acc -> union_nkro_mapping (apply_nkro_mapping (comp_bdd_4 man pk1 pk2 pk3 pk4 bdd) (delta_kr_aux nkro)) acc) (delta_krx man pk1 pk2 pk3 pk4 nkro) NKROMap.empty
+         in
+         Hashtbl.replace man.delta_kr_start_cache (pk1, pk2, pk3, pk4, nkro) nkromap;
+         nkromap
        else delta_kr_aux nkro
 
 (* pk1: x, pk2:x', pk3:y, pk4:y'*)
