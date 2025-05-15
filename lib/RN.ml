@@ -293,7 +293,16 @@ type man = {
   field_max: field;
   bman:MLBDD.man;
   split_hist:MLBDD.t MLBDD.hist;
+  pred_cache: (pk*pred,MLBDD.t)Hashtbl.t;
+  pkr_cache: (pk*pk*pkr,MLBDD.t)Hashtbl.t;
+  delta_k_cache: (pk*pk*NK.t option,MLBDD.t NKOMap.t)Hashtbl.t;
+  delta_r_cache: (pk*pk*pk*pk*Rel.t option*next_step,MLBDD.t ROMap.t)Hashtbl.t;
+  delta_krx_atomic_cache: (pk*pk*pk*pk*(NK.t option*Rel.t option),MLBDD.t NKROMap.t)Hashtbl.t;
+  delta_krx_cache: (pk*pk*pk*pk*(NK.t option*Rel.t option),MLBDD.t NKROMap.t)Hashtbl.t;
+  delta_kr_cache: (pk*pk*pk*pk*(NK.t option*Rel.t option),MLBDD.t NKROMap.t)Hashtbl.t;
+  split_bdd_cache: (MLBDD.t,BSet.t)Hashtbl.t;
 }
+
 let rec pred_to_string (pred:pred):string= 
   match pred with
   | True -> "True"
@@ -436,7 +445,16 @@ let determinized_transition_map_to_string (mapping:((MLBDD.t)NKROBSMap.t)NKROBSM
     
 let init_man (field_max:field) (bman_cache:int) = 
   let bman = MLBDD.init ~cache:bman_cache () in
-  {field_max = field_max; bman = bman;split_hist = MLBDD.fold_init bman}
+  {field_max = field_max; bman = bman;split_hist = MLBDD.fold_init bman;
+   pred_cache = Hashtbl.create bman_cache;
+   pkr_cache = Hashtbl.create bman_cache;
+   delta_k_cache = Hashtbl.create bman_cache;
+   delta_r_cache = Hashtbl.create bman_cache;
+   delta_krx_atomic_cache = Hashtbl.create bman_cache;
+   delta_krx_cache = Hashtbl.create bman_cache;
+   delta_kr_cache = Hashtbl.create bman_cache;
+   split_bdd_cache = Hashtbl.create bman_cache;
+   }
 (* The variable is in order of x x' y y' --> 6k, 6k+1, 6k+2, 6k+3*)
 let bddvar (pk:pk) (field:field) = field*6 + pk
 
@@ -448,16 +466,22 @@ let bdd_true (man:man):MLBDD.t = MLBDD.dtrue man.bman
 let bdd_false (man:man):MLBDD.t = MLBDD.dfalse man.bman    
 
 let compile_pred_bdd (man:man)(pk:pk) (predicate:pred):MLBDD.t = 
-     let rec compile_pred_bdd_aux (predicate:pred):MLBDD.t =
-  match predicate with
-      | True -> bdd_true man
-      | False -> bdd_false man
-      | Test (field,false) -> MLBDD.dnot (generate_single_var man pk field)
-      | Test (field,true) -> generate_single_var man pk field
-      | And (pred1,pred2) -> MLBDD.dand (compile_pred_bdd_aux pred1) (compile_pred_bdd_aux pred2)
-      | Or (pred1,pred2) -> MLBDD.dor (compile_pred_bdd_aux pred1) (compile_pred_bdd_aux pred2)
-      | Neg predicate -> MLBDD.dnot (compile_pred_bdd_aux predicate)
-    in compile_pred_bdd_aux predicate
+  let rec compile_pred_bdd_aux (predicate:pred):MLBDD.t =
+    try Hashtbl.find man.pred_cache (pk, predicate)
+    with Not_found ->
+      let bdd =
+        match predicate with
+        | True -> bdd_true man
+        | False -> bdd_false man
+        | Test (field,false) -> MLBDD.dnot (generate_single_var man pk field)
+        | Test (field,true) -> generate_single_var man pk field
+        | And (pred1,pred2) -> MLBDD.dand (compile_pred_bdd_aux pred1) (compile_pred_bdd_aux pred2)
+        | Or (pred1,pred2) -> MLBDD.dor (compile_pred_bdd_aux pred1) (compile_pred_bdd_aux pred2)
+        | Neg predicate -> MLBDD.dnot (compile_pred_bdd_aux predicate)
+      in 
+       Hashtbl.replace man.pred_cache (pk, predicate) bdd;
+       bdd
+  in compile_pred_bdd_aux predicate
 
 let produce_id (man:man) (pk1:pk) (pk2:pk):MLBDD.t =
      let rec produce_id_aux (cur:field):MLBDD.t =
@@ -521,20 +545,25 @@ let comp_bdd (man:man) (pk1:pk) (pk2:pk) (compiler:man -> pk -> pk -> 'a -> MLBD
     MLBDD.exists (generate_support man pk3) (MLBDD.dand (compiler man pk1 pk3 con1) (compiler man pk3 pk2 con2))    
       
 let rec compile_pkr_bdd (man:man)(pk1:pk) (pk2:pk) (pkr:pkr):MLBDD.t = 
-     let rec compile_pkr_bdd_aux (pkr:pkr):MLBDD.t =
-  match pkr with
-    | Id -> produce_id man pk1 pk2
-    | Empty -> bdd_false man
-    | Test (field, false) -> (MLBDD.dand (produce_id man pk1 pk2) (MLBDD.dnot (generate_single_var man pk1 field)))
-    | Test (field, true) -> (MLBDD.dand (produce_id man pk1 pk2) (generate_single_var man pk1 field))
-    | LeftAsgn (field, b) -> produce_assign man pk1 pk2 field b true  
-    | RightAsgn (field, b) -> produce_assign man pk1 pk2 field b false  
-    | Comp (pkr1, pkr2) -> comp_bdd man pk1 pk2 compile_pkr_bdd pkr1 pkr2
-    | OrP (pkr1,pkr2)-> MLBDD.dor (compile_pkr_bdd_aux pkr1) (compile_pkr_bdd_aux pkr2)
-    | AndP (pkr1,pkr2)-> MLBDD.dand (compile_pkr_bdd_aux pkr1) (compile_pkr_bdd_aux pkr2)
-    | Binary (pred1,pred2) -> MLBDD.dand (compile_pred_bdd man pk1 pred1) (compile_pred_bdd man pk2 pred2)
-    | FMap (field1,field2) -> MLBDD.nxor (generate_single_var man pk1 field1) (generate_single_var man pk2 field2) 
-    in compile_pkr_bdd_aux pkr
+  let rec compile_pkr_bdd_aux (pkr:pkr):MLBDD.t =
+    try Hashtbl.find man.pkr_cache (pk1, pk2, pkr)
+    with Not_found ->
+    let bdd =
+      match pkr with
+      | Id -> produce_id man pk1 pk2
+      | Empty -> bdd_false man
+      | Test (field, false) -> (MLBDD.dand (produce_id man pk1 pk2) (MLBDD.dnot (generate_single_var man pk1 field)))
+      | Test (field, true) -> (MLBDD.dand (produce_id man pk1 pk2) (generate_single_var man pk1 field))
+      | LeftAsgn (field, b) -> produce_assign man pk1 pk2 field b true
+      | RightAsgn (field, b) -> produce_assign man pk1 pk2 field b false
+      | Comp (pkr1, pkr2) -> comp_bdd man pk1 pk2 compile_pkr_bdd pkr1 pkr2
+      | OrP (pkr1,pkr2)-> MLBDD.dor (compile_pkr_bdd_aux pkr1) (compile_pkr_bdd_aux pkr2)
+      | AndP (pkr1,pkr2)-> MLBDD.dand (compile_pkr_bdd_aux pkr1) (compile_pkr_bdd_aux pkr2)
+      | Binary (pred1,pred2) -> MLBDD.dand (compile_pred_bdd man pk1 pred1) (compile_pred_bdd man pk2 pred2)
+      | FMap (field1,field2) -> MLBDD.nxor (generate_single_var man pk1 field1) (generate_single_var man pk2 field2)
+    in Hashtbl.replace man.pkr_cache (pk1, pk2, pkr) bdd;
+        bdd
+  in compile_pkr_bdd_aux pkr
 
 let rename_bdd  (pk1:pk) (pk2:pk) (bdd:MLBDD.t):MLBDD.t =
   let permute var = if var mod 6 = pk1 then
@@ -629,13 +658,6 @@ let union_ro_mapping (mapping1:(MLBDD.t)ROMap.t) (mapping2:(MLBDD.t)ROMap.t):(ML
 let union_nkro_mapping (mapping1:(MLBDD.t)NKROMap.t) (mapping2:(MLBDD.t)NKROMap.t):(MLBDD.t)NKROMap.t=
    NKROMap.union (fun _ bdd1 bdd2 -> Some (MLBDD.dor bdd1 bdd2)) mapping1 mapping2
 
-let union_nkro_mapping_updated (mapping1:(MLBDD.t)NKROMap.t) (mapping2:(MLBDD.t)NKROMap.t):((MLBDD.t)NKROMap.t*bool)=
-   NKROMap.fold (fun con bdd (mapping,changed) -> 
-            match add_nkro_mapping_updated con bdd mapping with
-              | (mapping',true) -> (mapping',true)
-              | (mapping',false) -> (mapping',changed)
-            ) mapping1 (mapping2,false)
-
 let union_nkrob_mapping (mapping1:(MLBDD.t)NKROBMap.t) (mapping2:(MLBDD.t)NKROBMap.t):(MLBDD.t)NKROBMap.t=
    NKROBMap.union (fun _ bdd1 bdd2 -> Some (MLBDD.dor bdd1 bdd2)) mapping1 mapping2
 
@@ -727,9 +749,12 @@ let determinize_nko_transition (nexts:(MLBDD.t)NKOMap.t):(MLBDD.t)NKOMap.t=
 (* Where for all nk_1,nk_2, delta_k (Some nk1) (Some nk2) is the delta_k in the paper *)                            
 (* And for all nk, delta_k (Some nk) None is the epsilon_k in the paper *)                            
 let rec delta_k (man:man)(pk1:pk)(pk2:pk)(nko:NK.t option): (MLBDD.t)NKOMap.t=
-    match nko with
+    try Hashtbl.find man.delta_k_cache (pk1, pk2, nko)
+    with Not_found ->
+    let nkomap = 
+      match nko with
       | None -> NKOMap.empty
-      | Some (Pred pred) -> add_nko_mapping None (MLBDD.dand (compile_pred_bdd man pk1 pred) (produce_id man pk1 pk2)) NKOMap.empty  
+      | Some (Pred pred) -> add_nko_mapping None (MLBDD.dand (compile_pred_bdd man pk1 pred) (produce_id man pk1 pk2)) NKOMap.empty
       | Some (Pkr pkr) -> add_nko_mapping None (compile_pkr_bdd man pk1 pk2 pkr) NKOMap.empty
       | Some (Asgn (field, b)) -> add_nko_mapping None (produce_assign man pk1 pk2 field b false) NKOMap.empty
       | Some (Union nks) -> SNK.fold (fun nk acc -> union_nko_mapping (delta_k man pk1 pk2 (Some nk)) acc) nks NKOMap.empty
@@ -763,7 +788,10 @@ let rec delta_k (man:man)(pk1:pk)(pk2:pk)(nko:NK.t option): (MLBDD.t)NKOMap.t=
                                             (add_nko_mapping None (produce_id man pk1 pk2)
                                               (concatenate_nko_mapping (filtering_epsilon_k (delta_k man pk1 pk2 (Some nk))) (Some (Star nk)))) 
       | Some Dup -> add_nko_mapping (Some (Pred True)) (produce_id man pk1 pk2) NKOMap.empty
-          
+   in Hashtbl.replace man.delta_k_cache (pk1, pk2, nko) nkomap;
+    nkomap
+
+
 let right_nko_lifting (nko:NK.t option):(Rel.t option) =
   match nko with
     | None -> None
@@ -803,7 +831,10 @@ let closure_bdd_r (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (bdd:MLBDD.t):ML
 (* Note that for E, we directly calculate the transitive closure of it *)                 
 (* But for X/Y/XY, we calculate only one step *)                 
 let rec delta_r (man:man)(pk1:pk)(pk2:pk)(pk3:pk)(pk4:pk)(ro:Rel.t option)(ns:next_step): (MLBDD.t)ROMap.t=
-  let id1234 = produce_double_id man pk1 pk2 pk3 pk4 in
+ try Hashtbl.find man.delta_r_cache (pk1, pk2, pk3, pk4, ro, ns)
+ with Not_found ->
+  let romap = 
+   let id1234 = produce_double_id man pk1 pk2 pk3 pk4 in
     match ro with
       | None -> (match ns with
                     | E -> add_ro_mapping ro id1234 ROMap.empty
@@ -859,47 +890,68 @@ let rec delta_r (man:man)(pk1:pk)(pk2:pk)(pk3:pk)(pk4:pk)(ro:Rel.t option)(ns:ne
                                   (match ns with
                                      | XY -> NKOMap.fold (fun nko bdd acc -> add_ro_mapping (apply_nko_lifting nko pkr) (MLBDD.dand bdd pkr_rel) acc) (delta_k man pk1 pk2 (Some nk)) ROMap.empty
                                      | E -> add_ro_mapping ro id1234 ROMap.empty
-                                     | _ ->  ROMap.empty)                             
-                                                                      
-                                              
+                                     | _ ->  ROMap.empty)
+  in Hashtbl.replace man.delta_r_cache (pk1, pk2, pk3, pk4, ro, ns) romap;
+    romap  
+                                                                 
+let delta_krx_atomic (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro:(NK.t option*Rel.t option)):(MLBDD.t)NKROMap.t =
+    try Hashtbl.find man.delta_krx_atomic_cache (pk1, pk2, pk3, pk4, nkro)
+    with Not_found ->
+    let nkromap =
+      let (nko,ro) = nkro in
+      let nko_map = delta_k man pk1 pk2 nko in
+      let ro_map = delta_r man pk1 pk2 pk3 pk4 ro X in
+      let epsilon_closure_ro_map_right = ROMap.fold (fun ro bdd acc -> union_ro_mapping (apply_ro_mapping
+         (comp_bdd_4 man pk1 pk2 pk3 pk4 bdd) (delta_r man pk1 pk2 pk3 pk4 ro E)) acc) ro_map ROMap.empty in
+      NKOMap.fold (fun nko kbdd acc -> ROMap.fold (fun ro rbdd acc -> 
+          add_nkro_mapping (nko,ro) (MLBDD.dand kbdd rbdd) acc) epsilon_closure_ro_map_right acc) nko_map NKROMap.empty
+    in Hashtbl.replace man.delta_krx_atomic_cache (pk1, pk2, pk3, pk4, nkro) nkromap;
+  nkromap
+    
 (* pk1: x, pk2:x', pk3:y, pk4:y'*)
 (* Correspond to delta_re1^* transistion in the paper *)
 let delta_krx (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro:(NK.t option*Rel.t option)):(MLBDD.t)NKROMap.t =
- let worklist = Queue.create() in
- let rec delta_krx_aux (cur:(MLBDD.t)NKROMap.t) :(MLBDD.t)NKROMap.t =
-  match Queue.take_opt worklist with
-    | None -> cur
-    (* transition_bdd is in order of pk1 pk2 pk3 pk4*)
-    | Some (nkro,transition_bdd) -> let (nko,ro) = nkro in 
-                          let nko_map = delta_k man pk1 pk2 nko in
-                          let ro_map = delta_r man pk1 pk2 pk3 pk4 ro X in
-                          (* The right epsilon closure on the result *)
-                          let epsilon_closure_ro_map_right = ROMap.fold (fun ro bdd acc -> union_ro_mapping (apply_ro_mapping
-                             (comp_bdd_4 man pk1 pk2 pk3 pk4 bdd) (delta_r man pk1 pk2 pk3 pk4 ro E)) acc) ro_map ROMap.empty in
-                              delta_krx_aux (NKOMap.fold (fun nko kbdd acc -> ROMap.fold (fun ro rbdd acc -> 
-                                  let transition_bdd' = comp_bdd_4 man pk1 pk2 pk3 pk4 transition_bdd (MLBDD.dand kbdd rbdd)
-                                    in match add_nkro_mapping_updated (nko,ro) transition_bdd' acc with
-                                        | (mapping',true) -> Queue.add ((nko,ro),transition_bdd') worklist; mapping'
-                                        | (mapping',false) -> mapping' ) epsilon_closure_ro_map_right acc) nko_map cur)
- in let (nko,ro) = nkro in
-      let epsilon_closure_ro_map_left = delta_r man pk1 pk2 pk3 pk4 ro E in
-        delta_krx_aux (ROMap.fold (fun ro bdd acc -> Queue.add ((nko,ro),bdd) worklist;
-                        add_nkro_mapping (nko,ro) bdd acc) epsilon_closure_ro_map_left NKROMap.empty)
- 
+  try Hashtbl.find man.delta_krx_cache (pk1, pk2, pk3, pk4, nkro)
+   with Not_found ->
+  let nkromap = 
+   let worklist = Queue.create() in
+   let rec delta_krx_aux (cur:(MLBDD.t)NKROMap.t) :(MLBDD.t)NKROMap.t =
+   match Queue.take_opt worklist with
+     | None -> cur
+     (* transition_bdd is in order of pk1 pk2 pk3 pk4*)
+     | Some (nkro,transition_bdd) -> 
+       let next_map = delta_krx_atomic man pk1 pk2 pk3 pk4 nkro in
+         delta_krx_aux (NKROMap.fold (fun nkro bdd acc ->
+            let transition_bdd' = comp_bdd_4 man pk1 pk2 pk3 pk4 transition_bdd bdd in
+            match add_nkro_mapping_updated nkro transition_bdd' acc with
+                                         | (mapping',true) -> Queue.add (nkro,transition_bdd') worklist; mapping'
+                                         | (mapping',false) -> mapping' ) next_map cur)
+   in let (nko,ro) = nkro in
+       let epsilon_closure_ro_map_left = delta_r man pk1 pk2 pk3 pk4 ro E in
+         delta_krx_aux (ROMap.fold (fun ro bdd acc -> Queue.add ((nko,ro),bdd) worklist;
+                         add_nkro_mapping (nko,ro) bdd acc) epsilon_closure_ro_map_left NKROMap.empty)
+  in Hashtbl.replace man.delta_krx_cache (pk1, pk2, pk3, pk4, nkro) nkromap;
+    nkromap
+
 (* pk1: x, pk2:x', pk3:y, pk4:y'*)
 (* Each computation starts from the epsilon closure of the the nkro, which means we first do the delta_re1^* transition, and then
   do the delta_re transition.
 *)
 let delta_kr (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro:NK.t option*Rel.t option) (start_flag:bool): (MLBDD.t)NKROMap.t=
   let delta_kr_aux (nkro:NK.t option*Rel.t option) :(MLBDD.t)NKROMap.t =
-    let (nko,ro)= nkro in
-      let nko_map = delta_k man pk1 pk2 nko in
-      let ro_y_map = delta_r man pk1 pk2 pk3 pk4 ro Y in
-      let ro_xy_map = delta_r man pk1 pk2 pk3 pk4 ro XY in
-        let next_y_map = ROMap.fold (fun ro rbdd acc -> add_nkro_mapping (nko,ro) rbdd acc) ro_y_map NKROMap.empty in
-        let next_xy_map = NKOMap.fold (fun nko kbdd acc -> ROMap.fold (fun ro rbdd acc -> add_nkro_mapping (nko,ro) (MLBDD.dand kbdd rbdd) acc) ro_xy_map acc) nko_map NKROMap.empty in
-        let next_map = union_nkro_mapping next_y_map next_xy_map in
-            NKROMap.fold (fun nkro bdd acc -> union_nkro_mapping (apply_nkro_mapping (comp_bdd_4 man pk1 pk2 pk3 pk4 bdd) (delta_krx man pk1 pk2 pk3 pk4 nkro)) acc) next_map NKROMap.empty
+    try Hashtbl.find man.delta_kr_cache (pk1, pk2, pk3, pk4, nkro)
+    with Not_found ->
+    let nkromap =   
+     let (nko,ro)= nkro in
+       let nko_map = delta_k man pk1 pk2 nko in
+       let ro_y_map = delta_r man pk1 pk2 pk3 pk4 ro Y in
+       let ro_xy_map = delta_r man pk1 pk2 pk3 pk4 ro XY in
+         let next_y_map = ROMap.fold (fun ro rbdd acc -> add_nkro_mapping (nko,ro) rbdd acc) ro_y_map NKROMap.empty in
+         let next_xy_map = NKOMap.fold (fun nko kbdd acc -> ROMap.fold (fun ro rbdd acc -> add_nkro_mapping (nko,ro) (MLBDD.dand kbdd rbdd) acc) ro_xy_map acc) nko_map NKROMap.empty in
+         let next_map = union_nkro_mapping next_y_map next_xy_map in
+             NKROMap.fold (fun nkro bdd acc -> union_nkro_mapping (apply_nkro_mapping (comp_bdd_4 man pk1 pk2 pk3 pk4 bdd) (delta_krx man pk1 pk2 pk3 pk4 nkro)) acc) next_map NKROMap.empty
+    in Hashtbl.replace man.delta_kr_cache (pk1, pk2, pk3, pk4, nkro) nkromap;
+     nkromap
     in let start_closure =
         if start_flag then delta_krx man pk1 pk2 pk3 pk4 nkro
         else (add_nkro_mapping nkro (produce_double_id man pk1 pk2 pk3 pk4) NKROMap.empty) in
@@ -960,7 +1012,7 @@ let var_if (man:man) (var:int) (lbdd:MLBDD.t) (hbdd:MLBDD.t):MLBDD.t=
 
 let splitting_bdd (man:man)(pk1:pk)(pk2:pk)(pk3:pk)(pk4:pk) (bdd:MLBDD.t): BSet.t =
   (* Function used for folding *)
-  let splitting_bdd_aux (b:MLBDD.t MLBDD.b): MLBDD.t =  
+  let splitting_bdd_aux (b:MLBDD.t MLBDD.b): MLBDD.t =
     match b with
       | MLBDD.BFalse -> bdd_false man
       | MLBDD.BTrue -> bdd_true man
@@ -970,11 +1022,18 @@ let splitting_bdd (man:man)(pk1:pk)(pk2:pk)(pk3:pk)(pk4:pk) (bdd:MLBDD.t): BSet.
                                         var_high_branch man var high
                                     else var_low_branch man var low
      in 
-  let rec loop (cur:BSet.t) (bdd:MLBDD.t):BSet.t = 
-      if MLBDD.is_false bdd then cur
+  let rec loop (bdd:MLBDD.t):BSet.t =
+    try Hashtbl.find man.split_bdd_cache bdd
+    with Not_found ->
+      let bset =
+      if MLBDD.is_false bdd then BSet.empty
       else let low = MLBDD.foldb_cont man.split_hist splitting_bdd_aux bdd in
-            loop (BSet.add low cur) (MLBDD.dand bdd (MLBDD.dnot low)) in
-    BSet.map (fun bdd -> back_ordering pk1 pk2 pk3 pk4 bdd) (loop BSet.empty (re_ordering pk1 pk2 pk3 pk4 bdd))                         
+            BSet.add low (loop (MLBDD.dand bdd (MLBDD.dnot low)))
+          in
+      Hashtbl.replace man.split_bdd_cache bdd bset;
+      bset
+  in
+    BSet.map (fun bdd -> back_ordering pk1 pk2 pk3 pk4 bdd) (loop (re_ordering pk1 pk2 pk3 pk4 bdd))
 
 let is_final_nkro (nkro:NK.t option*Rel.t option):bool =
   Option.is_none (fst nkro)&& Option.is_none (snd nkro)
@@ -985,8 +1044,6 @@ let is_final_nkrob (nkrob:(NK.t option*Rel.t option)*MLBDD.t):bool =
 let is_final_nkrobs (nkrobs:NKROBSet.t):bool =
   NKROBSet.exists (fun nkrob -> is_final_nkrob nkrob) nkrobs
 
-let nkr_to_nkro (nkr:NK.t*Rel.t):NK.t option*Rel.t option=
-  (Some (fst nkr),Some (snd nkr))   
 (* pk1: x, pk2:x', pk3:y, pk4:y'*)
 let generate_all_transition(man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (start:NK.t option*Rel.t option):(BSet.t*(BSet.t)NKROMap.t)NKROMap.t=
   let support24 = generate_double_support man pk2 pk4 in

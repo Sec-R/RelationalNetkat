@@ -657,6 +657,15 @@ let tests = "MLBDD tests" >::: [
           let boolean = (RN.bisim man 2 3 start1 start1 nkrobsmap1 empty_map) in
           Printf.printf "Execution time 2: %fs\n" (Sys.time() -. t);
           assert_equal true boolean; 
+          let epsilon = RN.Rel.Left (RN.NK.Seq (RN.NK.Pkr (Binary (True,True)) ,RN.NK.Star (RN.NK.Seq (RN.NK.Dup,(RN.NK.Pkr (Binary (True,True))))))) in
+          let relation2 = RN.Rel.SeqR (epsilon, RN.Rel.SeqR (RN.Rel.Nil core1_filter, epsilon)) in
+          let t = Sys.time() in
+          let (nkrobsmap2, start2) = RN.projection_compiler man 0 1 2 3 (Some network1, Some relation2) in
+          Printf.printf "Execution time 3: %fs\n" (Sys.time() -. t);
+          let t = Sys.time() in
+          let boolean2 = (RN.bisim man 2 3 start2 start2 nkrobsmap2 empty_map) in
+          assert_equal true boolean2;
+          Printf.printf "Execution time 4: %fs\n" (Sys.time() -. t);
           (* print to see! *)
      (*     let open Yojson.Basic.Util in
           let jkeys = Yojson.Basic.Util.keys json1 in

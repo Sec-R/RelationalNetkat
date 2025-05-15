@@ -159,11 +159,7 @@ module NKROBSet : Set.S with type elt = (NK.t option * Rel.t option) * MLBDD.t
 module NKROBSMap : Map.S with type key = NKROBSet.t
 module NKROBSSMap : Map.S with type key = NKROBSet.t * NKROBSet.t
 
-type man = {
-  field_max : field;
-  bman : MLBDD.man;
-  split_hist : MLBDD.t MLBDD.hist;
-}
+type man
 
 val pred_to_string : pred -> string
 val pkr_to_string : pkr -> string
@@ -205,7 +201,6 @@ val add_nkro_mapping_updated : NK.t option * Rel.t option -> MLBDD.t -> MLBDD.t 
 val union_nko_mapping : MLBDD.t NKOMap.t -> MLBDD.t NKOMap.t -> MLBDD.t NKOMap.t
 val union_ro_mapping : MLBDD.t ROMap.t -> MLBDD.t ROMap.t -> MLBDD.t ROMap.t
 val union_nkro_mapping : MLBDD.t NKROMap.t -> MLBDD.t NKROMap.t -> MLBDD.t NKROMap.t
-val union_nkro_mapping_updated : MLBDD.t NKROMap.t -> MLBDD.t NKROMap.t -> MLBDD.t NKROMap.t * bool
 val union_nkrob_mapping : MLBDD.t NKROBMap.t -> MLBDD.t NKROBMap.t -> MLBDD.t NKROBMap.t
 val apply_nko_mapping : (MLBDD.t -> MLBDD.t) -> MLBDD.t NKOMap.t -> MLBDD.t NKOMap.t
 val apply_ro_mapping : (MLBDD.t -> MLBDD.t) -> MLBDD.t ROMap.t -> MLBDD.t ROMap.t
@@ -233,7 +228,6 @@ val splitting_bdd : man -> pk -> pk -> pk -> pk -> MLBDD.t -> BSet.t
 val is_final_nkro : NK.t option * Rel.t option -> bool
 val is_final_nkrob : (NK.t option * Rel.t option) * MLBDD.t -> bool
 val is_final_nkrobs : NKROBSet.t -> bool
-val nkr_to_nkro : NK.t * Rel.t -> NK.t option * Rel.t option
 val generate_all_transition : man -> pk -> pk -> pk -> pk -> NK.t option * Rel.t option -> (BSet.t * BSet.t NKROMap.t) NKROMap.t
 val find_bdds : NK.t option * Rel.t option -> (BSet.t * BSet.t NKROMap.t) NKROMap.t -> BSet.t
 val simplify_all_transition : man -> pk -> pk -> pk -> pk -> (BSet.t * BSet.t NKROMap.t) NKROMap.t -> MLBDD.t NKROBMap.t NKROBMap.t
