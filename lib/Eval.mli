@@ -11,8 +11,10 @@ val binary_to_pred: int -> int -> int -> int -> pred
 val binary_to_pkr: int -> int -> int -> int -> pkr
 val parse_location_to_pred : string -> int -> bool -> int NodesMap.t -> pred
 val parse_location_to_pkr : string -> int -> bool -> int NodesMap.t -> pkr
-val parse_ip_string : string -> int * int
+val parse_ip_entry_string : string -> int * int
+val parse_ip_string : string -> int
+val match_ip_string : int -> int -> int -> bool
 val length_of_int : int -> int
-val parse_routing_table : Yojson.Basic.t -> int NodesMap.t -> (string * string) EdgesMap.t -> pkr
-val compare_data : (string * Yojson.Basic.t) -> (string * Yojson.Basic.t) -> int
+val parse_local_routing_table : string -> Yojson.Basic.t list -> int NodesMap.t -> (string * string) EdgesMap.t -> pkr
+val parse_global_routing_table : Yojson.Basic.t -> int NodesMap.t -> (string * string) EdgesMap.t -> pkr
 val json_to_network : Yojson.Basic.t -> int NodesMap.t -> (string * string) EdgesMap.t -> (string list) -> (string list) -> NK.t

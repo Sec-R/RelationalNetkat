@@ -638,9 +638,11 @@ let tests = "MLBDD tests" >::: [
           let json2 = Yojson.Basic.from_file "../../../dataset/change1-edge.json" in
           let nodesmap = Eval.parse_nodes_to_map json1 in
           assert_equal ((Eval.binary_to_pred 0 5 4 12)) (Eval.parse_location_to_pred "leaf1" 0 false nodesmap);
-          let (ip,netmask) = Eval.parse_ip_string "1.2.3.4/24" in
+          let (ip,netmask) = Eval.parse_ip_entry_string "1.2.3.4/24" in
           assert_equal netmask 24;
           assert_equal ip (1 lsl 24 + 2 lsl 16 + 3 lsl 8 + 4);
+          let ip = Eval.parse_ip_string "4.5.6.7" in
+          assert_equal ip (4 lsl 24 + 5 lsl 16 + 6 lsl 8 + 7);
           let edgesmap = Eval.parse_edges_to_map json2 in
           let man = RN.init_man (33+(Eval.NodesMap.cardinal nodesmap)) (33+Eval.NodesMap.cardinal nodesmap) in
           (*
@@ -648,6 +650,11 @@ let tests = "MLBDD tests" >::: [
           let nodesmap2 = Eval.parse_nodes_to_map json3 in
           let edgesmap = Eval.parse_edges_to_map json2 in
           print_endline (RN.pkr_to_string (Eval.parse_routing_table json3 nodesmap2 edgesmap));*)
+         (* let json3 = Yojson.Basic.from_file "../../../dataset/test-node.json" in
+          let nodesmap2 = Eval.parse_nodes_to_map json3 in
+          match json3 with
+          | `Assoc ((s,`List table1)::_) -> print_endline (RN.pkr_to_string (Eval.parse_local_routing_table s table1 nodesmap2 edgesmap));  
+          | _ -> failwith "json1 is not an object";*)
           let network1 = Eval.json_to_network json1 nodesmap edgesmap ["border1";"border2"] ["host-db"] in
           let core1_loc = Eval.parse_location_to_pred "core1" 0 false nodesmap in
           let empty_map = RN.NKROBSMap.empty in

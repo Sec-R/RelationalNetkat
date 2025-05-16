@@ -1,10 +1,35 @@
 {
-    "0": {
-        "Node": "border1",
-        "Network": "2.1.1.1/32",
-        "Next_Hop_Interface": "Loopback0",
-        "Metric": 0,
-        "Admin_Distance": 0
-    }
-
-}
+    "border1": [
+        {
+            "VRF": "default",
+            "Network": "2.1.1.1/32",
+            "Next_Hop": {
+                "interface": "Loopback0",
+                "ip": null,
+                "type": "interface"
+            },
+            "Next_Hop_IP": "AUTO/NONE(-1l)",
+            "Next_Hop_Interface": "Loopback0",
+            "Protocol": "connected",
+            "Metric": 0,
+            "Admin_Distance": 0,
+            "Tag": null
+        },
+                {
+            "VRF": "default",
+            "Network": "2.1.1.2/32",
+            "Next_Hop": {
+                "interface": "GigabitEthernet2/0",
+                "ip": "2.12.12.2",
+                "type": "interface"
+            },
+            "Next_Hop_IP": "2.12.12.2",
+            "Next_Hop_Interface": "GigabitEthernet2/0",
+            "Protocol": "ospf",
+            "Metric": 102,
+            "Admin_Distance": 110,
+            "Tag": null
+        }
+    
+    ]
+}        
