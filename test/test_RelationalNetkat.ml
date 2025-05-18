@@ -747,6 +747,53 @@ let tests = "MLBDD tests" >::: [
           let boolean5 = (RN.bisim man 2 3 start3 start6 nkrobsmap3 nkrobsmap6) in
           Printf.printf "Bisimulation time (Test 4): %fs\n" (Sys.time() -. t);
           assert_equal true boolean5;
+          let json5 = Yojson.Basic.from_file "../../../dataset/change3-node.json" in
+          let json6 = Yojson.Basic.from_file "../../../dataset/change3-edge.json" in
+          let nodesmap3 = Eval.parse_nodes_to_map json5 in
+          let edgesmap3 = Eval.parse_edges_to_map json6 in
+          let network3 = Eval.json_to_network json5 nodesmap3 edgesmap3 false ["border1";"border2"] ["host-www"] in
+          let ip = Eval.parse_ip_string "2.128.0.0" in
+          let pred2 = Eval.binary_to_pred (Eval.header_placement Ip nodesmap3) 23 31 ip in
+          let filter = RN.Binary (pred2, True) in
+          let relation = RN.Rel.SeqR (RN.Rel.Nil filter, id) in
+          let t = Sys.time() in
+          let (nkrobsmap7, start7) = RN.projection_compiler man 0 1 2 3 (Some network3, Some relation) in
+          Printf.printf "Compiled time (Test 5): %fs\n" (Sys.time() -. t);
+          let t = Sys.time() in
+          let boolean6 = (RN.bisim man 2 3 start7 start7 nkrobsmap7 empty_map) in
+          Printf.printf "Bisimulation time (Test 5): %fs\n" (Sys.time() -. t);
+          assert_equal false boolean6;
+          let network4 = Eval.json_to_network json5 nodesmap3 edgesmap3 false ["border1";"border2"] ["host-db"] in
+          let t = Sys.time() in
+          let (nkrobsmap8, start8) = RN.projection_compiler man 0 1 2 3 (Some network4, Some relation) in
+          Printf.printf "Compiled time (Test 5): %fs\n" (Sys.time() -. t);
+          let t = Sys.time() in
+          let boolean7 = (RN.bisim man 2 3 start8 start8 nkrobsmap8 empty_map) in
+          Printf.printf "Bisimulation time (Test 5): %fs\n" (Sys.time() -. t);
+          assert_equal false boolean7;
+          let json7 = Yojson.Basic.from_file "../../../dataset/change4-node.json" in
+          let json8 = Yojson.Basic.from_file "../../../dataset/change4-edge.json" in
+          let nodesmap4 = Eval.parse_nodes_to_map json7 in
+          let edgesmap4 = Eval.parse_edges_to_map json8 in
+          let network5 = Eval.json_to_network json7 nodesmap4 edgesmap4 false ["border1";"border2"] ["host-www"] in
+          let pred3 = Eval.binary_to_pred (Eval.header_placement Ip nodesmap4) 23 31 ip in
+          let filter = RN.Binary (pred3, True) in
+          let relation = RN.Rel.SeqR (RN.Rel.Nil filter, id) in
+          let t = Sys.time() in
+          let (nkrobsmap9, start9) = RN.projection_compiler man 0 1 2 3 (Some network5, Some relation) in
+          Printf.printf "Compiled time (Test 5): %fs\n" (Sys.time() -. t);
+          let t = Sys.time() in
+          let boolean8 = (RN.bisim man 2 3 start9 start9 nkrobsmap9 empty_map) in
+          Printf.printf "Bisimulation time (Test 5): %fs\n" (Sys.time() -. t);
+          assert_equal false boolean8;
+          let network6 = Eval.json_to_network json7 nodesmap4 edgesmap4 true ["border1";"border2"] ["host-db"] in
+          let t = Sys.time() in
+          let (nkrobsmap10, start10) = RN.projection_compiler man 0 1 2 3 (Some network6, Some relation) in
+          Printf.printf "Compiled time (Test 6): %fs\n" (Sys.time() -. t);
+          let t = Sys.time() in
+          let boolean9 = (RN.bisim man 2 3 start10 start10 nkrobsmap10 empty_map) in
+          Printf.printf "Bisimulation time (Test 6): %fs\n" (Sys.time() -. t);
+          assert_equal false boolean9;
 
           (* print to see! *)
      (*     let open Yojson.Basic.Util in
