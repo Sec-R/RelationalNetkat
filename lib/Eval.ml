@@ -29,6 +29,12 @@ type header =
   | DstIp
   | Protocol
   
+type man = {
+  nodes: int StringMap.t;
+  edges: (string*string)EdgesMap.t;
+  protocols: int StringMap.t;
+}
+
 let insert_edge = EdgesMap.add
 
 let insert_node (key:string) (map:int StringMap.t) =
@@ -101,6 +107,26 @@ let parse_protocols_to_map (protocols:Yojson.Basic.t) : int StringMap.t =
   in
   aux StringMap.empty protocols
 
+let length_of_int (num:int) : int =
+  let rec aux n acc =
+    if n = 0 then acc
+    else aux (n lsr 1) (acc + 1)
+  in
+  aux (num + 1) 0
+
+
+let init_man (nodes:Yojson.Basic.t) (edges:Yojson.Basic.t) (protocols:Yojson.Basic.t) : man =
+  {
+    nodes = parse_nodes_to_map nodes;
+    edges = parse_edges_to_map edges;
+    protocols = parse_protocols_to_map protocols;
+  }
+
+let get_field_length (man:man) : int =
+  let nodes_length = length_of_int (StringMap.cardinal man.nodes) in
+  let protocols_length = length_of_int (StringMap.cardinal man.protocols) in
+  nodes_length + 32 + 32 + protocols_length + 1
+
 (* Convert a binary number to a predicate *)  
 let rec binary_to_pred (start:int) (length:int) (shifter:int) (num:int) : pred =
   match length with
@@ -126,46 +152,39 @@ let rec binary_to_pkr (start:int) (length:int) (shifter:int) (num:int) : pkr =
          else
            Comp (RightAsgn (start, true), binary_to_pkr (start + 1) (length - 1) (shifter - 1) num)
 
-           
-let length_of_int (num:int) : int =
-  let rec aux n acc =
-    if n = 0 then acc
-    else aux (n lsr 1) (acc + 1)
-  in
-  aux (num + 1) 0
-
-let header_placement (header:header) (nodes: int StringMap.t) : int =
+          
+let header_placement (header:header) (man: man) : int =
   match header with
   | Loc -> 0
-  | DstIp -> length_of_int (StringMap.cardinal nodes)
-  | SrcIp -> 32 + (length_of_int (StringMap.cardinal nodes))
-  | Protocol -> 64 + (length_of_int (StringMap.cardinal nodes))
+  | DstIp -> length_of_int (StringMap.cardinal man.nodes)
+  | SrcIp -> 32 + (length_of_int (StringMap.cardinal man.nodes))
+  | Protocol -> 64 + (length_of_int (StringMap.cardinal man.nodes))
 
 
-let parse_protocols_to_pred (protocols:string list) (protocol_map:int StringMap.t) (nodesmap:int StringMap.t) : pred =
+let parse_protocols_to_pred (protocols:string list) (man:man) : pred =
   let rec aux acc = function
     | [] -> acc
     | x::xs ->
-        let id = StringMap.find x protocol_map in
-        let protocol_length = length_of_int (StringMap.cardinal protocol_map) in
-        aux (Or (acc, binary_to_pred (header_placement Protocol nodesmap) protocol_length (protocol_length-1) id)) xs
+        let id = StringMap.find x man.protocols in
+        let protocol_length = length_of_int (StringMap.cardinal man.protocols) in
+        aux (Or (acc, binary_to_pred (header_placement Protocol man) protocol_length (protocol_length-1) id)) xs
   in
   if List.length protocols = 0 then
     True
   else
     aux False protocols
 
-let parse_location_to_pred (loc:string) (start:int) (local:bool) (nodes: int StringMap.t) : pred =
+let parse_location_to_pred (loc:string) (start:int) (local:bool) (man: man) : pred =
   try
-    let id = (StringMap.find loc nodes) + (if local then 1 else 0) in
-      let length = length_of_int (StringMap.cardinal nodes) in
+    let id = (StringMap.find loc man.nodes) + (if local then 1 else 0) in
+      let length = length_of_int (StringMap.cardinal man.nodes) in
       binary_to_pred start length (length-1)  id
   with Not_found -> failwith ("Node " ^ loc ^ " not found in the map")
 
-let parse_location_to_pkr (loc:string) (start:int) (local:bool) (nodes: int StringMap.t) : pkr =
+let parse_location_to_pkr (loc:string) (start:int) (local:bool) (man: man) : pkr =
   try
-    let id = (StringMap.find loc nodes) + (if local then 1 else 0) in
-      let length = length_of_int (StringMap.cardinal nodes) in
+    let id = (StringMap.find loc man.nodes) + (if local then 1 else 0) in
+      let length = length_of_int (StringMap.cardinal man.nodes) in
       binary_to_pkr start length (length-1)  id
   with Not_found -> failwith ("Node " ^ loc ^ " not found in the map")
  
@@ -175,9 +194,9 @@ let parse_ip_entry_string (ip:string) : int * int =
 let parse_ip_string (ip:string) : int =
   Scanf.sscanf ip "%d.%d.%d.%d" (fun a b c d-> a lsl 24 + b lsl 16 + c lsl 8 + d)  
 
-let find_next_loc (loc:string) (interface:string) (edges:(string*string)EdgesMap.t) : string =
+let find_next_loc (loc:string) (interface:string) (man: man) : string =
   try
-    let (node, _) = EdgesMap.find (loc, interface) edges in
+    let (node, _) = EdgesMap.find (loc, interface) man.edges in
     node
   with Not_found -> failwith ("Interface " ^ interface ^ " not found in the map for node " ^ loc)
            
@@ -199,7 +218,7 @@ let parse_ip_wildcard (ip:string) : int * int =
   else
     (parse_ip_string ip, 0)
 
-let rec parse_protocol_filter (node:string) (named_structure:string) (protocols:Yojson.Basic.t) (nodes: int StringMap.t) (protocol_map:int StringMap.t) : pred =
+let rec parse_protocol_filter (node:string) (named_structure:string) (protocols:Yojson.Basic.t) (man:man) : pred =
   match protocols with
   | `Assoc ((_, entry)::xs) ->
       let structure_type = entry |> member "Structure_Type" |> to_string in
@@ -211,31 +230,31 @@ let rec parse_protocol_filter (node:string) (named_structure:string) (protocols:
           | `List [] -> False
           | `List (x::xs) ->
               let (dstip,dst_mask) = x |> member "matchCondition" |> member "headerSpace" |> member "dstIps" |> member "ipWildcard" |> to_string |> parse_ip_wildcard in
-              let dst_pred = binary_to_pred (header_placement DstIp nodes) dst_mask 31 dstip in
+              let dst_pred = binary_to_pred (header_placement DstIp man) dst_mask 31 dstip in
               let (srcip,src_mask) = x |> member "matchCondition" |> member "headerSpace" |> member "srcIps" |> member "ipWildcard" |> to_string |> parse_ip_wildcard in
-              let src_pred = binary_to_pred (header_placement SrcIp nodes) src_mask 31 srcip in
+              let src_pred = binary_to_pred (header_placement SrcIp man) src_mask 31 srcip in
               let protocol_list = [x] |> filter_member "matchCondition" |> filter_member "headerSpace" |> filter_member "ipProtocols" |> filter_string  in
-              let protocol_pred = parse_protocols_to_pred protocol_list protocol_map nodes in
+              let protocol_pred = parse_protocols_to_pred protocol_list man in
               let new_filter =  (And (And (src_pred, dst_pred), protocol_pred)) in
               (Or (And (Neg acc,new_filter), aux (Or (acc, new_filter)) (`List xs)))
           | _ -> failwith "Unexpected JSON format for protocols, please check the json generated by the batfish is in orient format of 'record'" 
         in
         aux False local_entries
       else
-        parse_protocol_filter node named_structure (`Assoc xs) nodes protocol_map
+        parse_protocol_filter node named_structure (`Assoc xs) man
   | `Assoc [] ->  failwith "Expected interface not found!"
   | `List [] ->  failwith "Expected interface not found!"
   | _ -> failwith "Unexpected JSON format for protocols, please check the json generated by the batfish is in orient format of 'record'"
 
 
 
-let parse_local_routing_table (loc:string) (tables: Yojson.Basic.t list)  (nodes: int StringMap.t) (edges: (string*string)EdgesMap.t) : pkr = 
+let parse_local_routing_table (loc:string) (tables: Yojson.Basic.t list)  (man:man) : pkr = 
    let rec aux (re_routing_list: (int*pred) list) (action_list:(int*int*pred*pkr) list) (filter:pred) = function
     | [] -> (re_routing_list, action_list)
     | table::xs ->
         let ip = table |> member "Network" |> to_string in
         let (ip, mask) = parse_ip_entry_string ip in
-        let ip_filter = binary_to_pred (header_placement DstIp nodes) mask 31 ip in
+        let ip_filter = binary_to_pred (header_placement DstIp man) mask 31 ip in
         let interface = table |> member "Next_Hop_Interface" |> to_string in
           if String.equal interface "dynamic" then
             let route_ip = table |> member "Next_Hop_IP" |> to_string in
@@ -243,12 +262,12 @@ let parse_local_routing_table (loc:string) (tables: Yojson.Basic.t list)  (nodes
             aux (re_routing_list @ [(route_ip, And (Neg filter,ip_filter))]) action_list (Or (filter, ip_filter)) xs
           else let next_loc_pkr = 
                   if String.equal interface "Loopback0"
-                    then parse_location_to_pkr loc (header_placement Loc nodes) true nodes
+                    then parse_location_to_pkr loc (header_placement Loc man) true man
                     (* Setting the discard the testing interface *)
                   else if String.equal interface "null_interface" 
                     then Binary (False,False)
                     (* Neglect the interface sending to nowhere/outside network *)
-                  else try (parse_location_to_pkr (find_next_loc loc interface edges) (header_placement Loc nodes) false nodes)
+                  else try (parse_location_to_pkr (find_next_loc loc interface man) (header_placement Loc man) false man)
                     with _ -> Binary (False,False) in
             aux re_routing_list (action_list @ [(ip,mask, And (Neg filter,ip_filter), next_loc_pkr)]) (Or (filter, ip_filter)) xs
     in
@@ -264,24 +283,24 @@ let parse_local_routing_table (loc:string) (tables: Yojson.Basic.t list)  (nodes
     List.fold_right (fun (ip,pred) acc -> OrP (AndP (Binary (pred,True), action_lookup action_list ip), acc)) re_routing_list
       (List.fold_right (fun (_,_,pred,action) acc -> OrP (AndP (Binary (pred,True), action), acc)) action_list (Binary (False,False)))
 
-let rec parse_global_routing_table (table:Yojson.Basic.t) (nodes: int StringMap.t) (edges: (string*string)EdgesMap.t) : pkr = 
+let rec parse_global_routing_table (table:Yojson.Basic.t) (man:man) : pkr = 
   match table with
   | `Assoc ((loc, `List routing_table)::xs) ->
-      let loc_filter = parse_location_to_pred loc (header_placement Loc nodes) false nodes in
-        let action = parse_local_routing_table loc routing_table nodes edges in
-         OrP (AndP (Binary (loc_filter,True), action), parse_global_routing_table (`Assoc xs) nodes edges)
+      let loc_filter = parse_location_to_pred loc (header_placement Loc man) false man in
+        let action = parse_local_routing_table loc routing_table man in
+         OrP (AndP (Binary (loc_filter,True), action), parse_global_routing_table (`Assoc xs) man)
   | `List []
   | `Assoc [] -> Binary (False,False)
   | _ -> failwith "Unexpected JSON format for routing table, please check the json generated by the batfish is in orient format of 'Record'"        
 
-let json_to_network (table:Yojson.Basic.t) (nodes: int StringMap.t) (edges: (string*string)EdgesMap.t) (dup_free:bool) (start_list:string list) (end_list:string list) : NK.t =
-  let routing_table = parse_global_routing_table table nodes edges in
+let json_to_network (table:Yojson.Basic.t) (man:man) (dup_free:bool) (start_list:string list) (end_list:string list): NK.t =
+  let routing_table = parse_global_routing_table table man in
   let start_loc = List.fold_left (fun acc loc ->
-    let start_loc = parse_location_to_pred loc (header_placement Loc nodes) false nodes in
+    let start_loc = parse_location_to_pred loc (header_placement Loc man) false man in
     Or (acc, start_loc)
   ) False start_list in
   let end_loc = List.fold_left (fun acc loc ->
-    let end_loc = parse_location_to_pred loc (header_placement Loc nodes) false nodes in
+    let end_loc = parse_location_to_pred loc (header_placement Loc man) false man in
     Or (acc, end_loc)
   ) False end_list in
   let start_filter = AndP (Binary (start_loc,True), Id) in
@@ -293,8 +312,3 @@ let json_to_network (table:Yojson.Basic.t) (nodes: int StringMap.t) (edges: (str
     else
       Star (Seq (Dup,Pkr routing_table)) in
   Seq (Pkr start_filter, Seq (network,Pkr end_filter))
-
-let network_compiler (routings:Yojson.Basic.t) (edges: Yojson.Basic.t) (dup_free:bool) (start_list:string list) (end_list:string list) : NK.t =
-  let edges = parse_edges_to_map edges in
-  let nodes = parse_nodes_to_map routings in
-  json_to_network routings nodes edges dup_free start_list end_list
