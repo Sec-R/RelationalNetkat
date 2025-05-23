@@ -638,7 +638,7 @@ let tests = "MLBDD tests" >::: [
           let json_edge_base = Yojson.Basic.from_file "../../../dataset/base-edge.json" in
           let nodesmap0 = Eval.parse_nodes_to_map json_node_base in
           let edgesmap0 = Eval.parse_edges_to_map json_edge_base in
-          assert_equal ((Eval.binary_to_pred 0 5 4 12)) (Eval.parse_location_to_pred "leaf1" 0 false nodesmap0);
+          assert_equal ((Eval.binary_to_pred 0 4 3 12)) (Eval.parse_location_to_pred "leaf1" 0 false nodesmap0);
           let (ip,netmask) = Eval.parse_ip_entry_string "1.2.3.4/24" in
           assert_equal netmask 24;
           assert_equal ip (1 lsl 24 + 2 lsl 16 + 3 lsl 8 + 4);
@@ -647,7 +647,7 @@ let tests = "MLBDD tests" >::: [
           let pred0 = Eval.binary_to_pred 0 2 31 ip in
           assert_equal (RN.And (RN.Test (0,false),RN.Test (1,false))) pred0;
           assert_equal true (Eval.match_ip_string (1 lsl 24 + 2 lsl 16 + 3 lsl 8 + 4) (1 lsl 24 + 1 lsl 23 +7 lsl 16 + 6 lsl 8 + 5) 8);
-          let man = RN.init_man (33+(Eval.NodesMap.cardinal nodesmap0)) (33+Eval.NodesMap.cardinal nodesmap0) in
+          let man = RN.init_man (33+(Eval.StringMap.cardinal nodesmap0)) (33+Eval.StringMap.cardinal nodesmap0) in
           let empty_map = RN.NKROBSMap.empty in
           let core1_loc = Eval.parse_location_to_pred "core1" 0 false nodesmap0 in
           let core1_filter = RN.Binary (core1_loc, True) in
@@ -753,7 +753,7 @@ let tests = "MLBDD tests" >::: [
           let edgesmap3 = Eval.parse_edges_to_map json6 in
           let network3 = Eval.json_to_network json5 nodesmap3 edgesmap3 false ["border1";"border2"] ["host-www"] in
           let ip = Eval.parse_ip_string "2.128.0.0" in
-          let pred2 = Eval.binary_to_pred (Eval.header_placement Ip nodesmap3) 23 31 ip in
+          let pred2 = Eval.binary_to_pred (Eval.header_placement DstIp nodesmap3) 23 31 ip in
           let filter = RN.Binary (pred2, True) in
           let relation = RN.Rel.SeqR (RN.Rel.Nil filter, id) in
           let t = Sys.time() in
@@ -776,7 +776,7 @@ let tests = "MLBDD tests" >::: [
           let nodesmap4 = Eval.parse_nodes_to_map json7 in
           let edgesmap4 = Eval.parse_edges_to_map json8 in
           let network5 = Eval.json_to_network json7 nodesmap4 edgesmap4 false ["border1";"border2"] ["host-www"] in
-          let pred3 = Eval.binary_to_pred (Eval.header_placement Ip nodesmap4) 23 31 ip in
+          let pred3 = Eval.binary_to_pred (Eval.header_placement DstIp nodesmap4) 23 31 ip in
           let filter = RN.Binary (pred3, True) in
           let relation = RN.Rel.SeqR (RN.Rel.Nil filter, id) in
           let t = Sys.time() in
@@ -794,6 +794,10 @@ let tests = "MLBDD tests" >::: [
           let boolean9 = (RN.bisim man 2 3 start10 start10 nkrobsmap10 empty_map) in
           Printf.printf "Bisimulation time (Test 6): %fs\n" (Sys.time() -. t);
           assert_equal false boolean9;
+          let json9 = Yojson.Basic.from_file "../../../dataset/base-named-structure.json" in
+          let protocols_map = Eval.parse_protocols_to_map json9 in
+          assert_equal (Eval.StringMap.cardinal protocols_map) 3;
+          print_endline (RN.pred_to_string (Eval.parse_protocol_filter "border1" "INSIDE_TO_AS1" json9 nodesmap0 protocols_map));
 
           (* print to see! *)
      (*     let open Yojson.Basic.Util in
