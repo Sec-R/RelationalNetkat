@@ -353,8 +353,10 @@ let rec parse_global_routing_table (table:Yojson.Basic.t) (man:man) : pkr =
 let json_to_network (table:Yojson.Basic.t) (man:man) (dup_free:bool) (start_list:string list) (end_list:string list): NK.t =
   let routing_table = parse_global_routing_table table man in
   let start_loc = List.fold_left (fun acc loc ->
+    let (loc,interface) = Scanf.sscanf loc "%[^[][%[^]]" (fun a b -> (a, b)) in
     let start_loc = parse_location_to_pred loc (header_placement Loc man) false man in
-    Or (acc, start_loc)
+    let interface_filter = fst (DStringMap.find (loc, interface) man.interface) in
+    Or (acc, And (start_loc, interface_filter))
   ) False start_list in
   let end_loc = List.fold_left (fun acc loc ->
     let end_loc = parse_location_to_pred loc (header_placement Loc man) false man in
