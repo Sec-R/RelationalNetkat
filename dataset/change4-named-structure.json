@@ -1560,6 +1560,53 @@
                         "headerSpace": {
                             "dstIps": {
                                 "class": "org.batfish.datamodel.IpWildcardIpSpace",
+                                "ipWildcard": "2.128.0.0/23"
+                            },
+                            "dstPorts": [
+                                "80-80"
+                            ],
+                            "ipProtocols": [
+                                "TCP"
+                            ],
+                            "negate": false,
+                            "srcIps": {
+                                "class": "org.batfish.datamodel.IpWildcardIpSpace",
+                                "ipWildcard": "0.0.0.0/0"
+                            }
+                        }
+                    },
+                    "name": "permit tcp any 2.128.0.0 0.0.1.255 eq www",
+                    "traceElement": {
+                        "fragments": [
+                            {
+                                "class": "org.batfish.datamodel.TraceElement$TextFragment",
+                                "text": "Matched line "
+                            },
+                            {
+                                "class": "org.batfish.datamodel.TraceElement$LinkFragment",
+                                "text": "permit tcp any 2.128.0.0 0.0.1.255 eq www",
+                                "vendorStructureId": {
+                                    "filename": "configs/border1.cfg",
+                                    "structureName": "OUTSIDE_TO_INSIDE: permit tcp any 2.128.0.0 0.0.1.255 eq www",
+                                    "structureType": "extended ipv4 access-list line"
+                                }
+                            }
+                        ]
+                    },
+                    "vendorStructureId": {
+                        "filename": "configs/border1.cfg",
+                        "structureName": "OUTSIDE_TO_INSIDE: permit tcp any 2.128.0.0 0.0.1.255 eq www",
+                        "structureType": "extended ipv4 access-list line"
+                    }
+                },
+                {
+                    "class": "org.batfish.datamodel.ExprAclLine",
+                    "action": "PERMIT",
+                    "matchCondition": {
+                        "class": "org.batfish.datamodel.acl.MatchHeaderSpace",
+                        "headerSpace": {
+                            "dstIps": {
+                                "class": "org.batfish.datamodel.IpWildcardIpSpace",
                                 "ipWildcard": "2.0.0.0/8"
                             },
                             "ipProtocols": [
@@ -1693,6 +1740,53 @@
                     "vendorStructureId": {
                         "filename": "configs/border2.cfg",
                         "structureName": "OUTSIDE_TO_INSIDE: permit tcp any 2.128.0.0 0.0.1.255 eq ssh",
+                        "structureType": "extended ipv4 access-list line"
+                    }
+                },
+                {
+                    "class": "org.batfish.datamodel.ExprAclLine",
+                    "action": "PERMIT",
+                    "matchCondition": {
+                        "class": "org.batfish.datamodel.acl.MatchHeaderSpace",
+                        "headerSpace": {
+                            "dstIps": {
+                                "class": "org.batfish.datamodel.IpWildcardIpSpace",
+                                "ipWildcard": "2.128.0.0/23"
+                            },
+                            "dstPorts": [
+                                "80-80"
+                            ],
+                            "ipProtocols": [
+                                "TCP"
+                            ],
+                            "negate": false,
+                            "srcIps": {
+                                "class": "org.batfish.datamodel.IpWildcardIpSpace",
+                                "ipWildcard": "0.0.0.0/0"
+                            }
+                        }
+                    },
+                    "name": "permit tcp any 2.128.0.0 0.0.1.255 eq www",
+                    "traceElement": {
+                        "fragments": [
+                            {
+                                "class": "org.batfish.datamodel.TraceElement$TextFragment",
+                                "text": "Matched line "
+                            },
+                            {
+                                "class": "org.batfish.datamodel.TraceElement$LinkFragment",
+                                "text": "permit tcp any 2.128.0.0 0.0.1.255 eq www",
+                                "vendorStructureId": {
+                                    "filename": "configs/border2.cfg",
+                                    "structureName": "OUTSIDE_TO_INSIDE: permit tcp any 2.128.0.0 0.0.1.255 eq www",
+                                    "structureType": "extended ipv4 access-list line"
+                                }
+                            }
+                        ]
+                    },
+                    "vendorStructureId": {
+                        "filename": "configs/border2.cfg",
+                        "structureName": "OUTSIDE_TO_INSIDE: permit tcp any 2.128.0.0 0.0.1.255 eq www",
                         "structureType": "extended ipv4 access-list line"
                     }
                 },
@@ -1939,7 +2033,7 @@
                         "headerSpace": {
                             "dstIps": {
                                 "class": "org.batfish.datamodel.IpWildcardIpSpace",
-                                "ipWildcard": "2.128.0.0/23"
+                                "ipWildcard": "2.128.1.0/24"
                             },
                             "dstPorts": [
                                 "80-80"
@@ -1954,7 +2048,7 @@
                             }
                         }
                     },
-                    "name": "permit tcp any 2.128.0.0 0.0.1.255 eq www",
+                    "name": "permit tcp any 2.128.1.0 0.0.0.255 eq www",
                     "traceElement": {
                         "fragments": [
                             {
@@ -1963,10 +2057,10 @@
                             },
                             {
                                 "class": "org.batfish.datamodel.TraceElement$LinkFragment",
-                                "text": "permit tcp any 2.128.0.0 0.0.1.255 eq www",
+                                "text": "permit tcp any 2.128.1.0 0.0.0.255 eq www",
                                 "vendorStructureId": {
                                     "filename": "configs/leaf1.cfg",
-                                    "structureName": "RESTRICT_HOST_TRAFFIC_OUT: permit tcp any 2.128.0.0 0.0.1.255 eq www",
+                                    "structureName": "RESTRICT_HOST_TRAFFIC_OUT: permit tcp any 2.128.1.0 0.0.0.255 eq www",
                                     "structureType": "extended ipv4 access-list line"
                                 }
                             }
@@ -1974,7 +2068,7 @@
                     },
                     "vendorStructureId": {
                         "filename": "configs/leaf1.cfg",
-                        "structureName": "RESTRICT_HOST_TRAFFIC_OUT: permit tcp any 2.128.0.0 0.0.1.255 eq www",
+                        "structureName": "RESTRICT_HOST_TRAFFIC_OUT: permit tcp any 2.128.1.0 0.0.0.255 eq www",
                         "structureType": "extended ipv4 access-list line"
                     }
                 },

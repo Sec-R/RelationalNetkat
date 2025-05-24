@@ -5,7 +5,9 @@ module StringMap : Map.S with type key = string
 type header =
   | Loc
   | SrcIp
+  | SrcPorts
   | DstIp
+  | DstPorts
   | Protocol
 
 type man = {
@@ -35,6 +37,9 @@ val binary_to_pred : int -> int -> int -> int -> pred
 val binary_to_pkr : int -> int -> int -> int -> pkr
 val length_of_int : int -> int
 
+val get_ge_pred : int -> int -> int -> pred
+val get_le_pred : int -> int -> int -> pred
+
 val header_placement : header -> man -> int
 val parse_protocols_to_pred : string list -> man -> pred
 val parse_location_to_pred : string -> int -> bool -> man -> pred
@@ -45,7 +50,9 @@ val find_next_loc : string -> string -> man -> string
 val match_ip_string : int -> int -> int -> bool
 val compare_data : Yojson.Basic.t -> Yojson.Basic.t -> int
 val parse_ip_wildcard : string -> int * int
-val parse_protocol_filter : string -> string -> Yojson.Basic.t -> int StringMap.t -> pred
+val parse_protocol_filter : string -> string -> Yojson.Basic.t -> int StringMap.t -> bool ->pred
 val parse_local_routing_table : string -> Yojson.Basic.t list -> man -> pkr
 val parse_global_routing_table : Yojson.Basic.t -> man -> pkr
 val json_to_network : Yojson.Basic.t -> man -> bool -> string list -> string list -> NK.t
+
+val parse_tcp_filter: string -> man -> pred
