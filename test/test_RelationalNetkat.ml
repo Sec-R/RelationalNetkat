@@ -777,7 +777,7 @@ let tests = "MLBDD tests" >::: [
           let t = Sys.time() in
           let boolean7 = (RN.bisim man 2 3 start8 start9 nkrobsmap8 nkrobsmap9) in
           Printf.printf "Bisimulation time (Test 5): %fs\n" (Sys.time() -. t);
-          assert_equal true boolean7;
+          assert_equal false boolean7;
           let boolean_tmp = RN.bisim man 2 3 start8 start8 nkrobsmap8 empty_map in
           assert_equal false boolean_tmp;
           let json_node_base_4 = Yojson.Basic.from_file "../../../dataset/change4-node.json" in

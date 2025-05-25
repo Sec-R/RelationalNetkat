@@ -50,11 +50,12 @@ val find_next_loc : string -> string -> man -> string
 val match_ip_string : int -> int -> int -> bool
 val compare_data : Yojson.Basic.t -> Yojson.Basic.t -> int
 val parse_ip_wildcard : string -> int * int
-val parse_protocol_filter : string -> string -> Yojson.Basic.t -> int StringMap.t -> pred
+val parse_protocol_filter : string -> string -> Yojson.Basic.t -> int StringMap.t -> int StringMap.t -> pred
 val parse_local_routing_table : string -> Yojson.Basic.t list -> man -> pkr
 val parse_global_routing_table : Yojson.Basic.t -> man -> pkr
 val json_to_network : Yojson.Basic.t -> man -> bool -> string list -> string list -> NK.t
 val find_next_loc_filter: string -> string -> man -> pred
+val string_of_ip : int -> string
 
 val parse_start_loc_to_pred : man -> string list -> pred
 val parse_end_loc_to_pred : man -> string list -> pred
