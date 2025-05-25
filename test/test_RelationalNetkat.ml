@@ -667,7 +667,7 @@ let tests = "MLBDD tests" >::: [
           let pkr3 = (RN.Binary (pred1,RN.True)) in
           let bdd3 = RN.compile_pkr_bdd man 0 1 (AndP (pkr3,pkr2)) in
           assert_equal ~cmp:MLBDD.equal bdd3 bdd2;
-          let bdd4 = RN.compile_pred_bdd man 0(Eval.get_ge_pred 0 15 0) in
+          let bdd4 = RN.compile_pred_bdd man 0 (Eval.get_ge_pred 0 15 0) in
           assert_equal ~cmp:MLBDD.equal (RN.bdd_true man) bdd4;
           let bdd5 = RN.compile_pred_bdd man 0 (And (Eval.get_ge_pred 0 15 80, Eval.get_le_pred 0 15 80)) in
           let bdd6 = RN.compile_pred_bdd man 0 (Eval.binary_to_pred 0 16 15 80) in
@@ -778,6 +778,8 @@ let tests = "MLBDD tests" >::: [
           let boolean7 = (RN.bisim man 2 3 start8 start9 nkrobsmap8 nkrobsmap9) in
           Printf.printf "Bisimulation time (Test 5): %fs\n" (Sys.time() -. t);
           assert_equal true boolean7;
+          let boolean_tmp = RN.bisim man 2 3 start8 start8 nkrobsmap8 empty_map in
+          assert_equal false boolean_tmp;
           let json_node_base_4 = Yojson.Basic.from_file "../../../dataset/change4-node.json" in
           let json_edge_base_4 = Yojson.Basic.from_file "../../../dataset/change4-edge.json" in
           let json_protocol_4 = Yojson.Basic.from_file "../../../dataset/change4-named-structure.json" in
@@ -802,6 +804,7 @@ let tests = "MLBDD tests" >::: [
           let boolean9 = (RN.bisim man 2 3 start9 start11 nkrobsmap9 nkrobsmap11) in
           Printf.printf "Bisimulation time (Test 6): %fs\n" (Sys.time() -. t);
           assert_equal true boolean9;
+          
 
           (* print to see! *)
      (*     let open Yojson.Basic.Util in
