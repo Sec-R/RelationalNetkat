@@ -682,7 +682,7 @@ let tests = "MLBDD tests" >::: [
           let man1 = Eval.init_man json_node_base_1 json_edge_base_2 json_protocol json_interface in
           let network1 = Eval.json_to_network json_node_base_1 man1 false ["border1[GigabitEthernet0/0]";"border2[GigabitEthernet0/0]"] ["host-db";"host-www"] in
           let core1_loc = Eval.parse_location_to_pred "core1" 0 false man1 in
-          let core1_filter = RN.Binary (core1_loc, True) in
+          let core1_filter = (RN.AndP (Id,RN.Binary (core1_loc, True))) in
           let relation = RN.Rel.SeqR (id, RN.Rel.SeqR (RN.Rel.Nil core1_filter, id)) in
           let t = Sys.time() in
           let (nkrobsmap1, start1) = RN.projection_compiler man 0 1 2 3 (Some network1, Some relation) in
@@ -710,7 +710,7 @@ let tests = "MLBDD tests" >::: [
           Printf.printf "Bisimulation Execution time: %fs\n" (Sys.time() -. t);
           assert_equal true boolean;
           let epsilon = RN.Rel.Left (RN.NK.Seq (RN.NK.Pkr (Binary (True,True)) ,RN.NK.Star (RN.NK.Seq (RN.NK.Dup,(RN.NK.Pkr (Binary (True,True))))))) in
-          let relation2 = RN.Rel.SeqR (epsilon, RN.Rel.SeqR (RN.Rel.Nil core1_filter, epsilon)) in
+          let relation2 = RN.Rel.SeqR (epsilon, RN.Rel.SeqR (RN.Rel.App (core1_filter,Id), epsilon)) in
           let t = Sys.time() in
           let (nkrobsmap2, start2) = RN.projection_compiler man 0 1 2 3 (Some network1, Some relation2) in
           Printf.printf "Compiled time (optmized): %fs\n" (Sys.time() -. t);
@@ -804,7 +804,23 @@ let tests = "MLBDD tests" >::: [
           let boolean9 = (RN.bisim man 2 3 start9 start11 nkrobsmap9 nkrobsmap11) in
           Printf.printf "Bisimulation time (Test 6): %fs\n" (Sys.time() -. t);
           assert_equal true boolean9;
-          
+          let relation3 = RN.Rel.Binary ((RN.NK.Seq (RN.NK.Pkr (Binary (True,True)) ,RN.NK.Star (RN.NK.Seq (RN.NK.Dup,(RN.NK.Pkr (Binary (True,True))))))),RN.NK.Pkr (Binary (True,True))) in
+          let relation4 = RN.Rel.SeqR (RN.Rel.Nil Id, RN.Rel.SeqR (relation3, RN.Rel.Nil Id)) in
+          let relation5 = RN.Rel.OrR (RN.SR.add relation4 (RN.SR.add relation RN.SR.empty)) in
+          let t = Sys.time() in
+          let (nkrobsmap12, start12) = RN.projection_compiler man 0 1 2 3 (Some network2, Some relation5) in
+          Printf.printf "Compiled time (Test 7): %fs\n" (Sys.time() -. t);
+          let t = Sys.time() in
+          let boolean10 = (RN.bisim man 2 3 start3 start12 nkrobsmap3 nkrobsmap12) in
+          Printf.printf "Bisimulation time (Test 7): %fs\n" (Sys.time() -. t);
+          assert_equal true boolean10;
+          let t = Sys.time() in
+          let (nkrobsmap13, start13) = RN.projection_compiler man 0 1 2 3 (Some network1, Some relation5) in
+          Printf.printf "Compiled time (Test 8): %fs\n" (Sys.time() -. t);
+          let t = Sys.time() in
+          let boolean11 = (RN.bisim man 2 3 start13 start12 nkrobsmap13 nkrobsmap12) in
+          Printf.printf "Bisimulation time (Test 8): %fs\n" (Sys.time() -. t);
+          assert_equal false boolean11;
 
           (* print to see! *)
      (*     let open Yojson.Basic.Util in
