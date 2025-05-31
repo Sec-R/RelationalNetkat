@@ -821,17 +821,56 @@ let tests = "MLBDD tests" >::: [
           let boolean11 = (RN.bisim man 2 3 start13 start12 nkrobsmap13 nkrobsmap12) in
           Printf.printf "Bisimulation time (Test 8): %fs\n" (Sys.time() -. t);
           assert_equal false boolean11;
-
-          (* print to see! *)
-     (*     let open Yojson.Basic.Util in
-          let jkeys = Yojson.Basic.Util.keys json1 in
-          List.iter (fun key -> print_endline key) jkeys;
-          let nodes = json1 |> member "0" |> Yojson.Basic.pretty_to_string in
-          print_endline nodes; 
-          let edgesmap = Eval.parse_edges_to_map json2 in
-          print_endline (Eval.edgesMap_to_string edgesmap);
-          print_endline (Eval.nodesMap_to_string nodesmap);*)
-
+          let json_node_base_5 = Yojson.Basic.from_file "../../../dataset/acl-node.json" in
+          let json_edge_base_5 = Yojson.Basic.from_file "../../../dataset/acl-edge.json" in
+          let json_protocol_5 = Yojson.Basic.from_file "../../../dataset/acl-named-structure.json" in
+          let json_interface_5 = Yojson.Basic.from_file "../../../dataset/acl-interface.json" in
+          let man5 = Eval.init_man json_node_base_5 json_edge_base_5 json_protocol_5 json_interface_5 in
+          let network6 = Eval.json_to_network_with_interface json_node_base_5 man5 false ["firewall[GigabitEthernet0/0/2]"] ["firewall[GigabitEthernet0/0/3]"] in
+          let pred4 = Eval.parse_tcp_filter "http" man5 in
+          let srcip_filter = Eval.parse_src_ip_filter "10.114.64.1" man5 in
+          let dstip_filter = Eval.parse_dst_ip_filter "10.114.60.10" man5 in
+          let filter = RN.Binary (RN.And (pred4, RN.And (srcip_filter, dstip_filter)), True) in
+          let relation6 = RN.Rel.SeqR (RN.Rel.Nil filter, RN.Rel.StarR (RN.Rel.App (Id,Id))) in
+          let t = Sys.time() in
+          let (nkrobsmap14, start14) = RN.projection_compiler man 0 1 2 3 (Some network6, Some relation6) in
+          Printf.printf "Compiled time (Test 9): %fs\n" (Sys.time() -. t);
+          let t = Sys.time() in
+          let boolean12 = (RN.bisim man 2 3 start14 start14 nkrobsmap14 empty_map) in
+          Printf.printf "Bisimulation time (Test 9): %fs\n" (Sys.time() -. t);
+          assert_equal true boolean12;
+          let pred5 = Eval.parse_protocols_to_pred ["TCP"] man5 in
+          let srcip_filter = Eval.parse_src_ip_filter "101.164.101.231" man5 in
+          let dstip_filter = Eval.parse_dst_ip_filter "101.164.9.0/24" man5 in
+          let ports_filter = Eval.parse_dstports_filter 2049 false man5 in
+          let filter2 = RN.Binary (RN.And (pred5, RN.And (srcip_filter, RN.And (dstip_filter, ports_filter))), True) in
+          let relation7 = RN.Rel.SeqR (RN.Rel.Nil filter2, RN.Rel.StarR (RN.Rel.App (Id,Id))) in
+          let t = Sys.time() in
+          let (nkrobsmap15, start15) = RN.projection_compiler man 0 1 2 3 (Some network6, Some relation7) in
+          Printf.printf "Compiled time (Test 10): %fs\n" (Sys.time() -. t);
+          let t = Sys.time() in
+          let boolean13 = (RN.bisim man 2 3 start15 start15 nkrobsmap15 empty_map) in
+          Printf.printf "Bisimulation time (Test 10): %fs\n" (Sys.time() -. t);
+          assert_equal true boolean13;
+          let json_node_base_6 = Yojson.Basic.from_file "../../../dataset/hybrid-node.json" in
+          let json_edge_base_6 = Yojson.Basic.from_file "../../../dataset/hybrid-edge.json" in
+          let json_protocol_6 = Yojson.Basic.from_file "../../../dataset/hybrid-named-structure.json" in
+          let json_interface_6 = Yojson.Basic.from_file "../../../dataset/hybrid-interface.json" in
+          let man6 = Eval.init_man json_node_base_6 json_edge_base_6 json_protocol_6 json_interface_6 in
+          let east2_private = "i-04cd3db5124a05ee6" in
+          let east2_public = "i-01602d9efaed4409a" in
+          let west2_private = "i-0a5d64b8b58c6dd09" in
+          let west2_public = "i-02cae6eaa9edeed70" in
+          let network7 = Eval.json_to_network_with_loc json_node_base_6 man6 false [east2_private] [west2_public] in
+          let pred6 = Eval.parse_tcp_filter "ssh" man6 in
+          let relation8 = RN.Rel.SeqR (RN.Rel.Nil (RN.AndP (Id,RN.Binary (pred6, True))), RN.Rel.StarR (RN.Rel.App (Id,Id))) in
+          let t = Sys.time() in
+          let (nkrobsmap16, start16) = RN.projection_compiler man 0 1 2 3 (Some network7, Some relation8) in
+          Printf.printf "Compiled time (Test 11): %fs\n" (Sys.time() -. t);
+          let t = Sys.time() in
+          let boolean14 = (RN.bisim man 2 3 start16 start16 nkrobsmap16 empty_map) in
+          Printf.printf "Bisimulation time (Test 11): %fs\n" (Sys.time() -. t);
+          assert_equal true boolean14;
           );
 
       ]
