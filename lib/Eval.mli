@@ -66,8 +66,6 @@ val parse_protocol_filter : string -> string -> Yojson.Basic.t -> int StringMap.
 val parse_local_routing_table : string -> Yojson.Basic.t list -> man -> pkr
 val parse_global_routing_table : Yojson.Basic.t -> man -> pkr
 val json_to_network : Yojson.Basic.t -> man -> bool -> string list -> string list -> NK.t
-val json_to_network_with_interface : Yojson.Basic.t -> man -> bool -> string list -> string list -> NK.t
-val json_to_network_with_loc : Yojson.Basic.t -> man -> bool -> string list -> string list -> NK.t
 val find_next_loc_filter: string -> string -> man -> pred
 val string_of_ip : int -> string
 

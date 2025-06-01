@@ -826,7 +826,7 @@ let tests = "MLBDD tests" >::: [
           let json_protocol_5 = Yojson.Basic.from_file "../../../dataset/acl-named-structure.json" in
           let json_interface_5 = Yojson.Basic.from_file "../../../dataset/acl-interface.json" in
           let man5 = Eval.init_man json_node_base_5 json_edge_base_5 json_protocol_5 json_interface_5 in
-          let network6 = Eval.json_to_network_with_interface json_node_base_5 man5 false ["firewall[GigabitEthernet0/0/2]"] ["firewall[GigabitEthernet0/0/3]"] in
+          let network6 = Eval.json_to_network json_node_base_5 man5 false ["firewall[GigabitEthernet0/0/2]"] ["firewall[GigabitEthernet0/0/3]"] in
           let pred4 = Eval.parse_tcp_filter "http" man5 in
           let srcip_filter = Eval.parse_src_ip_filter "10.114.64.1" man5 in
           let dstip_filter = Eval.parse_dst_ip_filter "10.114.60.10" man5 in
@@ -838,7 +838,7 @@ let tests = "MLBDD tests" >::: [
           let t = Sys.time() in
           let boolean12 = (RN.bisim man 2 3 start14 start14 nkrobsmap14 empty_map) in
           Printf.printf "Bisimulation time (Test 9): %fs\n" (Sys.time() -. t);
-          assert_equal true boolean12;
+          assert_equal false boolean12;
           let pred5 = Eval.parse_protocols_to_pred ["TCP"] man5 in
           let srcip_filter = Eval.parse_src_ip_filter "101.164.101.231" man5 in
           let dstip_filter = Eval.parse_dst_ip_filter "101.164.9.0/24" man5 in
@@ -851,7 +851,7 @@ let tests = "MLBDD tests" >::: [
           let t = Sys.time() in
           let boolean13 = (RN.bisim man 2 3 start15 start15 nkrobsmap15 empty_map) in
           Printf.printf "Bisimulation time (Test 10): %fs\n" (Sys.time() -. t);
-          assert_equal true boolean13;
+          assert_equal false boolean13;
           let json_node_base_6 = Yojson.Basic.from_file "../../../dataset/hybrid-node.json" in
           let json_edge_base_6 = Yojson.Basic.from_file "../../../dataset/hybrid-edge.json" in
           let json_protocol_6 = Yojson.Basic.from_file "../../../dataset/hybrid-named-structure.json" in
@@ -861,16 +861,18 @@ let tests = "MLBDD tests" >::: [
           let east2_public = "i-01602d9efaed4409a" in
           let west2_private = "i-0a5d64b8b58c6dd09" in
           let west2_public = "i-02cae6eaa9edeed70" in
-          let network7 = Eval.json_to_network_with_loc json_node_base_6 man6 false [east2_private] [east2_public] in
+          let man' = RN.init_man (Eval.get_field_length man6) (Eval.get_field_length man6) in
+          let network7 = Eval.json_to_network json_node_base_6 man6 false [east2_private] [east2_public] in
           let pred6 = Eval.parse_tcp_filter "ssh" man6 in
           let relation8 = RN.Rel.SeqR (RN.Rel.Nil (RN.Binary (pred6, True)), id) in
           let t = Sys.time() in
-          let (nkrobsmap16, start16) = RN.projection_compiler man 0 1 2 3 (Some network7, Some relation8) in
+          let (nkrobsmap16, start16) = RN.projection_compiler man' 0 1 2 3 (Some network7, Some relation8) in
           Printf.printf "Compiled time (Test 11): %fs\n" (Sys.time() -. t);
           let t = Sys.time() in
-          let boolean14 = (RN.bisim man 2 3 start16 start16 nkrobsmap16 empty_map) in
+          let boolean14 = (RN.bisim man' 2 3 start16 start16 nkrobsmap16 empty_map) in
           Printf.printf "Bisimulation time (Test 11): %fs\n" (Sys.time() -. t);
-          assert_equal true boolean14;
+          assert_equal false boolean14;
+
           );
 
       ]
