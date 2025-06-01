@@ -640,7 +640,7 @@ let tests = "MLBDD tests" >::: [
           let json_interface = Yojson.Basic.from_file "../../../dataset/base-interface.json" in
           let man0 = Eval.init_man json_node_base json_edge_base json_protocol json_interface in
           assert_equal (Eval.StringMap.cardinal man0.protocols) 3;
-          assert_equal ((Eval.binary_to_pred 0 4 3 12)) (Eval.parse_location_to_pred "leaf1" 0 false man0);
+          assert_equal ((Eval.binary_to_pred 0 4 3 12)) (Eval.parse_location_to_pred "leaf1" false man0);
           let (ip,netmask) = Eval.parse_ip_entry_string "1.2.3.4/24" in
           assert_equal netmask 24;
           assert_equal ip (1 lsl 24 + 2 lsl 16 + 3 lsl 8 + 4);
@@ -651,15 +651,15 @@ let tests = "MLBDD tests" >::: [
           assert_equal true (Eval.match_ip_string (1 lsl 24 + 2 lsl 16 + 3 lsl 8 + 4) (1 lsl 24 + 1 lsl 23 +7 lsl 16 + 6 lsl 8 + 5) 8);
           let man = RN.init_man (Eval.get_field_length man0) (Eval.get_field_length man0) in
           let empty_map = RN.NKROBSMap.empty in
-          let core1_loc = Eval.parse_location_to_pred "core1" 0 false man0 in
+          let core1_loc = Eval.parse_location_to_pred "core1" false man0 in
           let core1_filter = RN.Binary (core1_loc, True) in
           let id = RN.Rel.StarR (RN.Rel.App (Id,Id)) in
           let relation = RN.Rel.SeqR (id, RN.Rel.SeqR (RN.Rel.Nil core1_filter, id)) in
           let network0 = Eval.json_to_network json_node_base man0 false ["border1[GigabitEthernet0/0]";"border2[GigabitEthernet0/0]"] ["host-db";"host-www"] in
           let t = Sys.time() in
           let (nkrobsmap0, start0) = RN.projection_compiler man 0 1 2 3 (Some network0, Some relation) in
-          let pred1 = Eval.parse_location_to_pred "core1" 0 true man0 in
-          let pkr1 = Eval.parse_location_to_pkr "core1" 0 true man0 in
+          let pred1 = Eval.parse_location_to_pred "core1" true man0 in
+          let pkr1 = Eval.parse_location_to_pkr "core1" true man0 in
           let pkr2 = (RN.AndP (RN.Binary (pred1,RN.True),RN.Id)) in
           let bdd1 = RN.compile_pkr_bdd man 0 1 pkr2 in
           let bdd2 = RN.compile_pkr_bdd man 0 1 (Comp (pkr2,pkr1)) in
@@ -681,7 +681,7 @@ let tests = "MLBDD tests" >::: [
           let json_edge_base_2 = Yojson.Basic.from_file "../../../dataset/change1-edge.json" in
           let man1 = Eval.init_man json_node_base_1 json_edge_base_2 json_protocol json_interface in
           let network1 = Eval.json_to_network json_node_base_1 man1 false ["border1[GigabitEthernet0/0]";"border2[GigabitEthernet0/0]"] ["host-db";"host-www"] in
-          let core1_loc = Eval.parse_location_to_pred "core1" 0 false man1 in
+          let core1_loc = Eval.parse_location_to_pred "core1" false man1 in
           let core1_filter = (RN.AndP (Id,RN.Binary (core1_loc, True))) in
           let relation = RN.Rel.SeqR (id, RN.Rel.SeqR (RN.Rel.Nil core1_filter, id)) in
           let t = Sys.time() in
@@ -734,7 +734,7 @@ let tests = "MLBDD tests" >::: [
           let json_edge_base_2 = Yojson.Basic.from_file "../../../dataset/change2-edge.json" in
           let man2 = Eval.init_man json_node_base_2 json_edge_base_2 json_protocol json_interface in
           let network2 = Eval.json_to_network json_node_base_2 man2 false ["border1[GigabitEthernet0/0]";"border2[GigabitEthernet0/0]"] ["host-db";"host-www"] in
-          let core1_loc = Eval.parse_location_to_pred "core1" 0 false man2 in
+          let core1_loc = Eval.parse_location_to_pred "core1" false man2 in
           let core1_filter = RN.Binary (core1_loc, True) in
           let relation = RN.Rel.SeqR (id, RN.Rel.SeqR (RN.Rel.Nil core1_filter, id)) in
           let t = Sys.time() in
@@ -861,9 +861,9 @@ let tests = "MLBDD tests" >::: [
           let east2_public = "i-01602d9efaed4409a" in
           let west2_private = "i-0a5d64b8b58c6dd09" in
           let west2_public = "i-02cae6eaa9edeed70" in
-          let network7 = Eval.json_to_network_with_loc json_node_base_6 man6 false [east2_private] [west2_public] in
+          let network7 = Eval.json_to_network_with_loc json_node_base_6 man6 false [east2_private] [east2_public] in
           let pred6 = Eval.parse_tcp_filter "ssh" man6 in
-          let relation8 = RN.Rel.SeqR (RN.Rel.Nil (RN.AndP (Id,RN.Binary (pred6, True))), RN.Rel.StarR (RN.Rel.App (Id,Id))) in
+          let relation8 = RN.Rel.SeqR (RN.Rel.Nil (RN.Binary (pred6, True)), id) in
           let t = Sys.time() in
           let (nkrobsmap16, start16) = RN.projection_compiler man 0 1 2 3 (Some network7, Some relation8) in
           Printf.printf "Compiled time (Test 11): %fs\n" (Sys.time() -. t);
