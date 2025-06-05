@@ -23,6 +23,14 @@ module StringMap = Map.Make(
     let compare s1 s2 = String.compare s1 s2
   end)
 
+module DIntMap = Map.Make(
+  struct type t = int * int
+    let compare (i1, j1) (i2, j2) =
+      match Int.compare i1 i2 with
+      | 0 -> Int.compare j1 j2
+      | c -> c
+  end)  
+
 type header =
   | Loc
   | Vrf
@@ -375,6 +383,10 @@ let string_of_ip (ip:int) : string =
   let d = ip land 0xFF in
   Printf.sprintf "%d.%d.%d.%d" a b c d  
 
+let ip_under_mask (ip:int) (mask:int) : int =
+  let mask = 0xFFFFFFFF lsl (32 - mask) in
+  ip land mask
+
 let rec parse_protocol_filter (node:string) (named_structure:string) (protocols:Yojson.Basic.t) (nodesmap:int StringMap.t) (vrf_length:int) (protocol_map:int StringMap.t): pred =
   if (String.equal named_structure "") then
     True
@@ -478,8 +490,8 @@ let post_pred_pkr (pred:pred) (pkr:pkr) : pkr =
   (AndP (Binary (True,pred), pkr))
 
 let parse_local_routing_table (loc:string) (tables: Yojson.Basic.t list)  (man:man) : pkr = 
-   let rec aux (re_routing_list: (int*pred) list) (action_list:(int*int*pred*pkr) list) (filter:pred) = function
-    | [] -> (re_routing_list, action_list)
+   let rec aux (re_routing_list: (int*pred) list) (actions:pkr DIntMap.t)  (mask_list:int list) (cur_length:int) (filter:pred) (mask_filter:pred) (routing_table:pkr) (pending_actions:pkr) = function
+    | [] -> (re_routing_list, actions, mask_list, OrP (AndP (Binary (Neg filter,True), pending_actions), routing_table))
     | table::xs ->
         let ip = table |> member "Network" |> to_string in
         let (ip, mask) = parse_ip_entry_string ip in
@@ -487,11 +499,33 @@ let parse_local_routing_table (loc:string) (tables: Yojson.Basic.t list)  (man:m
         let vrf = table |> member "VRF" |> to_string in
         let vrf_filter = parse_vrf_to_pred (StringMap.find vrf (StringMap.find loc man.vrf)) man in
         let new_filter = And (ip_filter, vrf_filter) in
+        let next_mask_list = if mask < cur_length then
+          mask_list @ [mask]
+        else
+          mask_list in
+        let next_cur = mask in
+        let next_filter = if mask < cur_length then
+          Or (filter, mask_filter)
+        else
+          filter in
+        let next_mask_filter = if mask < cur_length then
+          new_filter
+        else
+          Or (mask_filter, new_filter) in
+        let next_routing_table = if mask < cur_length then 
+          OrP (AndP (Binary (Neg filter,True), pending_actions), routing_table)
+        else
+          routing_table in
+        let next_pending_actions = if mask < cur_length then
+          Binary (False,False)
+        else 
+          pending_actions in           
         let interface = table |> member "Next_Hop_Interface" |> to_string in
           if String.equal interface "dynamic" then
             let route_ip = table |> member "Next_Hop_IP" |> to_string in
             let route_ip = parse_ip_string route_ip in
-            aux (re_routing_list @ [(route_ip, And (Neg filter,new_filter))]) action_list (Or (filter, new_filter)) xs
+            aux (re_routing_list @ [(route_ip, And (Neg filter,new_filter))]) actions next_mask_list next_cur next_filter 
+              next_mask_filter next_routing_table next_pending_actions xs
           else let next_loc_pkr = 
                   if String.equal interface "Loopback0"
                     then post_pred_pkr (snd (DStringMap.find (loc, interface) man.interface))
@@ -506,19 +540,19 @@ let parse_local_routing_table (loc:string) (tables: Yojson.Basic.t list)  (man:m
                       parse_vrf_to_pkr (DStringMap.find (find_next_loc_and_interface loc interface man) man.interface_to_vrf)
                       man)))
                     with _ -> Binary (False,False) in
-            aux re_routing_list (action_list @ [(ip,mask, And (Neg filter,new_filter), next_loc_pkr)]) (Or (filter, new_filter)) xs
+            aux re_routing_list (DIntMap.add (mask, ip_under_mask ip mask) next_loc_pkr actions)
+              next_mask_list next_cur next_filter next_mask_filter next_routing_table (OrP (AndP (Binary (new_filter,True),next_loc_pkr), next_pending_actions)) xs
     in
-  let (re_routing_list, action_list) = aux [] [] False (List.sort compare_data tables) in
-    let rec action_lookup (action_list:(int*int*pred*pkr) list) (ip:int) : pkr =
-      match action_list with
+  let (re_routing_list, actions, mask_list, routing_table) = aux [] DIntMap.empty [] 33 False False (Binary (False,False)) (Binary (False,False)) (List.sort compare_data tables) in
+    let rec action_lookup (mask_list:int list) (ip:int) : pkr =
+      match mask_list with
       | [] -> Binary (False,False)
-      | (ip2,mask,_,action)::xs ->
-          if match_ip_string ip ip2 mask then
-            action
-          else action_lookup xs ip
+      | mask::xs ->
+          try (DIntMap.find (mask, ip_under_mask ip mask) actions)
+          with Not_found -> action_lookup xs ip
     in
-    List.fold_right (fun (ip,pred) acc -> OrP (AndP (Binary (pred,True), action_lookup action_list ip), acc)) re_routing_list
-      (List.fold_right (fun (_,_,pred,action) acc -> OrP (AndP (Binary (pred,True), action), acc)) action_list (Binary (False,False)))
+    List.fold_right (fun (ip,pred) acc -> OrP (AndP (Binary (pred,True), action_lookup mask_list ip), acc)) re_routing_list
+      routing_table
 
 let rec parse_global_routing_table (table:Yojson.Basic.t) (man:man) : pkr = 
   match table with
