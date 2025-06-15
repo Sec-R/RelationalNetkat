@@ -1,10 +1,4 @@
 
-(menhir
- (modules Parser))
-
-(ocamllex Lexer)
-
-
 (library
  (name RelationalNetkat)
  (public_name RelationalNetkat)
