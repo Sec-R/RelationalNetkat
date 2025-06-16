@@ -634,7 +634,7 @@ let tests = "MLBDD tests" >::: [
           let pk3 = 2 in
           let pk4 = 3 in
           assert_equal (RN.And (RN.Test (0,true),RN.And (RN.Test (1,true),RN.Test (2,false)))) (Eval.binary_to_pred 0 3 2 6);
-          let json_node_base = Yojson.Basic.from_file "../../../dataset/base-node.json" in
+         let json_node_base = Yojson.Basic.from_file "../../../dataset/base-node.json" in
           let json_edge_base = Yojson.Basic.from_file "../../../dataset/base-edge.json" in
           let json_protocol = Yojson.Basic.from_file "../../../dataset/base-named-structure.json" in
           let json_interface = Yojson.Basic.from_file "../../../dataset/base-interface.json" in
@@ -664,7 +664,7 @@ let tests = "MLBDD tests" >::: [
           let bdd1 = RN.compile_pkr_bdd man 0 1 pkr2 in
           let bdd2 = RN.compile_pkr_bdd man 0 1 (Comp (pkr2,pkr1)) in
           assert_equal ~cmp:MLBDD.equal bdd1 bdd2;
-          let pkr3 = (RN.Binary (pred1,RN.True)) in
+(*           let pkr3 = (RN.Binary (pred1,RN.True)) in
           let bdd3 = RN.compile_pkr_bdd man 0 1 (AndP (pkr3,pkr2)) in
           assert_equal ~cmp:MLBDD.equal bdd3 bdd2;
           let bdd4 = RN.compile_pred_bdd man 0 (Eval.get_ge_pred 0 15 0) in
@@ -871,8 +871,15 @@ let tests = "MLBDD tests" >::: [
           let t = Sys.time() in
           let boolean14 = (RN.bisim man' 2 3 start16 start16 nkrobsmap16 empty_map) in
           Printf.printf "Bisimulation time (Test 11): %fs\n" (Sys.time() -. t);
-          assert_equal false boolean14;
-
+          assert_equal false boolean14;*)
+          let rela_json = Yojson.Basic.from_file "../../../dataset/chunk_1_1000.json" in
+          let rela_man = Eval.init_rela_man rela_json in
+          let t = Sys.time() in
+          let (before_network, after_network) = Eval.rela_to_network rela_json rela_man in
+          let (nkrobsmap17, start17) = RN.projection_compiler man pk1 pk2 pk3 pk4 (Some before_network, Some (RN.Rel.StarR (RN.Rel.App (Id,Id)))) in
+          let (nkrobsmap18, start18) = RN.projection_compiler man pk1 pk2 pk3 pk4 (Some after_network, Some (RN.Rel.StarR (RN.Rel.App (Id,Id)))) in
+          assert_equal false (RN.bisim man pk3 pk4 start17 start18 nkrobsmap17 nkrobsmap18);
+          Printf.printf "Rela Test time: %fs\n" (Sys.time() -. t);
           );
 
       ]

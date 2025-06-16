@@ -31,6 +31,12 @@ module DIntMap = Map.Make(
       | c -> c
   end)  
 
+module StringSet = Set.Make(
+  struct type t = string
+  let compare = String.compare
+  end)
+
+
 type header =
   | Loc
   | Vrf
@@ -656,3 +662,132 @@ let parse_dstports_filter (ports:int) (negate:bool) (man:man): pred =
       Neg pred
     else
       pred
+
+let insert_rela_node (key:string) (map:int StringMap.t) =
+  if StringMap.mem key map then
+    map
+  else
+    StringMap.add key (StringMap.cardinal map) map
+
+let insert_rela_nodes (keys:string list) (map:int StringMap.t) : int StringMap.t =
+  List.fold_left (fun acc key -> insert_rela_node key acc) map keys    
+
+let parse_rela_nodes (rela:Yojson.Basic.t) : int StringMap.t =
+  let rec aux acc = function
+    | `Assoc [] -> acc
+    | `List [] -> acc
+    | `List (entry::xs) ->
+        let before_keys_in = entry |> member "graphBefore" |> member "nodeToOutEdgesMap" |> keys in
+        let before_keys_out = entry |> member "graphBefore" |> member "nodeToOutEdgesMap" |> values |> List.map keys |> List.flatten in
+        let after_keys_in = entry |> member "graphAfter" |> member "nodeToOutEdgesMap" |> keys in
+        let after_keys_out = entry |> member "graphAfter" |> member "nodeToOutEdgesMap" |> values |> List.map keys |> List.flatten in
+        let before_sources = entry |> member "graphBefore" |> member "sourceNodes" |> to_list |> filter_string in
+        let after_sources = entry |> member "graphAfter" |> member "sourceNodes" |> to_list |> filter_string in
+        let before_sinks = entry |> member "graphBefore" |> member "sinkNodes" |> to_list |> filter_string in
+        let after_sinks = entry |> member "graphAfter" |> member "sinkNodes" |> to_list |> filter_string in
+        aux (insert_rela_nodes (before_keys_in @ before_keys_out @ after_keys_in @ after_keys_out @ before_sources @ after_sources @ before_sinks @ after_sinks) acc) (`List xs)
+    | _ -> failwith "Unexpected JSON format for rela, please check the json"
+  in
+  aux StringMap.empty rela
+
+let init_rela_man (rela:Yojson.Basic.t) : man =
+  let rela_nodes = parse_rela_nodes rela in
+  let nodes_length = length_of_int (StringMap.cardinal rela_nodes) in
+  let vrf_length = 0 in (* No VRFs in RELA *)
+  let protocols_length = 0 in (* No protocols in RELA *)
+  let edges = DStringMap.empty in (* No edges in RELA *)
+  let interface = DStringMap.empty in (* No interfaces in RELA *)
+  let interface_to_vrf = DStringMap.empty in (* No interfaces to VRF mapping in RELA *)
+  let length = nodes_length + 32 + 32 + 1 in
+  {
+    nodes = rela_nodes;
+    edges;
+    protocols = StringMap.empty; (* No protocols in RELA *)
+    interface;
+    vrf = StringMap.empty; (* No VRFs in RELA *)
+    interface_to_vrf;
+    nodes_length;
+    vrf_length;
+    protocols_length;
+    length;
+  }  
+
+let rela_header_placement (header:header) (man: man) : int =
+  match header with
+  | Loc -> 0
+  | SrcIp -> man.nodes_length
+  | DstIp -> 32 + man.nodes_length
+  | _ -> failwith "RELA does not support Vrf, Protocol, DstPorts, SrcPorts headers"
+
+
+let parse_rela_location_to_pred (loc:string) (man: man) : pred =
+  try
+    let id = StringMap.find loc man.nodes in
+    let length = man.nodes_length in
+    binary_to_pred (rela_header_placement Loc man) length (length-1)  id
+  with Not_found -> failwith ("Node " ^ loc ^ " not found in the map")
+
+let parse_rela_location_to_pkr (loc:string) (man: man) : pkr =
+  try
+    let id = StringMap.find loc man.nodes in
+    let length = man.nodes_length in
+    binary_to_pkr (rela_header_placement Loc man) length (length-1)  id
+  with Not_found -> failwith ("Node " ^ loc ^ " not found in the map")
+
+let parse_rela_src_ip_filter (ip:string) (man:man): pred =
+  let (ip, mask) = parse_ip_wildcard ip in
+  binary_to_pred (rela_header_placement SrcIp man) mask 31 ip
+
+let parse_rela_dst_ip_filter (ip:string) (man:man): pred =
+  let (ip, mask) = parse_ip_wildcard ip in
+  binary_to_pred (rela_header_placement DstIp man) mask 31 ip
+
+let parse_rela_local_routing_table (rela:Yojson.Basic.t) (man:man) : pkr * pkr =
+  let ip_traffic_list = rela |> member "ipTrafficKeys" |> to_list in
+    let ip_pred = 
+      List.fold_left (fun acc ip ->
+        let srcip = ip |> member "srcIp" |> to_string in
+        let dstip = ip |> member "dstIp" |> to_string in
+        Or (acc, And (parse_rela_src_ip_filter srcip man, parse_rela_dst_ip_filter dstip man))) (False) ip_traffic_list  in
+  let before_sink_list = rela |> member "graphBefore" |> member "sinkNodes" |> to_list |> filter_string in
+  let before_sink_set = StringSet.of_list before_sink_list in
+  let after_sink_list = rela |> member "graphAfter" |> member "sinkNodes" |> to_list |> filter_string in
+  let after_sink_set = StringSet.of_list after_sink_list in
+  let rec aux (acc:pkr) (sink_set:StringSet.t) = function
+    | `Assoc [] -> acc
+    | `Assoc ((loc, table)::xs) ->
+        if StringSet.mem loc sink_set then
+          aux acc sink_set (`Assoc xs)
+        else
+          let loc_filter = parse_rela_location_to_pred loc man in
+          let next_list = table |> keys in
+          let next_pkr = 
+            List.fold_left (fun acc next_loc ->
+              if StringSet.mem next_loc sink_set then
+                acc
+              else
+                OrP (acc, parse_rela_location_to_pkr next_loc man)
+            ) (Binary (False,False)) next_list in
+            if next_pkr = Binary (False,False) then
+              aux acc sink_set (`Assoc xs)
+            else
+              aux (OrP (acc, AndP (Binary (loc_filter,True), next_pkr))) sink_set (`Assoc xs)
+    | _ -> failwith "Unexpected JSON format for rela"
+  in
+   (AndP (Binary (ip_pred, True), aux (Binary (False,False)) before_sink_set (rela |> member "graphBefore" |> member "nodeToOutEdgesMap")),
+   AndP (Binary (ip_pred, True), aux (Binary (False,False)) after_sink_set (rela |> member "graphAfter" |> member "nodeToOutEdgesMap")))
+
+
+let rec parse_rela_global_routing_table (rela:Yojson.Basic.t) (man:man) : pkr * pkr =
+  match rela with
+  | `List [] -> (Binary (False,False), Binary (False,False))
+  | `List (entry::xs) ->
+      let (before_table, after_table) = parse_rela_local_routing_table entry man in
+      (* Recursively parse the rest of the entries *)
+      let (acc_before, acc_after) = parse_rela_global_routing_table (`List xs) man in
+      (OrP (before_table, acc_before), OrP (after_table, acc_after))
+  | _ -> failwith "Unexpected JSON format for rela"    
+
+let rela_to_network (rela:Yojson.Basic.t) (man:man) : NK.t * NK.t =
+  let (before_table, after_table) = parse_rela_global_routing_table rela man in
+    (Star (Seq (Dup,Pkr before_table)), Star (Seq (Dup,Pkr after_table)))

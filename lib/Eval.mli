@@ -2,6 +2,8 @@ open RN
 
 module DStringMap : Map.S with type key = string*string
 module StringMap : Map.S with type key = string
+module StringSet : Set.S with type elt = string
+
 type header =
   | Loc
   | Vrf
@@ -75,3 +77,14 @@ val parse_tcp_filter: string -> man -> pred
 val parse_src_ip_filter: string -> man -> pred
 val parse_dst_ip_filter: string -> man -> pred
 val parse_dstports_filter: int -> bool -> man -> pred
+
+val parse_rela_nodes: Yojson.Basic.t -> int StringMap.t
+val init_rela_man: Yojson.Basic.t -> man
+val rela_header_placement : header -> man -> int
+val parse_rela_location_to_pred : string -> man -> pred
+val parse_rela_location_to_pkr : string -> man -> pkr
+val parse_rela_local_routing_table : Yojson.Basic.t -> man -> pkr * pkr
+val parse_rela_global_routing_table : Yojson.Basic.t -> man -> pkr * pkr
+val parse_rela_src_ip_filter : string -> man -> pred
+val parse_rela_dst_ip_filter : string -> man -> pred
+val rela_to_network : Yojson.Basic.t -> man -> NK.t * NK.t
