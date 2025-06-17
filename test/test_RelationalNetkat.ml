@@ -13,7 +13,7 @@ open RelationalNetkat
   print_endline ""*)
 
 let tests = "MLBDD tests" >::: [
-   (*   "var_test" >:: (fun _ctx ->
+      "var_test" >:: (fun _ctx ->
       let var_a  = RN.bddvar 1 0 in  
       let var_b  = RN.bddvar 1 1 in  
       assert_equal var_a 1;
@@ -627,7 +627,7 @@ let tests = "MLBDD tests" >::: [
           let nkro11 = (Some nk1, (Some (RN.Rel.IdComp ((Some nk2),(RN.Rel.StarR (RN.Rel.App (Id,Id))))))) in
           let (nkrobsmap11,start15) = RN.projection_compiler man pk1 pk2 pk3 pk4 nkro11 in
           assert_equal true (RN.bisim man pk3 pk4 start12 start15 nkrobsmap8 nkrobsmap11);
-          );*)
+          );
         "json_test" >:: (fun _ctx ->
           let pk1 = 0 in
           let pk2 = 1 in
@@ -657,7 +657,7 @@ let tests = "MLBDD tests" >::: [
           let relation = RN.Rel.SeqR (id, RN.Rel.SeqR (RN.Rel.Nil core1_filter, id)) in
           let network0 = Eval.json_to_network json_node_base man0 false ["border1[GigabitEthernet0/0]";"border2[GigabitEthernet0/0]"] ["host-db";"host-www"] in
           let t = Sys.time() in
-          let (nkrobsmap0, start0) = RN.projection_compiler man 0 1 2 3 (Some network0, Some relation) None in
+          let (nkrobsmap0, start0) = RN.projection_compiler man 0 1 2 3 (Some network0, Some relation) in
           let pred1 = Eval.parse_location_to_pred "core1" true man0 in
           let pkr1 = Eval.parse_location_to_pkr "core1" true man0 in
           let pkr2 = (RN.AndP (RN.Binary (pred1,RN.True),RN.Id)) in
@@ -876,16 +876,9 @@ let tests = "MLBDD tests" >::: [
           let rela_man = Eval.init_rela_man rela_json in
           let t = Sys.time() in
           let (before_network, after_network) = Eval.rela_to_network rela_json rela_man in
-          let (nkrobsmap17, start17) = RN.projection_compiler man pk1 pk2 pk3 pk4 (Some before_network, Some (RN.Rel.StarR (RN.Rel.App (Id,Id)))) None in
-          let (nkrobsmap18, start18) = RN.projection_compiler man pk1 pk2 pk3 pk4 (Some after_network, Some (RN.Rel.StarR (RN.Rel.App (Id,Id)))) None in
+          let (nkrobsmap17, start17) = RN.projection_compiler man pk1 pk2 pk3 pk4 (Some before_network, Some (RN.Rel.StarR (RN.Rel.App (Id,Id)))) in
+          let (nkrobsmap18, start18) = RN.projection_compiler man pk1 pk2 pk3 pk4 (Some after_network, Some (RN.Rel.StarR (RN.Rel.App (Id,Id)))) in
           assert_equal true (RN.bisim man pk3 pk4 start17 start18 nkrobsmap17 nkrobsmap18);
-          Printf.printf "Rela Test time: %fs\n" (Sys.time() -. t);
-          let man = RN.init_man (Eval.get_field_length man0) (Eval.get_field_length man0) in
-          let (before_k_automata, after_k_automata) = Eval.parse_rela_global_k_automata rela_json rela_man in
-          let start_nk = Eval.generate_start_nk rela_man in
-          let (nkrobsmap19, start19) = RN.projection_compiler man pk1 pk2 pk3 pk4 (start_nk, Some (RN.Rel.StarR (RN.Rel.App (Id,Id)))) (Some before_k_automata) in
-          let (nkrobsmap20, start20) = RN.projection_compiler man pk1 pk2 pk3 pk4 (start_nk, Some (RN.Rel.StarR (RN.Rel.App (Id,Id)))) (Some after_k_automata) in
-          assert_equal true (RN.bisim man pk3 pk4 start19 start20 nkrobsmap19 nkrobsmap20);
           Printf.printf "Rela Test time: %fs\n" (Sys.time() -. t);
           );
 
