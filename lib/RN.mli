@@ -215,9 +215,9 @@ val unionize_nko : NK.t option -> NK.t option -> NK.t option
 val determinize_nko_transition : MLBDD.t NKOMap.t -> MLBDD.t NKOMap.t
 val delta_k : man -> pk -> pk -> NK.t option -> MLBDD.t NKOMap.t
 val delta_r : man -> pk -> pk -> pk -> pk -> Rel.t option -> next_step -> MLBDD.t ROMap.t
-val delta_krx : man -> pk -> pk -> pk -> pk -> NK.t option * Rel.t option -> MLBDD.t NKROMap.t
-val delta_kr : man -> pk -> pk -> pk -> pk -> NK.t option * Rel.t option -> bool -> MLBDD.t NKROMap.t
-val calculate_reachable_set : man -> pk -> pk -> pk -> pk -> NK.t option * Rel.t option -> MLBDD.t NKROMap.t
+val delta_krx : man -> pk -> pk -> pk -> pk -> NK.t option * Rel.t option -> (pkr NKOMap.t NKOMap.t) option -> MLBDD.t NKROMap.t
+val delta_kr : man -> pk -> pk -> pk -> pk -> NK.t option * Rel.t option -> (pkr NKOMap.t NKOMap.t) option -> bool -> MLBDD.t NKROMap.t
+val calculate_reachable_set : man -> pk -> pk -> pk -> pk -> NK.t option * Rel.t option -> (pkr NKOMap.t NKOMap.t) option -> MLBDD.t NKROMap.t
 val re_ordering : pk -> pk -> pk -> pk -> MLBDD.t -> MLBDD.t
 val back_ordering : pk -> pk -> pk -> pk -> MLBDD.t -> MLBDD.t
 val var_low_branch : man -> int -> MLBDD.t -> MLBDD.t
@@ -227,13 +227,11 @@ val splitting_bdd : man -> pk -> pk -> pk -> pk -> MLBDD.t -> BSet.t
 val is_final_nkro : NK.t option * Rel.t option -> bool
 val is_final_nkrob : (NK.t option * Rel.t option) * MLBDD.t -> bool
 val is_final_nkrobs : NKROBSet.t -> bool
-val generate_all_transition : man -> pk -> pk -> pk -> pk -> NK.t option * Rel.t option -> (BSet.t * BSet.t NKROMap.t) NKROMap.t
+val generate_all_transition : man -> pk -> pk -> pk -> pk -> NK.t option * Rel.t option -> (pkr NKOMap.t NKOMap.t) option -> (BSet.t * BSet.t NKROMap.t) NKROMap.t
 val find_bdds : NK.t option * Rel.t option -> (BSet.t * BSet.t NKROMap.t) NKROMap.t -> BSet.t
 val simplify_all_transition : man -> pk -> pk -> pk -> pk -> (BSet.t * BSet.t NKROMap.t) NKROMap.t -> MLBDD.t NKROBMap.t NKROBMap.t
 val is_final_state : (NK.t option * Rel.t option) * MLBDD.t -> bool
 val determinize_transition : MLBDD.t NKROBMap.t -> MLBDD.t NKROBSMap.t
 val determinization : NK.t option * Rel.t option -> MLBDD.t NKROBMap.t NKROBMap.t -> MLBDD.t NKROBSMap.t NKROBSMap.t * NKROBSet.t
-val projection_compiler : man -> pk -> pk -> pk ->  pk -> (NK.t option * Rel.t option) -> MLBDD.t NKROBSMap.t NKROBSMap.t * NKROBSet.t
+val projection_compiler : man -> pk -> pk -> pk ->  pk -> (NK.t option * Rel.t option) -> (pkr NKOMap.t NKOMap.t) option -> MLBDD.t NKROBSMap.t NKROBSMap.t * NKROBSet.t
 val bisim : man -> pk -> pk -> NKROBSet.t -> NKROBSet.t -> MLBDD.t NKROBSMap.t NKROBSMap.t -> MLBDD.t NKROBSMap.t NKROBSMap.t -> bool
-
-val parse_char_to_pred : char -> pred

@@ -753,11 +753,16 @@ let parse_rela_local_routing_table (rela:Yojson.Basic.t) (man:man) : pkr * pkr =
   let before_sink_set = StringSet.of_list before_sink_list in
   let after_sink_list = rela |> member "graphAfter" |> member "sinkNodes" |> to_list |> filter_string in
   let after_sink_set = StringSet.of_list after_sink_list in
-  let rec aux (acc:pkr) (sink_set:StringSet.t) = function
+  let before_start_list = rela |> member "graphBefore" |> member "sourceNodes" |> to_list |> filter_string in
+  let before_start_set = StringSet.of_list before_start_list in
+  let after_start_list = rela |> member "graphAfter" |> member "sourceNodes" |> to_list |> filter_string in
+  let after_start_set = StringSet.of_list after_start_list in
+  (* Filter out the start nodes that are also sinks *)
+  let rec aux (acc:pkr) (start_set:StringSet.t) (sink_set:StringSet.t) = function
     | `Assoc [] -> acc
     | `Assoc ((loc, table)::xs) ->
-        if StringSet.mem loc sink_set then
-          aux acc sink_set (`Assoc xs)
+        if not (StringSet.mem loc start_set) then
+          aux acc start_set sink_set (`Assoc xs)
         else
           let loc_filter = parse_rela_location_to_pred loc man in
           let next_list = table |> keys in
@@ -769,13 +774,13 @@ let parse_rela_local_routing_table (rela:Yojson.Basic.t) (man:man) : pkr * pkr =
                 OrP (acc, parse_rela_location_to_pkr next_loc man)
             ) (Binary (False,False)) next_list in
             if next_pkr = Binary (False,False) then
-              aux acc sink_set (`Assoc xs)
+              aux acc start_set sink_set (`Assoc xs)
             else
-              aux (OrP (acc, AndP (Binary (loc_filter,True), next_pkr))) sink_set (`Assoc xs)
+              aux (OrP (acc, AndP (Binary (loc_filter,True), next_pkr))) start_set sink_set (`Assoc xs)
     | _ -> failwith "Unexpected JSON format for rela"
   in
-   (AndP (Binary (ip_pred, True), aux (Binary (False,False)) before_sink_set (rela |> member "graphBefore" |> member "nodeToOutEdgesMap")),
-   AndP (Binary (ip_pred, True), aux (Binary (False,False)) after_sink_set (rela |> member "graphAfter" |> member "nodeToOutEdgesMap")))
+   (AndP (Binary (ip_pred, True), aux (Binary (False,False)) before_start_set before_sink_set (rela |> member "graphBefore" |> member "nodeToOutEdgesMap")),
+   AndP (Binary (ip_pred, True), aux (Binary (False,False)) after_start_set after_sink_set (rela |> member "graphAfter" |> member "nodeToOutEdgesMap")))
 
 
 let rec parse_rela_global_routing_table (rela:Yojson.Basic.t) (man:man) : pkr * pkr =
@@ -791,3 +796,72 @@ let rec parse_rela_global_routing_table (rela:Yojson.Basic.t) (man:man) : pkr * 
 let rela_to_network (rela:Yojson.Basic.t) (man:man) : NK.t * NK.t =
   let (before_table, after_table) = parse_rela_global_routing_table rela man in
     (Star (Seq (Dup,Pkr before_table)), Star (Seq (Dup,Pkr after_table)))
+
+let generate_start_nodes (man:man):pred =
+  Test (man.length + 1, false)
+
+let loc_pred_to_nk (loc_pred:pred): NK.t option =
+  Some (NK.Pkr (Binary (loc_pred, True)))
+
+let generate_start_nk (man:man):NK.t option=
+  loc_pred_to_nk (generate_start_nodes man)
+
+let union_k_automata (k_aut_1 : pkr NKOMap.t NKOMap.t) (k_aut_2 : pkr NKOMap.t NKOMap.t) : pkr NKOMap.t NKOMap.t =
+  NKOMap.union (fun _ map1 map2 ->
+    Some (NKOMap.union (fun _ pkr1 pkr2 -> Some (OrP (pkr1, pkr2))) map1 map2)
+  ) k_aut_1 k_aut_2
+
+let parse_rela_location_to_nk (loc:string) (man:man) : NK.t option =
+  let loc_pred = parse_rela_location_to_pred loc man in
+    loc_pred_to_nk loc_pred
+
+let parse_rela_local_k_automata (rela:Yojson.Basic.t) (man:man) : (pkr NKOMap.t NKOMap.t) * (pkr NKOMap.t NKOMap.t) =
+  let ip_traffic_list = rela |> member "ipTrafficKeys" |> to_list in
+    let ip_pred = 
+      List.fold_left (fun acc ip ->
+        let srcip = ip |> member "srcIp" |> to_string in
+        let dstip = ip |> member "dstIp" |> to_string in
+        Or (acc, And (parse_rela_src_ip_filter srcip man, parse_rela_dst_ip_filter dstip man))) (False) ip_traffic_list  in
+  let before_sink_list = rela |> member "graphBefore" |> member "sinkNodes" |> to_list |> filter_string in
+  let before_sink_set = StringSet.of_list before_sink_list in
+  let after_sink_list = rela |> member "graphAfter" |> member "sinkNodes" |> to_list |> filter_string in
+  let after_sink_set = StringSet.of_list after_sink_list in
+  let before_start_list = rela |> member "graphBefore" |> member "sourceNodes" |> to_list |> filter_string in
+  let before_start_set = StringSet.of_list before_start_list in
+  let after_start_list = rela |> member "graphAfter" |> member "sourceNodes" |> to_list |> filter_string in
+  let after_start_set = StringSet.of_list after_start_list in
+  (* Filter out the start nodes that are also sinks *)
+  let rec aux (acc:pkr NKOMap.t NKOMap.t) (start_set:StringSet.t) (sink_set:StringSet.t) = function
+    | `Assoc [] -> acc
+    | `Assoc ((loc, table)::xs) ->
+        if StringSet.mem loc sink_set then
+          aux (union_k_automata acc (NKOMap.singleton (parse_rela_location_to_nk loc man) (NKOMap.singleton None Id))) start_set sink_set (`Assoc xs)
+        else
+          let loc_filter = parse_rela_location_to_pred loc man in
+          let next_list = table |> keys in
+          let next_acc = 
+            List.fold_left (fun acc next_loc ->
+              union_k_automata acc (NKOMap.singleton (parse_rela_location_to_nk loc man) (NKOMap.singleton (parse_rela_location_to_nk next_loc man)
+              (AndP (Binary (And (ip_pred, loc_filter),True), parse_rela_location_to_pkr next_loc man))
+              ))
+            ) acc next_list in
+            if StringSet.mem loc start_set then
+              aux (union_k_automata next_acc (NKOMap.singleton (generate_start_nk man) (NKOMap.singleton (parse_rela_location_to_nk loc man) Id))) start_set sink_set (`Assoc xs)
+            else
+              aux next_acc start_set sink_set (`Assoc xs)
+    | _ -> failwith "Unexpected JSON format for rela"
+  in
+    (aux NKOMap.empty before_start_set before_sink_set (rela |> member "graphBefore" |> member "nodeToOutEdgesMap"),
+     aux NKOMap.empty after_start_set after_sink_set (rela |> member "graphAfter" |> member "nodeToOutEdgesMap"))
+
+
+let rec parse_rela_global_k_automata (rela:Yojson.Basic.t) (man:man) : (pkr NKOMap.t NKOMap.t) * (pkr NKOMap.t NKOMap.t) =
+  match rela with
+  | `List [] -> (NKOMap.empty, NKOMap.empty)
+  | `List (entry::xs) ->
+      let (before_nk, after_nk) = parse_rela_local_k_automata entry man in
+      (* Recursively parse the rest of the entries *)
+      let (acc_before, acc_after) = parse_rela_global_k_automata (`List xs) man in
+      (union_k_automata before_nk acc_before, union_k_automata after_nk acc_after)
+  | _ -> failwith "Unexpected JSON format for rela"
+

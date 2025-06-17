@@ -88,3 +88,7 @@ val parse_rela_global_routing_table : Yojson.Basic.t -> man -> pkr * pkr
 val parse_rela_src_ip_filter : string -> man -> pred
 val parse_rela_dst_ip_filter : string -> man -> pred
 val rela_to_network : Yojson.Basic.t -> man -> NK.t * NK.t
+
+val parse_rela_local_k_automata: Yojson.Basic.t -> man -> (pkr NKOMap.t NKOMap.t) * (pkr NKOMap.t NKOMap.t)
+val parse_rela_global_k_automata: Yojson.Basic.t -> man -> (pkr NKOMap.t NKOMap.t) * (pkr NKOMap.t NKOMap.t)
+val generate_start_nk: man -> NK.t option

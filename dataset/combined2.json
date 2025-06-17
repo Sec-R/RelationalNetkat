@@ -1,0 +1,3313 @@
+[
+    {
+        "ipTrafficKeys": [
+            {
+                "srcIp": "0.0.0.0",
+                "dstIp": "226.3.205.146",
+                "qos": 4
+            },
+            {
+                "srcIp": "0.0.0.0",
+                "dstIp": "40.2.144.148",
+                "qos": 4
+            },
+            {
+                "srcIp": "0.0.0.0",
+                "dstIp": "236.3.9.85",
+                "qos": 4
+            }
+        ],
+        "graphBefore": {
+            "nodeToOutEdgesMap": {
+                "Device713": {
+                    "Device558": [
+                        "Interface75447",
+                        "Interface42872",
+                        "Interface78804",
+                        "Interface49570"
+                    ]
+                },
+                "Device1511": {
+                    "Device601": [
+                        "Interface11668",
+                        "Interface75930",
+                        "Interface85623",
+                        "Interface12889",
+                        "Interface19759",
+                        "Interface57795",
+                        "Interface35210",
+                        "Interface32789"
+                    ],
+                    "Device602": [
+                        "Interface48062",
+                        "Interface37160",
+                        "Interface65844",
+                        "Interface81618",
+                        "Interface41794",
+                        "Interface89761",
+                        "Interface80823",
+                        "Interface21205"
+                    ]
+                },
+                "Device262": {
+                    "Device1189": [
+                        "Interface92343",
+                        "Interface71855"
+                    ],
+                    "Device780": [
+                        "Interface20843",
+                        "Interface30587"
+                    ],
+                    "Device2106": [
+                        "Interface74099",
+                        "Interface31474"
+                    ],
+                    "Device829": [
+                        "Interface37336",
+                        "Interface37912"
+                    ]
+                },
+                "Device1021": {
+                    "Device601": [
+                        "Interface17457",
+                        "Interface91998",
+                        "Interface57426",
+                        "Interface76465",
+                        "Interface74023",
+                        "Interface53208",
+                        "Interface38221",
+                        "Interface29013"
+                    ],
+                    "Device602": [
+                        "Interface59115",
+                        "Interface37881",
+                        "Interface57415",
+                        "Interface60013",
+                        "Interface36514",
+                        "Interface41230",
+                        "Interface6315",
+                        "Interface59776"
+                    ]
+                },
+                "Device1986": {
+                    "Device1189": [
+                        "Interface30186",
+                        "Interface25526"
+                    ],
+                    "Device780": [
+                        "Interface21882",
+                        "Interface4386"
+                    ],
+                    "Device2106": [
+                        "Interface59044",
+                        "Interface76374"
+                    ],
+                    "Device829": [
+                        "Interface87405",
+                        "Interface67357"
+                    ]
+                },
+                "Device558": {
+                    "Device601": [
+                        "Interface90991",
+                        "Interface92482",
+                        "Interface27922",
+                        "Interface26431",
+                        "Interface74692",
+                        "Interface23826",
+                        "Interface15635",
+                        "Interface32963"
+                    ],
+                    "Device602": [
+                        "Interface92399",
+                        "Interface85910",
+                        "Interface40171",
+                        "Interface75165",
+                        "Interface42865",
+                        "Interface40005",
+                        "Interface17372",
+                        "Interface4620"
+                    ]
+                },
+                "Device2436": {
+                    "Device1189": [
+                        "Interface28253",
+                        "Interface2409"
+                    ],
+                    "Device780": [
+                        "Interface63440",
+                        "Interface76572"
+                    ],
+                    "Device2106": [
+                        "Interface62965",
+                        "Interface56003"
+                    ],
+                    "Device829": [
+                        "Interface42985",
+                        "Interface25041"
+                    ]
+                },
+                "Device601": {
+                    "drop": []
+                },
+                "Device490": {
+                    "Device2436": [
+                        "Interface63204",
+                        "Interface498"
+                    ],
+                    "Device262": [
+                        "Interface75855",
+                        "Interface9410"
+                    ],
+                    "Device1986": [
+                        "Interface67982",
+                        "Interface50944"
+                    ]
+                },
+                "Device1189": {
+                    "Device713": [
+                        "Interface55480",
+                        "Interface84713",
+                        "Interface5365",
+                        "Interface36372",
+                        "Interface81566",
+                        "Interface16220",
+                        "Interface29937",
+                        "Interface74955",
+                        "Interface68816"
+                    ]
+                },
+                "Device602": {
+                    "drop": []
+                },
+                "Device780": {
+                    "Device1854": [
+                        "Interface41508",
+                        "Interface4567",
+                        "Interface11397",
+                        "Interface22727",
+                        "Interface79445",
+                        "Interface67821",
+                        "Interface69153",
+                        "Interface18323",
+                        "Interface60841"
+                    ]
+                },
+                "Device2106": {
+                    "Device979": [
+                        "Interface79211",
+                        "Interface57324",
+                        "Interface91664",
+                        "Interface22370",
+                        "Interface82829",
+                        "Interface71479",
+                        "Interface46960",
+                        "Interface91432",
+                        "Interface13091"
+                    ]
+                },
+                "Device1854": {
+                    "Device1511": [
+                        "Interface21443",
+                        "Interface22705",
+                        "Interface66589",
+                        "Interface72936"
+                    ]
+                },
+                "Device975": {
+                    "Device665": [
+                        "Interface69142",
+                        "Interface37871",
+                        "Interface2234",
+                        "Interface58491"
+                    ]
+                },
+                "Device979": {
+                    "Device1021": [
+                        "Interface36507",
+                        "Interface77450",
+                        "Interface50393",
+                        "Interface79907"
+                    ]
+                },
+                "Device829": {
+                    "Device975": [
+                        "Interface57189",
+                        "Interface64682",
+                        "Interface30979",
+                        "Interface21369",
+                        "Interface76728",
+                        "Interface82187",
+                        "Interface47383",
+                        "Interface29063",
+                        "Interface30925"
+                    ]
+                },
+                "Device665": {
+                    "Device601": [
+                        "Interface87595",
+                        "Interface63033",
+                        "Interface53340",
+                        "Interface74394",
+                        "Interface82262",
+                        "Interface91693",
+                        "Interface39321",
+                        "Interface36225"
+                    ],
+                    "Device602": [
+                        "Interface48182",
+                        "Interface49996",
+                        "Interface37802",
+                        "Interface66232",
+                        "Interface50352",
+                        "Interface71833",
+                        "Interface58656",
+                        "Interface19859"
+                    ]
+                },
+                "Device492": {
+                    "Device2436": [
+                        "Interface9579",
+                        "Interface85960"
+                    ],
+                    "Device262": [
+                        "Interface4446",
+                        "Interface4873"
+                    ],
+                    "Device1986": [
+                        "Interface82250",
+                        "Interface53506"
+                    ]
+                }
+            },
+            "sourceNodes": [
+                "Device492",
+                "Device490"
+            ],
+            "sinkNodes": [
+                "drop"
+            ]
+        },
+        "graphAfter": {
+            "nodeToOutEdgesMap": {
+                "Device713": {
+                    "Device558": [
+                        "Interface75447",
+                        "Interface42872",
+                        "Interface78804",
+                        "Interface49570"
+                    ]
+                },
+                "Device1511": {
+                    "Device601": [
+                        "Interface11668",
+                        "Interface75930",
+                        "Interface85623",
+                        "Interface12889",
+                        "Interface19759",
+                        "Interface57795",
+                        "Interface35210",
+                        "Interface32789"
+                    ],
+                    "Device602": [
+                        "Interface48062",
+                        "Interface37160",
+                        "Interface65844",
+                        "Interface41794",
+                        "Interface81618",
+                        "Interface89761",
+                        "Interface80823",
+                        "Interface21205"
+                    ]
+                },
+                "Device262": {
+                    "Device1189": [
+                        "Interface92343",
+                        "Interface71855"
+                    ],
+                    "Device780": [
+                        "Interface20843",
+                        "Interface30587"
+                    ],
+                    "Device2106": [
+                        "Interface74099",
+                        "Interface31474"
+                    ],
+                    "Device829": [
+                        "Interface37336",
+                        "Interface37912"
+                    ]
+                },
+                "Device1021": {
+                    "Device601": [
+                        "Interface17457",
+                        "Interface91998",
+                        "Interface57426",
+                        "Interface74023",
+                        "Interface76465",
+                        "Interface53208",
+                        "Interface38221",
+                        "Interface29013"
+                    ],
+                    "Device602": [
+                        "Interface59115",
+                        "Interface37881",
+                        "Interface57415",
+                        "Interface36514",
+                        "Interface60013",
+                        "Interface41230",
+                        "Interface6315",
+                        "Interface59776"
+                    ]
+                },
+                "Device1986": {
+                    "Device1189": [
+                        "Interface30186",
+                        "Interface25526"
+                    ],
+                    "Device780": [
+                        "Interface21882",
+                        "Interface4386"
+                    ],
+                    "Device2106": [
+                        "Interface59044",
+                        "Interface76374"
+                    ],
+                    "Device829": [
+                        "Interface87405",
+                        "Interface67357"
+                    ]
+                },
+                "Device558": {
+                    "Device601": [
+                        "Interface90991",
+                        "Interface92482",
+                        "Interface27922",
+                        "Interface26431",
+                        "Interface74692",
+                        "Interface23826",
+                        "Interface15635",
+                        "Interface32963"
+                    ],
+                    "Device602": [
+                        "Interface92399",
+                        "Interface40171",
+                        "Interface85910",
+                        "Interface75165",
+                        "Interface40005",
+                        "Interface17372",
+                        "Interface42865",
+                        "Interface4620"
+                    ]
+                },
+                "Device2436": {
+                    "Device1189": [
+                        "Interface28253",
+                        "Interface2409"
+                    ],
+                    "Device780": [
+                        "Interface63440",
+                        "Interface76572"
+                    ],
+                    "Device2106": [
+                        "Interface62965",
+                        "Interface56003"
+                    ],
+                    "Device829": [
+                        "Interface42985",
+                        "Interface25041"
+                    ]
+                },
+                "Device601": {
+                    "drop": []
+                },
+                "Device490": {
+                    "Device2436": [
+                        "Interface63204",
+                        "Interface498"
+                    ],
+                    "Device262": [
+                        "Interface75855",
+                        "Interface9410"
+                    ],
+                    "Device1986": [
+                        "Interface67982",
+                        "Interface50944"
+                    ]
+                },
+                "Device1189": {
+                    "Device713": [
+                        "Interface55480",
+                        "Interface84713",
+                        "Interface5365",
+                        "Interface36372",
+                        "Interface81566",
+                        "Interface16220",
+                        "Interface29937",
+                        "Interface74955",
+                        "Interface68816"
+                    ]
+                },
+                "Device602": {
+                    "drop": []
+                },
+                "Device780": {
+                    "Device1854": [
+                        "Interface41508",
+                        "Interface4567",
+                        "Interface11397",
+                        "Interface22727",
+                        "Interface79445",
+                        "Interface67821",
+                        "Interface69153",
+                        "Interface18323",
+                        "Interface60841"
+                    ]
+                },
+                "Device2106": {
+                    "Device979": [
+                        "Interface79211",
+                        "Interface57324",
+                        "Interface91664",
+                        "Interface22370",
+                        "Interface82829",
+                        "Interface71479",
+                        "Interface46960",
+                        "Interface91432",
+                        "Interface13091"
+                    ]
+                },
+                "Device1854": {
+                    "Device1511": [
+                        "Interface21443",
+                        "Interface22705",
+                        "Interface66589",
+                        "Interface72936"
+                    ]
+                },
+                "Device975": {
+                    "Device665": [
+                        "Interface69142",
+                        "Interface37871",
+                        "Interface2234",
+                        "Interface58491"
+                    ]
+                },
+                "Device979": {
+                    "Device1021": [
+                        "Interface36507",
+                        "Interface77450",
+                        "Interface50393",
+                        "Interface79907"
+                    ]
+                },
+                "Device829": {
+                    "Device975": [
+                        "Interface57189",
+                        "Interface64682",
+                        "Interface30979",
+                        "Interface21369",
+                        "Interface76728",
+                        "Interface82187",
+                        "Interface47383",
+                        "Interface29063",
+                        "Interface30925"
+                    ]
+                },
+                "Device665": {
+                    "Device601": [
+                        "Interface87595",
+                        "Interface63033",
+                        "Interface53340",
+                        "Interface74394",
+                        "Interface82262",
+                        "Interface91693",
+                        "Interface39321",
+                        "Interface36225"
+                    ],
+                    "Device602": [
+                        "Interface48182",
+                        "Interface49996",
+                        "Interface37802",
+                        "Interface66232",
+                        "Interface50352",
+                        "Interface71833",
+                        "Interface58656",
+                        "Interface19859"
+                    ]
+                },
+                "Device492": {
+                    "Device2436": [
+                        "Interface9579",
+                        "Interface85960"
+                    ],
+                    "Device262": [
+                        "Interface4446",
+                        "Interface4873"
+                    ],
+                    "Device1986": [
+                        "Interface82250",
+                        "Interface53506"
+                    ]
+                }
+            },
+            "sourceNodes": [
+                "Device492",
+                "Device490"
+            ],
+            "sinkNodes": [
+                "drop"
+            ]
+        }
+    },
+    {
+        "ipTrafficKeys": [
+            {
+                "srcIp": "0.0.0.0",
+                "dstIp": "200.130.16.20",
+                "qos": 4
+            }
+        ],
+        "graphBefore": {
+            "nodeToOutEdgesMap": {
+                "Device2436": {
+                    "Device1189": [
+                        "Interface28253",
+                        "Interface2409"
+                    ],
+                    "Device780": [
+                        "Interface63440",
+                        "Interface76572"
+                    ],
+                    "Device2106": [
+                        "Interface62965",
+                        "Interface56003"
+                    ],
+                    "Device829": [
+                        "Interface42985",
+                        "Interface25041"
+                    ]
+                },
+                "Device70": {
+                    "Device2436": [
+                        "Interface45536",
+                        "Interface36887"
+                    ],
+                    "Device262": [
+                        "Interface50164",
+                        "Interface42208"
+                    ],
+                    "Device1986": [
+                        "Interface21383",
+                        "Interface23564"
+                    ]
+                },
+                "Device1189": {
+                    "Device2156": [
+                        "Interface40768"
+                    ]
+                },
+                "Device780": {
+                    "Device2156": [
+                        "Interface30623"
+                    ]
+                },
+                "Device262": {
+                    "Device1189": [
+                        "Interface92343",
+                        "Interface71855"
+                    ],
+                    "Device780": [
+                        "Interface20843",
+                        "Interface30587"
+                    ],
+                    "Device2106": [
+                        "Interface74099",
+                        "Interface31474"
+                    ],
+                    "Device829": [
+                        "Interface37336",
+                        "Interface37912"
+                    ]
+                },
+                "Device2106": {
+                    "Device2156": [
+                        "Interface7723",
+                        "Interface36489"
+                    ]
+                },
+                "Device2156": {
+                    "drop": []
+                },
+                "Device1986": {
+                    "Device1189": [
+                        "Interface30186",
+                        "Interface25526"
+                    ],
+                    "Device780": [
+                        "Interface21882",
+                        "Interface4386"
+                    ],
+                    "Device2106": [
+                        "Interface59044",
+                        "Interface76374"
+                    ],
+                    "Device829": [
+                        "Interface87405",
+                        "Interface67357"
+                    ]
+                },
+                "Device829": {
+                    "Device2156": [
+                        "Interface1741",
+                        "Interface45287"
+                    ]
+                },
+                "Device492": {
+                    "Device2436": [
+                        "Interface9579",
+                        "Interface85960"
+                    ],
+                    "Device262": [
+                        "Interface4446",
+                        "Interface4873"
+                    ],
+                    "Device1986": [
+                        "Interface82250",
+                        "Interface53506"
+                    ]
+                }
+            },
+            "sourceNodes": [
+                "Device492",
+                "Device70"
+            ],
+            "sinkNodes": [
+                "drop"
+            ]
+        },
+        "graphAfter": {
+            "nodeToOutEdgesMap": {
+                "Device2436": {
+                    "Device1189": [
+                        "Interface28253",
+                        "Interface2409"
+                    ],
+                    "Device780": [
+                        "Interface63440",
+                        "Interface76572"
+                    ],
+                    "Device2106": [
+                        "Interface62965",
+                        "Interface56003"
+                    ],
+                    "Device829": [
+                        "Interface42985",
+                        "Interface25041"
+                    ]
+                },
+                "Device70": {
+                    "Device2436": [
+                        "Interface45536",
+                        "Interface36887"
+                    ],
+                    "Device262": [
+                        "Interface50164",
+                        "Interface42208"
+                    ],
+                    "Device1986": [
+                        "Interface21383",
+                        "Interface23564"
+                    ]
+                },
+                "Device1189": {
+                    "Device2156": [
+                        "Interface40768"
+                    ]
+                },
+                "Device780": {
+                    "Device2156": [
+                        "Interface30623"
+                    ]
+                },
+                "Device262": {
+                    "Device1189": [
+                        "Interface92343",
+                        "Interface71855"
+                    ],
+                    "Device780": [
+                        "Interface20843",
+                        "Interface30587"
+                    ],
+                    "Device2106": [
+                        "Interface74099",
+                        "Interface31474"
+                    ],
+                    "Device829": [
+                        "Interface37336",
+                        "Interface37912"
+                    ]
+                },
+                "Device2106": {
+                    "Device2156": [
+                        "Interface7723",
+                        "Interface36489"
+                    ]
+                },
+                "Device2156": {
+                    "drop": []
+                },
+                "Device1986": {
+                    "Device1189": [
+                        "Interface30186",
+                        "Interface25526"
+                    ],
+                    "Device780": [
+                        "Interface21882",
+                        "Interface4386"
+                    ],
+                    "Device2106": [
+                        "Interface59044",
+                        "Interface76374"
+                    ],
+                    "Device829": [
+                        "Interface87405",
+                        "Interface67357"
+                    ]
+                },
+                "Device829": {
+                    "Device2156": [
+                        "Interface1741",
+                        "Interface45287"
+                    ]
+                },
+                "Device492": {
+                    "Device2436": [
+                        "Interface9579",
+                        "Interface85960"
+                    ],
+                    "Device262": [
+                        "Interface4446",
+                        "Interface4873"
+                    ],
+                    "Device1986": [
+                        "Interface82250",
+                        "Interface53506"
+                    ]
+                }
+            },
+            "sourceNodes": [
+                "Device492",
+                "Device70"
+            ],
+            "sinkNodes": [
+                "drop"
+            ]
+        }
+    },
+    {
+        "ipTrafficKeys": [
+            {
+                "srcIp": "0.0.0.0",
+                "dstIp": "20.135.41.50",
+                "qos": 4
+            }
+        ],
+        "graphBefore": {
+            "nodeToOutEdgesMap": {
+                "Device1068": {
+                    "Device134": [
+                        "Interface85795",
+                        "Interface81412",
+                        "Interface1443",
+                        "Interface81054"
+                    ]
+                },
+                "Device713": {
+                    "Device1666": [
+                        "Interface2720",
+                        "Interface6791",
+                        "Interface41588",
+                        "Interface8958",
+                        "Interface61909",
+                        "Interface61112",
+                        "Interface63601",
+                        "Interface79525"
+                    ]
+                },
+                "Device730": {
+                    "Device2436": [
+                        "Interface76797",
+                        "Interface78094"
+                    ],
+                    "Device262": [
+                        "Interface17232",
+                        "Interface71131"
+                    ],
+                    "Device1986": [
+                        "Interface38627",
+                        "Interface7041"
+                    ]
+                },
+                "Device1666": {
+                    "Device1068": [
+                        "Interface19064"
+                    ],
+                    "Device1113": [
+                        "Interface81643"
+                    ]
+                },
+                "Device1113": {
+                    "Device134": [
+                        "Interface48618",
+                        "Interface91459",
+                        "Interface71728",
+                        "Interface15738"
+                    ],
+                    "Device2096": [
+                        "Interface12055",
+                        "Interface88266",
+                        "Interface29631",
+                        "Interface5701"
+                    ]
+                },
+                "Device717": {
+                    "Device1902": [
+                        "Interface88060"
+                    ],
+                    "Device451": [
+                        "Interface5596"
+                    ]
+                },
+                "Device262": {
+                    "Device1189": [
+                        "Interface92343",
+                        "Interface71855"
+                    ],
+                    "Device780": [
+                        "Interface20843",
+                        "Interface30587"
+                    ],
+                    "Device2106": [
+                        "Interface74099",
+                        "Interface31474"
+                    ],
+                    "Device829": [
+                        "Interface37336",
+                        "Interface37912"
+                    ]
+                },
+                "Device1986": {
+                    "Device1189": [
+                        "Interface30186",
+                        "Interface25526"
+                    ],
+                    "Device780": [
+                        "Interface21882",
+                        "Interface4386"
+                    ],
+                    "Device2106": [
+                        "Interface59044",
+                        "Interface76374"
+                    ],
+                    "Device829": [
+                        "Interface87405",
+                        "Interface67357"
+                    ]
+                },
+                "Device274": {
+                    "Device2436": [
+                        "Interface40331",
+                        "Interface37000"
+                    ],
+                    "Device262": [
+                        "Interface19585",
+                        "Interface89435"
+                    ],
+                    "Device1986": [
+                        "Interface79913",
+                        "Interface500"
+                    ]
+                },
+                "Device134": {
+                    "Device2096": [
+                        "Interface8633",
+                        "Interface63659",
+                        "Interface33437",
+                        "Interface8150"
+                    ],
+                    "Device1348": [
+                        "Interface54288",
+                        "Interface28965"
+                    ]
+                },
+                "Device44": {
+                    "drop": []
+                },
+                "Device2228": {
+                    "drop": []
+                },
+                "Device490": {
+                    "Device2436": [
+                        "Interface63204",
+                        "Interface498"
+                    ],
+                    "Device262": [
+                        "Interface75855",
+                        "Interface9410"
+                    ],
+                    "Device1986": [
+                        "Interface67982",
+                        "Interface50944"
+                    ]
+                },
+                "Device70": {
+                    "Device2436": [
+                        "Interface45536",
+                        "Interface36887"
+                    ],
+                    "Device262": [
+                        "Interface50164",
+                        "Interface42208"
+                    ],
+                    "Device1986": [
+                        "Interface21383",
+                        "Interface23564"
+                    ]
+                },
+                "Device1189": {
+                    "Device713": [
+                        "Interface55480",
+                        "Interface84713",
+                        "Interface5365",
+                        "Interface36372",
+                        "Interface81566",
+                        "Interface16220",
+                        "Interface29937",
+                        "Interface74955",
+                        "Interface68816"
+                    ]
+                },
+                "Device780": {
+                    "Device1854": [
+                        "Interface41508",
+                        "Interface4567",
+                        "Interface11397",
+                        "Interface22727",
+                        "Interface79445",
+                        "Interface67821",
+                        "Interface69153",
+                        "Interface18323",
+                        "Interface60841"
+                    ]
+                },
+                "Device1483": {},
+                "Device2106": {
+                    "Device979": [
+                        "Interface79211",
+                        "Interface57324",
+                        "Interface91664",
+                        "Interface22370",
+                        "Interface82829",
+                        "Interface71479",
+                        "Interface46960",
+                        "Interface91432",
+                        "Interface13091"
+                    ]
+                },
+                "Device1854": {
+                    "Device1880": [
+                        "Interface42695",
+                        "Interface4085",
+                        "Interface58409",
+                        "Interface39632",
+                        "Interface15191",
+                        "Interface61627",
+                        "Interface30518",
+                        "Interface9789"
+                    ]
+                },
+                "Device975": {
+                    "Device145": [
+                        "Interface80267",
+                        "Interface47538",
+                        "Interface18473",
+                        "Interface50194",
+                        "Interface30409",
+                        "Interface2110",
+                        "Interface2835",
+                        "Interface77023"
+                    ]
+                },
+                "Device979": {
+                    "Device1340": [
+                        "Interface58362",
+                        "Interface20796",
+                        "Interface75780",
+                        "Interface53522",
+                        "Interface18507",
+                        "Interface35332",
+                        "Interface66075",
+                        "Interface62050"
+                    ]
+                },
+                "Device829": {
+                    "Device975": [
+                        "Interface57189",
+                        "Interface64682",
+                        "Interface30979",
+                        "Interface21369",
+                        "Interface76728",
+                        "Interface82187",
+                        "Interface47383",
+                        "Interface29063",
+                        "Interface30925"
+                    ]
+                },
+                "Device1340": {
+                    "Device1068": [
+                        "Interface3733"
+                    ],
+                    "Device1113": [
+                        "Interface54053"
+                    ]
+                },
+                "Device1844": {},
+                "Device1962": {
+                    "Device2436": [
+                        "Interface4826",
+                        "Interface89995"
+                    ],
+                    "Device262": [
+                        "Interface64059",
+                        "Interface30056"
+                    ],
+                    "Device1986": [
+                        "Interface46409",
+                        "Interface33112"
+                    ]
+                },
+                "Device1880": {
+                    "Device1068": [
+                        "Interface47988"
+                    ],
+                    "Device1113": [
+                        "Interface83734"
+                    ]
+                },
+                "Device2436": {
+                    "Device1189": [
+                        "Interface28253",
+                        "Interface2409"
+                    ],
+                    "Device780": [
+                        "Interface63440",
+                        "Interface76572"
+                    ],
+                    "Device2106": [
+                        "Interface62965",
+                        "Interface56003"
+                    ],
+                    "Device829": [
+                        "Interface42985",
+                        "Interface25041"
+                    ]
+                },
+                "Device1902": {
+                    "Device44": [
+                        "Interface7466",
+                        "Interface12264"
+                    ],
+                    "Device1844": [
+                        "Interface14533",
+                        "Interface37817"
+                    ],
+                    "Device2228": [
+                        "Interface73221",
+                        "Interface9940"
+                    ],
+                    "Device1483": [
+                        "Interface73281",
+                        "Interface7834"
+                    ]
+                },
+                "Device145": {
+                    "Device1068": [
+                        "Interface63516"
+                    ],
+                    "Device1113": [
+                        "Interface38184"
+                    ]
+                },
+                "Device2096": {
+                    "Device2158": [
+                        "Interface73183",
+                        "Interface2941"
+                    ]
+                },
+                "Device1348": {
+                    "Device2158": [
+                        "Interface31906",
+                        "Interface37012"
+                    ]
+                },
+                "Device2158": {
+                    "Device717": [
+                        "Interface53963"
+                    ]
+                },
+                "Device451": {
+                    "Device44": [
+                        "Interface15866",
+                        "Interface30142"
+                    ],
+                    "Device1844": [
+                        "Interface6650",
+                        "Interface18584"
+                    ],
+                    "Device2228": [
+                        "Interface41057",
+                        "Interface86450"
+                    ],
+                    "Device1483": [
+                        "Interface28935",
+                        "Interface45046"
+                    ]
+                },
+                "Device492": {
+                    "Device2436": [
+                        "Interface9579",
+                        "Interface85960"
+                    ],
+                    "Device262": [
+                        "Interface4446",
+                        "Interface4873"
+                    ],
+                    "Device1986": [
+                        "Interface82250",
+                        "Interface53506"
+                    ]
+                }
+            },
+            "sourceNodes": [
+                "Device730",
+                "Device490",
+                "Device492",
+                "Device274",
+                "Device1962",
+                "Device70"
+            ],
+            "sinkNodes": [
+                "drop",
+                "Device1483",
+                "Device1844"
+            ]
+        },
+        "graphAfter": {
+            "nodeToOutEdgesMap": {
+                "Device1068": {
+                    "Device134": [
+                        "Interface85795",
+                        "Interface81412",
+                        "Interface1443",
+                        "Interface81054"
+                    ]
+                },
+                "Device713": {
+                    "Device1666": [
+                        "Interface2720",
+                        "Interface6791",
+                        "Interface41588",
+                        "Interface8958",
+                        "Interface61909",
+                        "Interface61112",
+                        "Interface63601",
+                        "Interface79525"
+                    ]
+                },
+                "Device730": {
+                    "Device2436": [
+                        "Interface76797",
+                        "Interface78094"
+                    ],
+                    "Device262": [
+                        "Interface17232",
+                        "Interface71131"
+                    ],
+                    "Device1986": [
+                        "Interface38627",
+                        "Interface7041"
+                    ]
+                },
+                "Device1666": {
+                    "Device1068": [
+                        "Interface19064"
+                    ],
+                    "Device1113": [
+                        "Interface81643"
+                    ]
+                },
+                "Device1113": {
+                    "Device134": [
+                        "Interface48618",
+                        "Interface91459",
+                        "Interface71728",
+                        "Interface15738"
+                    ],
+                    "Device2096": [
+                        "Interface12055",
+                        "Interface88266",
+                        "Interface29631",
+                        "Interface5701"
+                    ]
+                },
+                "Device717": {
+                    "Device1902": [
+                        "Interface88060"
+                    ],
+                    "Device451": [
+                        "Interface5596"
+                    ]
+                },
+                "Device262": {
+                    "Device1189": [
+                        "Interface92343",
+                        "Interface71855"
+                    ],
+                    "Device780": [
+                        "Interface20843",
+                        "Interface30587"
+                    ],
+                    "Device2106": [
+                        "Interface74099",
+                        "Interface31474"
+                    ],
+                    "Device829": [
+                        "Interface37336",
+                        "Interface37912"
+                    ]
+                },
+                "Device1986": {
+                    "Device1189": [
+                        "Interface30186",
+                        "Interface25526"
+                    ],
+                    "Device780": [
+                        "Interface21882",
+                        "Interface4386"
+                    ],
+                    "Device2106": [
+                        "Interface59044",
+                        "Interface76374"
+                    ],
+                    "Device829": [
+                        "Interface87405",
+                        "Interface67357"
+                    ]
+                },
+                "Device274": {
+                    "Device2436": [
+                        "Interface40331",
+                        "Interface37000"
+                    ],
+                    "Device262": [
+                        "Interface19585",
+                        "Interface89435"
+                    ],
+                    "Device1986": [
+                        "Interface79913",
+                        "Interface500"
+                    ]
+                },
+                "Device134": {
+                    "Device2096": [
+                        "Interface8633",
+                        "Interface63659",
+                        "Interface33437",
+                        "Interface8150"
+                    ],
+                    "Device1348": [
+                        "Interface54288",
+                        "Interface28965"
+                    ]
+                },
+                "Device44": {
+                    "drop": []
+                },
+                "Device2228": {
+                    "drop": []
+                },
+                "Device490": {
+                    "Device2436": [
+                        "Interface63204",
+                        "Interface498"
+                    ],
+                    "Device262": [
+                        "Interface75855",
+                        "Interface9410"
+                    ],
+                    "Device1986": [
+                        "Interface67982",
+                        "Interface50944"
+                    ]
+                },
+                "Device70": {
+                    "Device2436": [
+                        "Interface45536",
+                        "Interface36887"
+                    ],
+                    "Device262": [
+                        "Interface50164",
+                        "Interface42208"
+                    ],
+                    "Device1986": [
+                        "Interface21383",
+                        "Interface23564"
+                    ]
+                },
+                "Device1189": {
+                    "Device713": [
+                        "Interface55480",
+                        "Interface84713",
+                        "Interface5365",
+                        "Interface36372",
+                        "Interface81566",
+                        "Interface16220",
+                        "Interface29937",
+                        "Interface74955",
+                        "Interface68816"
+                    ]
+                },
+                "Device780": {
+                    "Device1854": [
+                        "Interface41508",
+                        "Interface4567",
+                        "Interface11397",
+                        "Interface22727",
+                        "Interface79445",
+                        "Interface67821",
+                        "Interface69153",
+                        "Interface18323",
+                        "Interface60841"
+                    ]
+                },
+                "Device1483": {},
+                "Device2106": {
+                    "Device979": [
+                        "Interface79211",
+                        "Interface57324",
+                        "Interface91664",
+                        "Interface22370",
+                        "Interface82829",
+                        "Interface71479",
+                        "Interface46960",
+                        "Interface91432",
+                        "Interface13091"
+                    ]
+                },
+                "Device1854": {
+                    "Device1880": [
+                        "Interface42695",
+                        "Interface4085",
+                        "Interface58409",
+                        "Interface39632",
+                        "Interface15191",
+                        "Interface61627",
+                        "Interface30518",
+                        "Interface9789"
+                    ]
+                },
+                "Device975": {
+                    "Device145": [
+                        "Interface80267",
+                        "Interface47538",
+                        "Interface18473",
+                        "Interface50194",
+                        "Interface30409",
+                        "Interface2110",
+                        "Interface2835",
+                        "Interface77023"
+                    ]
+                },
+                "Device979": {
+                    "Device1340": [
+                        "Interface58362",
+                        "Interface20796",
+                        "Interface75780",
+                        "Interface53522",
+                        "Interface18507",
+                        "Interface35332",
+                        "Interface66075",
+                        "Interface62050"
+                    ]
+                },
+                "Device829": {
+                    "Device975": [
+                        "Interface57189",
+                        "Interface64682",
+                        "Interface30979",
+                        "Interface21369",
+                        "Interface76728",
+                        "Interface82187",
+                        "Interface47383",
+                        "Interface29063",
+                        "Interface30925"
+                    ]
+                },
+                "Device1340": {
+                    "Device1068": [
+                        "Interface3733"
+                    ],
+                    "Device1113": [
+                        "Interface54053"
+                    ]
+                },
+                "Device1844": {},
+                "Device1962": {
+                    "Device2436": [
+                        "Interface4826",
+                        "Interface89995"
+                    ],
+                    "Device262": [
+                        "Interface64059",
+                        "Interface30056"
+                    ],
+                    "Device1986": [
+                        "Interface46409",
+                        "Interface33112"
+                    ]
+                },
+                "Device1880": {
+                    "Device1068": [
+                        "Interface47988"
+                    ],
+                    "Device1113": [
+                        "Interface83734"
+                    ]
+                },
+                "Device2436": {
+                    "Device1189": [
+                        "Interface28253",
+                        "Interface2409"
+                    ],
+                    "Device780": [
+                        "Interface63440",
+                        "Interface76572"
+                    ],
+                    "Device2106": [
+                        "Interface62965",
+                        "Interface56003"
+                    ],
+                    "Device829": [
+                        "Interface42985",
+                        "Interface25041"
+                    ]
+                },
+                "Device1902": {
+                    "Device44": [
+                        "Interface7466",
+                        "Interface12264"
+                    ],
+                    "Device1844": [
+                        "Interface14533",
+                        "Interface37817"
+                    ],
+                    "Device2228": [
+                        "Interface73221",
+                        "Interface9940"
+                    ],
+                    "Device1483": [
+                        "Interface73281",
+                        "Interface7834"
+                    ]
+                },
+                "Device145": {
+                    "Device1068": [
+                        "Interface63516"
+                    ],
+                    "Device1113": [
+                        "Interface38184"
+                    ]
+                },
+                "Device2096": {
+                    "Device2158": [
+                        "Interface73183",
+                        "Interface2941"
+                    ]
+                },
+                "Device1348": {
+                    "Device2158": [
+                        "Interface31906",
+                        "Interface37012"
+                    ]
+                },
+                "Device2158": {
+                    "Device717": [
+                        "Interface53963"
+                    ]
+                },
+                "Device451": {
+                    "Device44": [
+                        "Interface15866",
+                        "Interface30142"
+                    ],
+                    "Device1844": [
+                        "Interface6650",
+                        "Interface18584"
+                    ],
+                    "Device2228": [
+                        "Interface41057",
+                        "Interface86450"
+                    ],
+                    "Device1483": [
+                        "Interface28935",
+                        "Interface45046"
+                    ]
+                },
+                "Device492": {
+                    "Device2436": [
+                        "Interface9579",
+                        "Interface85960"
+                    ],
+                    "Device262": [
+                        "Interface4446",
+                        "Interface4873"
+                    ],
+                    "Device1986": [
+                        "Interface82250",
+                        "Interface53506"
+                    ]
+                }
+            },
+            "sourceNodes": [
+                "Device730",
+                "Device490",
+                "Device492",
+                "Device274",
+                "Device1962",
+                "Device70"
+            ],
+            "sinkNodes": [
+                "drop",
+                "Device1483",
+                "Device1844"
+            ]
+        }
+    },
+    {
+        "ipTrafficKeys": [
+            {
+                "srcIp": "0.0.0.0",
+                "dstIp": "64.96.85.194",
+                "qos": 4
+            }
+        ],
+        "graphBefore": {
+            "nodeToOutEdgesMap": {
+                "Device713": {
+                    "Device558": [
+                        "Interface75447",
+                        "Interface42872",
+                        "Interface78804",
+                        "Interface49570"
+                    ]
+                },
+                "Device464": {},
+                "Device1511": {
+                    "Device1052": [
+                        "Interface34503",
+                        "Interface52731",
+                        "Interface91773",
+                        "Interface81842"
+                    ],
+                    "Device1727": [
+                        "Interface57025",
+                        "Interface84922",
+                        "Interface41516",
+                        "Interface73379"
+                    ]
+                },
+                "Device301": {},
+                "Device262": {
+                    "Device1189": [
+                        "Interface92343",
+                        "Interface71855"
+                    ],
+                    "Device780": [
+                        "Interface20843",
+                        "Interface30587"
+                    ],
+                    "Device2106": [
+                        "Interface74099",
+                        "Interface31474"
+                    ],
+                    "Device829": [
+                        "Interface37336",
+                        "Interface37912"
+                    ]
+                },
+                "Device1021": {
+                    "Device1052": [
+                        "Interface55919",
+                        "Interface44376",
+                        "Interface60877",
+                        "Interface62899"
+                    ],
+                    "Device1727": [
+                        "Interface48516",
+                        "Interface32183",
+                        "Interface70181",
+                        "Interface88841"
+                    ]
+                },
+                "Device1986": {
+                    "Device1189": [
+                        "Interface30186",
+                        "Interface25526"
+                    ],
+                    "Device780": [
+                        "Interface21882",
+                        "Interface4386"
+                    ],
+                    "Device2106": [
+                        "Interface59044",
+                        "Interface76374"
+                    ],
+                    "Device829": [
+                        "Interface87405",
+                        "Interface67357"
+                    ]
+                },
+                "Device1727": {
+                    "Device464": [
+                        "Interface76460",
+                        "Interface46362",
+                        "Interface90826",
+                        "Interface42344"
+                    ],
+                    "Device520": [
+                        "Interface28760",
+                        "Interface7779",
+                        "Interface55261",
+                        "Interface29929"
+                    ],
+                    "Device301": [
+                        "Interface25396",
+                        "Interface78808",
+                        "Interface36096",
+                        "Interface56655"
+                    ],
+                    "Device2320": [
+                        "Interface51070",
+                        "Interface73607",
+                        "Interface12829",
+                        "Interface64087"
+                    ]
+                },
+                "Device558": {
+                    "Device1052": [
+                        "Interface7941",
+                        "Interface68199",
+                        "Interface3486",
+                        "Interface79754"
+                    ],
+                    "Device1727": [
+                        "Interface31512",
+                        "Interface49391",
+                        "Interface21523",
+                        "Interface83308"
+                    ]
+                },
+                "Device2436": {
+                    "Device1189": [
+                        "Interface28253",
+                        "Interface2409"
+                    ],
+                    "Device780": [
+                        "Interface63440",
+                        "Interface76572"
+                    ],
+                    "Device2106": [
+                        "Interface62965",
+                        "Interface56003"
+                    ],
+                    "Device829": [
+                        "Interface42985",
+                        "Interface25041"
+                    ]
+                },
+                "Device520": {},
+                "Device1189": {
+                    "Device713": [
+                        "Interface55480",
+                        "Interface84713",
+                        "Interface5365",
+                        "Interface36372",
+                        "Interface81566",
+                        "Interface16220",
+                        "Interface29937",
+                        "Interface74955",
+                        "Interface68816"
+                    ]
+                },
+                "Device1052": {
+                    "Device464": [
+                        "Interface63567",
+                        "Interface54271",
+                        "Interface89079",
+                        "Interface24874"
+                    ],
+                    "Device520": [
+                        "Interface5259",
+                        "Interface76402",
+                        "Interface66264",
+                        "Interface14910"
+                    ],
+                    "Device301": [
+                        "Interface20036",
+                        "Interface65446",
+                        "Interface15706",
+                        "Interface78785"
+                    ],
+                    "Device2320": [
+                        "Interface74536",
+                        "Interface39744",
+                        "Interface57302",
+                        "Interface32618"
+                    ]
+                },
+                "Device780": {
+                    "Device1854": [
+                        "Interface41508",
+                        "Interface4567",
+                        "Interface11397",
+                        "Interface22727",
+                        "Interface79445",
+                        "Interface67821",
+                        "Interface69153",
+                        "Interface18323",
+                        "Interface60841"
+                    ]
+                },
+                "Device2106": {
+                    "Device979": [
+                        "Interface79211",
+                        "Interface57324",
+                        "Interface91664",
+                        "Interface22370",
+                        "Interface82829",
+                        "Interface71479",
+                        "Interface46960",
+                        "Interface91432",
+                        "Interface13091"
+                    ]
+                },
+                "Device1854": {
+                    "Device1511": [
+                        "Interface21443",
+                        "Interface22705",
+                        "Interface66589",
+                        "Interface72936"
+                    ]
+                },
+                "Device975": {
+                    "Device665": [
+                        "Interface69142",
+                        "Interface37871",
+                        "Interface2234",
+                        "Interface58491"
+                    ]
+                },
+                "Device979": {
+                    "Device1021": [
+                        "Interface36507",
+                        "Interface77450",
+                        "Interface50393",
+                        "Interface79907"
+                    ]
+                },
+                "Device829": {
+                    "Device975": [
+                        "Interface57189",
+                        "Interface64682",
+                        "Interface30979",
+                        "Interface21369",
+                        "Interface76728",
+                        "Interface82187",
+                        "Interface47383",
+                        "Interface29063",
+                        "Interface30925"
+                    ]
+                },
+                "Device665": {
+                    "Device1052": [
+                        "Interface81020",
+                        "Interface67618",
+                        "Interface3530",
+                        "Interface83989"
+                    ],
+                    "Device1727": [
+                        "Interface80799",
+                        "Interface69563",
+                        "Interface68678",
+                        "Interface39703"
+                    ]
+                },
+                "Device2320": {},
+                "Device492": {
+                    "Device2436": [
+                        "Interface9579",
+                        "Interface85960"
+                    ],
+                    "Device262": [
+                        "Interface4446",
+                        "Interface4873"
+                    ],
+                    "Device1986": [
+                        "Interface82250",
+                        "Interface53506"
+                    ]
+                }
+            },
+            "sourceNodes": [
+                "Device492"
+            ],
+            "sinkNodes": [
+                "Device464",
+                "Device301",
+                "Device520",
+                "Device2320"
+            ]
+        },
+        "graphAfter": {
+            "nodeToOutEdgesMap": {
+                "Device713": {
+                    "Device558": [
+                        "Interface75447",
+                        "Interface42872",
+                        "Interface78804",
+                        "Interface49570"
+                    ]
+                },
+                "Device464": {},
+                "Device1511": {
+                    "Device1052": [
+                        "Interface34503",
+                        "Interface52731",
+                        "Interface91773",
+                        "Interface81842"
+                    ],
+                    "Device1727": [
+                        "Interface84922",
+                        "Interface57025",
+                        "Interface41516",
+                        "Interface73379"
+                    ]
+                },
+                "Device301": {},
+                "Device262": {
+                    "Device1189": [
+                        "Interface92343",
+                        "Interface71855"
+                    ],
+                    "Device780": [
+                        "Interface20843",
+                        "Interface30587"
+                    ],
+                    "Device2106": [
+                        "Interface74099",
+                        "Interface31474"
+                    ],
+                    "Device829": [
+                        "Interface37336",
+                        "Interface37912"
+                    ]
+                },
+                "Device1021": {
+                    "Device1052": [
+                        "Interface55919",
+                        "Interface44376",
+                        "Interface60877",
+                        "Interface62899"
+                    ],
+                    "Device1727": [
+                        "Interface48516",
+                        "Interface32183",
+                        "Interface88841",
+                        "Interface70181"
+                    ]
+                },
+                "Device1986": {
+                    "Device1189": [
+                        "Interface30186",
+                        "Interface25526"
+                    ],
+                    "Device780": [
+                        "Interface21882",
+                        "Interface4386"
+                    ],
+                    "Device2106": [
+                        "Interface59044",
+                        "Interface76374"
+                    ],
+                    "Device829": [
+                        "Interface87405",
+                        "Interface67357"
+                    ]
+                },
+                "Device1727": {
+                    "Device464": [
+                        "Interface76460",
+                        "Interface46362",
+                        "Interface90826",
+                        "Interface42344"
+                    ],
+                    "Device520": [
+                        "Interface28760",
+                        "Interface7779",
+                        "Interface55261",
+                        "Interface29929"
+                    ],
+                    "Device301": [
+                        "Interface25396",
+                        "Interface78808",
+                        "Interface36096",
+                        "Interface56655"
+                    ],
+                    "Device2320": [
+                        "Interface51070",
+                        "Interface73607",
+                        "Interface12829",
+                        "Interface64087"
+                    ]
+                },
+                "Device558": {
+                    "Device1052": [
+                        "Interface7941",
+                        "Interface68199",
+                        "Interface3486",
+                        "Interface79754"
+                    ],
+                    "Device1727": [
+                        "Interface31512",
+                        "Interface49391",
+                        "Interface21523",
+                        "Interface83308"
+                    ]
+                },
+                "Device2436": {
+                    "Device1189": [
+                        "Interface28253",
+                        "Interface2409"
+                    ],
+                    "Device780": [
+                        "Interface63440",
+                        "Interface76572"
+                    ],
+                    "Device2106": [
+                        "Interface62965",
+                        "Interface56003"
+                    ],
+                    "Device829": [
+                        "Interface42985",
+                        "Interface25041"
+                    ]
+                },
+                "Device520": {},
+                "Device1189": {
+                    "Device713": [
+                        "Interface55480",
+                        "Interface84713",
+                        "Interface5365",
+                        "Interface36372",
+                        "Interface81566",
+                        "Interface16220",
+                        "Interface29937",
+                        "Interface74955",
+                        "Interface68816"
+                    ]
+                },
+                "Device1052": {
+                    "Device464": [
+                        "Interface63567",
+                        "Interface54271",
+                        "Interface89079",
+                        "Interface24874"
+                    ],
+                    "Device520": [
+                        "Interface5259",
+                        "Interface76402",
+                        "Interface66264",
+                        "Interface14910"
+                    ],
+                    "Device301": [
+                        "Interface20036",
+                        "Interface65446",
+                        "Interface15706",
+                        "Interface78785"
+                    ],
+                    "Device2320": [
+                        "Interface74536",
+                        "Interface39744",
+                        "Interface57302",
+                        "Interface32618"
+                    ]
+                },
+                "Device780": {
+                    "Device1854": [
+                        "Interface41508",
+                        "Interface4567",
+                        "Interface11397",
+                        "Interface22727",
+                        "Interface79445",
+                        "Interface67821",
+                        "Interface69153",
+                        "Interface18323",
+                        "Interface60841"
+                    ]
+                },
+                "Device2106": {
+                    "Device979": [
+                        "Interface79211",
+                        "Interface57324",
+                        "Interface91664",
+                        "Interface22370",
+                        "Interface82829",
+                        "Interface71479",
+                        "Interface46960",
+                        "Interface91432",
+                        "Interface13091"
+                    ]
+                },
+                "Device1854": {
+                    "Device1511": [
+                        "Interface21443",
+                        "Interface22705",
+                        "Interface66589",
+                        "Interface72936"
+                    ]
+                },
+                "Device975": {
+                    "Device665": [
+                        "Interface69142",
+                        "Interface37871",
+                        "Interface2234",
+                        "Interface58491"
+                    ]
+                },
+                "Device979": {
+                    "Device1021": [
+                        "Interface36507",
+                        "Interface77450",
+                        "Interface50393",
+                        "Interface79907"
+                    ]
+                },
+                "Device829": {
+                    "Device975": [
+                        "Interface57189",
+                        "Interface64682",
+                        "Interface30979",
+                        "Interface21369",
+                        "Interface76728",
+                        "Interface82187",
+                        "Interface47383",
+                        "Interface29063",
+                        "Interface30925"
+                    ]
+                },
+                "Device665": {
+                    "Device1052": [
+                        "Interface81020",
+                        "Interface67618",
+                        "Interface3530",
+                        "Interface83989"
+                    ],
+                    "Device1727": [
+                        "Interface80799",
+                        "Interface69563",
+                        "Interface68678",
+                        "Interface39703"
+                    ]
+                },
+                "Device2320": {},
+                "Device492": {
+                    "Device2436": [
+                        "Interface9579",
+                        "Interface85960"
+                    ],
+                    "Device262": [
+                        "Interface4446",
+                        "Interface4873"
+                    ],
+                    "Device1986": [
+                        "Interface82250",
+                        "Interface53506"
+                    ]
+                }
+            },
+            "sourceNodes": [
+                "Device492"
+            ],
+            "sinkNodes": [
+                "Device464",
+                "Device301",
+                "Device520",
+                "Device2320"
+            ]
+        }
+    },
+    {
+        "ipTrafficKeys": [
+            {
+                "srcIp": "0.0.0.0",
+                "dstIp": "28.33.49.19",
+                "qos": 4
+            },
+            {
+                "srcIp": "0.0.0.0",
+                "dstIp": "4.36.81.19",
+                "qos": 4
+            },
+            {
+                "srcIp": "0.0.0.0",
+                "dstIp": "48.6.76.247",
+                "qos": 4
+            }
+        ],
+        "graphBefore": {
+            "nodeToOutEdgesMap": {
+                "Device713": {
+                    "Device422": [
+                        "Interface3972",
+                        "Interface42646",
+                        "Interface35628",
+                        "Interface1472",
+                        "Interface29052",
+                        "Interface24357",
+                        "Interface1922",
+                        "Interface76489"
+                    ]
+                },
+                "Device730": {
+                    "Device2436": [
+                        "Interface76797",
+                        "Interface78094"
+                    ],
+                    "Device262": [
+                        "Interface17232",
+                        "Interface71131"
+                    ],
+                    "Device1986": [
+                        "Interface38627",
+                        "Interface7041"
+                    ]
+                },
+                "Device262": {
+                    "Device1189": [
+                        "Interface92343",
+                        "Interface71855"
+                    ],
+                    "Device780": [
+                        "Interface20843",
+                        "Interface30587"
+                    ],
+                    "Device2106": [
+                        "Interface74099",
+                        "Interface31474"
+                    ],
+                    "Device829": [
+                        "Interface37336",
+                        "Interface37912"
+                    ]
+                },
+                "Device2095": {
+                    "Device2110": [
+                        "Interface19046",
+                        "Interface72338",
+                        "Interface15036",
+                        "Interface59425",
+                        "Interface56861",
+                        "Interface14978",
+                        "Interface77842",
+                        "Interface20701",
+                        "Interface28098",
+                        "Interface6126",
+                        "Interface5802",
+                        "Interface57683",
+                        "Interface28083",
+                        "Interface56196",
+                        "Interface6625",
+                        "Interface52580"
+                    ],
+                    "Device658": [
+                        "Interface18248",
+                        "Interface9842",
+                        "Interface29790",
+                        "Interface66820",
+                        "Interface23649",
+                        "Interface79941",
+                        "Interface89711",
+                        "Interface73321",
+                        "Interface67270",
+                        "Interface44636",
+                        "Interface25048",
+                        "Interface42555"
+                    ],
+                    "Device1722": [
+                        "Interface4659",
+                        "Interface87792",
+                        "Interface1218",
+                        "Interface22127",
+                        "Interface46347",
+                        "Interface68993",
+                        "Interface11373",
+                        "Interface42174",
+                        "Interface15383",
+                        "Interface53769",
+                        "Interface64478",
+                        "Interface69137"
+                    ],
+                    "Device1660": [
+                        "Interface90317",
+                        "Interface56551",
+                        "Interface24212",
+                        "Interface47384",
+                        "Interface43677",
+                        "Interface29307",
+                        "Interface54245",
+                        "Interface73483",
+                        "Interface85140",
+                        "Interface71568",
+                        "Interface78776",
+                        "Interface45238",
+                        "Interface74431",
+                        "Interface52511",
+                        "Interface74802",
+                        "Interface56942"
+                    ]
+                },
+                "Device1073": {
+                    "Device2110": [
+                        "Interface42074",
+                        "Interface40810",
+                        "Interface82683",
+                        "Interface46601",
+                        "Interface16541",
+                        "Interface45874",
+                        "Interface42612",
+                        "Interface29748",
+                        "Interface32252",
+                        "Interface40284",
+                        "Interface9148",
+                        "Interface8883"
+                    ],
+                    "Device658": [
+                        "Interface91568",
+                        "Interface3993",
+                        "Interface12367",
+                        "Interface53292",
+                        "Interface76116",
+                        "Interface11843",
+                        "Interface3598",
+                        "Interface7854",
+                        "Interface61617",
+                        "Interface46709",
+                        "Interface76019",
+                        "Interface74626",
+                        "Interface33121",
+                        "Interface52299",
+                        "Interface55719",
+                        "Interface19862"
+                    ],
+                    "Device1722": [
+                        "Interface33330",
+                        "Interface90054",
+                        "Interface70778",
+                        "Interface87942",
+                        "Interface287",
+                        "Interface26844",
+                        "Interface86384",
+                        "Interface11443",
+                        "Interface59901",
+                        "Interface25278",
+                        "Interface63390",
+                        "Interface23433",
+                        "Interface17305",
+                        "Interface46227",
+                        "Interface24225",
+                        "Interface19345"
+                    ],
+                    "Device1660": [
+                        "Interface27560",
+                        "Interface42798",
+                        "Interface92078",
+                        "Interface11714",
+                        "Interface49982",
+                        "Interface26271",
+                        "Interface60964",
+                        "Interface24831",
+                        "Interface46517",
+                        "Interface36421",
+                        "Interface79762",
+                        "Interface42059"
+                    ]
+                },
+                "Device1986": {
+                    "Device1189": [
+                        "Interface30186",
+                        "Interface25526"
+                    ],
+                    "Device780": [
+                        "Interface21882",
+                        "Interface4386"
+                    ],
+                    "Device2106": [
+                        "Interface59044",
+                        "Interface76374"
+                    ],
+                    "Device829": [
+                        "Interface87405",
+                        "Interface67357"
+                    ]
+                },
+                "Device422": {
+                    "Device2110": [
+                        "Interface80892",
+                        "Interface79978",
+                        "Interface88489",
+                        "Interface4291",
+                        "Interface17472",
+                        "Interface5519",
+                        "Interface61224",
+                        "Interface17966",
+                        "Interface61138",
+                        "Interface16",
+                        "Interface44495",
+                        "Interface70499",
+                        "Interface63112",
+                        "Interface69182",
+                        "Interface28244",
+                        "Interface52744"
+                    ],
+                    "Device658": [
+                        "Interface43598",
+                        "Interface13726",
+                        "Interface78842",
+                        "Interface16821",
+                        "Interface73469",
+                        "Interface75382",
+                        "Interface39934",
+                        "Interface39746",
+                        "Interface85898",
+                        "Interface48910",
+                        "Interface75945",
+                        "Interface61247"
+                    ],
+                    "Device1722": [
+                        "Interface399",
+                        "Interface58318",
+                        "Interface46055",
+                        "Interface20212",
+                        "Interface78869",
+                        "Interface3954",
+                        "Interface2580",
+                        "Interface13191",
+                        "Interface5478",
+                        "Interface345",
+                        "Interface49515",
+                        "Interface77696"
+                    ],
+                    "Device1660": [
+                        "Interface13892",
+                        "Interface2107",
+                        "Interface74037",
+                        "Interface85435",
+                        "Interface24110",
+                        "Interface30733",
+                        "Interface65277",
+                        "Interface71252",
+                        "Interface58171",
+                        "Interface39591",
+                        "Interface91152",
+                        "Interface50844",
+                        "Interface60055",
+                        "Interface518",
+                        "Interface77577",
+                        "Interface54541"
+                    ]
+                },
+                "Device274": {
+                    "Device2436": [
+                        "Interface40331",
+                        "Interface37000"
+                    ],
+                    "Device262": [
+                        "Interface19585",
+                        "Interface89435"
+                    ],
+                    "Device1986": [
+                        "Interface79913",
+                        "Interface500"
+                    ]
+                },
+                "Device490": {
+                    "Device2436": [
+                        "Interface63204",
+                        "Interface498"
+                    ],
+                    "Device262": [
+                        "Interface75855",
+                        "Interface9410"
+                    ],
+                    "Device1986": [
+                        "Interface67982",
+                        "Interface50944"
+                    ]
+                },
+                "Device70": {
+                    "Device2436": [
+                        "Interface45536",
+                        "Interface36887"
+                    ],
+                    "Device262": [
+                        "Interface50164",
+                        "Interface42208"
+                    ],
+                    "Device1986": [
+                        "Interface21383",
+                        "Interface23564"
+                    ]
+                },
+                "Device1189": {
+                    "Device713": [
+                        "Interface55480",
+                        "Interface84713",
+                        "Interface5365",
+                        "Interface36372",
+                        "Interface81566",
+                        "Interface16220",
+                        "Interface29937",
+                        "Interface74955",
+                        "Interface68816"
+                    ]
+                },
+                "Device780": {
+                    "Device1854": [
+                        "Interface41508",
+                        "Interface4567",
+                        "Interface11397",
+                        "Interface22727",
+                        "Interface79445",
+                        "Interface67821",
+                        "Interface69153",
+                        "Interface18323",
+                        "Interface60841"
+                    ]
+                },
+                "Device2106": {
+                    "Device979": [
+                        "Interface79211",
+                        "Interface57324",
+                        "Interface91664",
+                        "Interface22370",
+                        "Interface82829",
+                        "Interface71479",
+                        "Interface46960",
+                        "Interface91432",
+                        "Interface13091"
+                    ]
+                },
+                "Device1854": {
+                    "Device1073": [
+                        "Interface38213",
+                        "Interface23941",
+                        "Interface9229",
+                        "Interface11227",
+                        "Interface13094",
+                        "Interface15828",
+                        "Interface5104",
+                        "Interface26072"
+                    ]
+                },
+                "Device979": {
+                    "Device34": [
+                        "Interface26839",
+                        "Interface81195",
+                        "Interface79264",
+                        "Interface37116",
+                        "Interface17009",
+                        "Interface61895",
+                        "Interface20645",
+                        "Interface11741"
+                    ]
+                },
+                "Device975": {
+                    "Device2095": [
+                        "Interface69460",
+                        "Interface48997",
+                        "Interface9301",
+                        "Interface77179",
+                        "Interface47675",
+                        "Interface7006",
+                        "Interface19995",
+                        "Interface47162"
+                    ]
+                },
+                "Device829": {
+                    "Device975": [
+                        "Interface57189",
+                        "Interface64682",
+                        "Interface30979",
+                        "Interface21369",
+                        "Interface76728",
+                        "Interface82187",
+                        "Interface47383",
+                        "Interface29063",
+                        "Interface30925"
+                    ]
+                },
+                "Device2110": {
+                    "Device1571": [
+                        "Interface68248"
+                    ],
+                    "Device747": [
+                        "Interface36711"
+                    ]
+                },
+                "Device1962": {
+                    "Device2436": [
+                        "Interface4826",
+                        "Interface89995"
+                    ],
+                    "Device262": [
+                        "Interface64059",
+                        "Interface30056"
+                    ],
+                    "Device1986": [
+                        "Interface46409",
+                        "Interface33112"
+                    ]
+                },
+                "Device1722": {
+                    "Device1571": [
+                        "Interface7620"
+                    ],
+                    "Device747": [
+                        "Interface68901"
+                    ]
+                },
+                "Device1974": {
+                    "Device2436": [
+                        "Interface13540",
+                        "Interface8701"
+                    ],
+                    "Device262": [
+                        "Interface17101",
+                        "Interface15209"
+                    ],
+                    "Device1986": [
+                        "Interface63644",
+                        "Interface49911"
+                    ]
+                },
+                "Device2436": {
+                    "Device1189": [
+                        "Interface28253",
+                        "Interface2409"
+                    ],
+                    "Device780": [
+                        "Interface63440",
+                        "Interface76572"
+                    ],
+                    "Device2106": [
+                        "Interface62965",
+                        "Interface56003"
+                    ],
+                    "Device829": [
+                        "Interface42985",
+                        "Interface25041"
+                    ]
+                },
+                "Device34": {
+                    "Device2110": [
+                        "Interface34106",
+                        "Interface19733",
+                        "Interface79794",
+                        "Interface44110",
+                        "Interface85714",
+                        "Interface66134",
+                        "Interface27878",
+                        "Interface5997",
+                        "Interface13122",
+                        "Interface57532",
+                        "Interface66114",
+                        "Interface50396"
+                    ],
+                    "Device658": [
+                        "Interface49814",
+                        "Interface37543",
+                        "Interface57678",
+                        "Interface16858",
+                        "Interface21557",
+                        "Interface4746",
+                        "Interface79744",
+                        "Interface39399",
+                        "Interface70990",
+                        "Interface91939",
+                        "Interface33647",
+                        "Interface51127",
+                        "Interface13452",
+                        "Interface22213",
+                        "Interface81411",
+                        "Interface20663"
+                    ],
+                    "Device1722": [
+                        "Interface91464",
+                        "Interface10247",
+                        "Interface69125",
+                        "Interface1439",
+                        "Interface20070",
+                        "Interface81276",
+                        "Interface45751",
+                        "Interface39555",
+                        "Interface18990",
+                        "Interface17482",
+                        "Interface39487",
+                        "Interface33890",
+                        "Interface25404",
+                        "Interface59838",
+                        "Interface83103",
+                        "Interface29582"
+                    ],
+                    "Device1660": [
+                        "Interface81711",
+                        "Interface59564",
+                        "Interface53694",
+                        "Interface706",
+                        "Interface82151",
+                        "Interface6508",
+                        "Interface34861",
+                        "Interface74535",
+                        "Interface31409",
+                        "Interface44703",
+                        "Interface50742",
+                        "Interface86205"
+                    ]
+                },
+                "Device658": {
+                    "Device1571": [
+                        "Interface7573"
+                    ],
+                    "Device747": [
+                        "Interface47575"
+                    ]
+                },
+                "Device1571": {},
+                "Device1660": {
+                    "Device1571": [
+                        "Interface13218"
+                    ],
+                    "Device747": [
+                        "Interface72938"
+                    ]
+                },
+                "Device747": {},
+                "Device492": {
+                    "Device2436": [
+                        "Interface9579",
+                        "Interface85960"
+                    ],
+                    "Device262": [
+                        "Interface4446",
+                        "Interface4873"
+                    ],
+                    "Device1986": [
+                        "Interface82250",
+                        "Interface53506"
+                    ]
+                }
+            },
+            "sourceNodes": [
+                "Device730",
+                "Device1974",
+                "Device490",
+                "Device492",
+                "Device274",
+                "Device1962",
+                "Device70"
+            ],
+            "sinkNodes": [
+                "Device747",
+                "Device1571"
+            ]
+        },
+        "graphAfter": {
+            "nodeToOutEdgesMap": {
+                "Device713": {
+                    "Device422": [
+                        "Interface3972",
+                        "Interface42646",
+                        "Interface35628",
+                        "Interface1472",
+                        "Interface29052",
+                        "Interface24357",
+                        "Interface1922",
+                        "Interface76489"
+                    ]
+                },
+                "Device730": {
+                    "Device2436": [
+                        "Interface76797",
+                        "Interface78094"
+                    ],
+                    "Device262": [
+                        "Interface17232",
+                        "Interface71131"
+                    ],
+                    "Device1986": [
+                        "Interface38627",
+                        "Interface7041"
+                    ]
+                },
+                "Device262": {
+                    "Device1189": [
+                        "Interface92343",
+                        "Interface71855"
+                    ],
+                    "Device780": [
+                        "Interface20843",
+                        "Interface30587"
+                    ],
+                    "Device2106": [
+                        "Interface74099",
+                        "Interface31474"
+                    ],
+                    "Device829": [
+                        "Interface37336",
+                        "Interface37912"
+                    ]
+                },
+                "Device2095": {
+                    "Device2110": [
+                        "Interface19046",
+                        "Interface72338",
+                        "Interface15036",
+                        "Interface59425",
+                        "Interface56861",
+                        "Interface77842",
+                        "Interface14978",
+                        "Interface20701",
+                        "Interface28098",
+                        "Interface6126",
+                        "Interface5802",
+                        "Interface57683",
+                        "Interface28083",
+                        "Interface56196",
+                        "Interface52580",
+                        "Interface6625"
+                    ],
+                    "Device658": [
+                        "Interface18248",
+                        "Interface9842",
+                        "Interface29790",
+                        "Interface66820",
+                        "Interface23649",
+                        "Interface89711",
+                        "Interface79941",
+                        "Interface67270",
+                        "Interface44636",
+                        "Interface73321",
+                        "Interface25048",
+                        "Interface42555"
+                    ],
+                    "Device1722": [
+                        "Interface4659",
+                        "Interface87792",
+                        "Interface1218",
+                        "Interface22127",
+                        "Interface46347",
+                        "Interface68993",
+                        "Interface42174",
+                        "Interface11373",
+                        "Interface15383",
+                        "Interface53769",
+                        "Interface69137",
+                        "Interface64478"
+                    ],
+                    "Device1660": [
+                        "Interface90317",
+                        "Interface56551",
+                        "Interface24212",
+                        "Interface47384",
+                        "Interface43677",
+                        "Interface29307",
+                        "Interface54245",
+                        "Interface73483",
+                        "Interface85140",
+                        "Interface71568",
+                        "Interface78776",
+                        "Interface45238",
+                        "Interface74431",
+                        "Interface74802",
+                        "Interface52511",
+                        "Interface56942"
+                    ]
+                },
+                "Device1073": {
+                    "Device2110": [
+                        "Interface40810",
+                        "Interface42074",
+                        "Interface82683",
+                        "Interface46601",
+                        "Interface16541",
+                        "Interface45874",
+                        "Interface42612",
+                        "Interface29748",
+                        "Interface32252",
+                        "Interface40284",
+                        "Interface9148",
+                        "Interface8883"
+                    ],
+                    "Device658": [
+                        "Interface91568",
+                        "Interface3993",
+                        "Interface12367",
+                        "Interface53292",
+                        "Interface76116",
+                        "Interface11843",
+                        "Interface3598",
+                        "Interface61617",
+                        "Interface7854",
+                        "Interface46709",
+                        "Interface76019",
+                        "Interface74626",
+                        "Interface33121",
+                        "Interface52299",
+                        "Interface55719",
+                        "Interface19862"
+                    ],
+                    "Device1722": [
+                        "Interface33330",
+                        "Interface90054",
+                        "Interface70778",
+                        "Interface87942",
+                        "Interface287",
+                        "Interface26844",
+                        "Interface86384",
+                        "Interface11443",
+                        "Interface59901",
+                        "Interface25278",
+                        "Interface63390",
+                        "Interface23433",
+                        "Interface17305",
+                        "Interface46227",
+                        "Interface24225",
+                        "Interface19345"
+                    ],
+                    "Device1660": [
+                        "Interface27560",
+                        "Interface42798",
+                        "Interface92078",
+                        "Interface11714",
+                        "Interface49982",
+                        "Interface26271",
+                        "Interface60964",
+                        "Interface24831",
+                        "Interface46517",
+                        "Interface36421",
+                        "Interface79762",
+                        "Interface42059"
+                    ]
+                },
+                "Device1986": {
+                    "Device1189": [
+                        "Interface30186",
+                        "Interface25526"
+                    ],
+                    "Device780": [
+                        "Interface21882",
+                        "Interface4386"
+                    ],
+                    "Device2106": [
+                        "Interface59044",
+                        "Interface76374"
+                    ],
+                    "Device829": [
+                        "Interface87405",
+                        "Interface67357"
+                    ]
+                },
+                "Device422": {
+                    "Device2110": [
+                        "Interface80892",
+                        "Interface79978",
+                        "Interface88489",
+                        "Interface4291",
+                        "Interface17472",
+                        "Interface61224",
+                        "Interface5519",
+                        "Interface61138",
+                        "Interface17966",
+                        "Interface16",
+                        "Interface44495",
+                        "Interface70499",
+                        "Interface63112",
+                        "Interface69182",
+                        "Interface28244",
+                        "Interface52744"
+                    ],
+                    "Device658": [
+                        "Interface43598",
+                        "Interface13726",
+                        "Interface16821",
+                        "Interface78842",
+                        "Interface73469",
+                        "Interface75382",
+                        "Interface39934",
+                        "Interface39746",
+                        "Interface48910",
+                        "Interface85898",
+                        "Interface75945",
+                        "Interface61247"
+                    ],
+                    "Device1722": [
+                        "Interface399",
+                        "Interface58318",
+                        "Interface46055",
+                        "Interface20212",
+                        "Interface78869",
+                        "Interface3954",
+                        "Interface2580",
+                        "Interface13191",
+                        "Interface5478",
+                        "Interface345",
+                        "Interface77696",
+                        "Interface49515"
+                    ],
+                    "Device1660": [
+                        "Interface13892",
+                        "Interface2107",
+                        "Interface74037",
+                        "Interface85435",
+                        "Interface30733",
+                        "Interface65277",
+                        "Interface24110",
+                        "Interface71252",
+                        "Interface58171",
+                        "Interface39591",
+                        "Interface91152",
+                        "Interface50844",
+                        "Interface60055",
+                        "Interface518",
+                        "Interface54541",
+                        "Interface77577"
+                    ]
+                },
+                "Device274": {
+                    "Device2436": [
+                        "Interface40331",
+                        "Interface37000"
+                    ],
+                    "Device262": [
+                        "Interface19585",
+                        "Interface89435"
+                    ],
+                    "Device1986": [
+                        "Interface79913",
+                        "Interface500"
+                    ]
+                },
+                "Device490": {
+                    "Device2436": [
+                        "Interface63204",
+                        "Interface498"
+                    ],
+                    "Device262": [
+                        "Interface75855",
+                        "Interface9410"
+                    ],
+                    "Device1986": [
+                        "Interface67982",
+                        "Interface50944"
+                    ]
+                },
+                "Device70": {
+                    "Device2436": [
+                        "Interface45536",
+                        "Interface36887"
+                    ],
+                    "Device262": [
+                        "Interface50164",
+                        "Interface42208"
+                    ],
+                    "Device1986": [
+                        "Interface21383",
+                        "Interface23564"
+                    ]
+                },
+                "Device1189": {
+                    "Device713": [
+                        "Interface55480",
+                        "Interface84713",
+                        "Interface5365",
+                        "Interface36372",
+                        "Interface81566",
+                        "Interface16220",
+                        "Interface29937",
+                        "Interface74955",
+                        "Interface68816"
+                    ]
+                },
+                "Device780": {
+                    "Device1854": [
+                        "Interface41508",
+                        "Interface4567",
+                        "Interface11397",
+                        "Interface22727",
+                        "Interface79445",
+                        "Interface67821",
+                        "Interface69153",
+                        "Interface18323",
+                        "Interface60841"
+                    ]
+                },
+                "Device2106": {
+                    "Device979": [
+                        "Interface79211",
+                        "Interface57324",
+                        "Interface91664",
+                        "Interface22370",
+                        "Interface82829",
+                        "Interface71479",
+                        "Interface46960",
+                        "Interface91432",
+                        "Interface13091"
+                    ]
+                },
+                "Device1854": {
+                    "Device1073": [
+                        "Interface38213",
+                        "Interface9229",
+                        "Interface23941",
+                        "Interface11227",
+                        "Interface13094",
+                        "Interface15828",
+                        "Interface5104",
+                        "Interface26072"
+                    ]
+                },
+                "Device979": {
+                    "Device34": [
+                        "Interface26839",
+                        "Interface81195",
+                        "Interface79264",
+                        "Interface37116",
+                        "Interface17009",
+                        "Interface61895",
+                        "Interface20645",
+                        "Interface11741"
+                    ]
+                },
+                "Device975": {
+                    "Device2095": [
+                        "Interface69460",
+                        "Interface48997",
+                        "Interface9301",
+                        "Interface77179",
+                        "Interface7006",
+                        "Interface47675",
+                        "Interface19995",
+                        "Interface47162"
+                    ]
+                },
+                "Device829": {
+                    "Device975": [
+                        "Interface57189",
+                        "Interface64682",
+                        "Interface30979",
+                        "Interface21369",
+                        "Interface76728",
+                        "Interface82187",
+                        "Interface47383",
+                        "Interface29063",
+                        "Interface30925"
+                    ]
+                },
+                "Device2110": {
+                    "Device1571": [
+                        "Interface68248"
+                    ],
+                    "Device747": [
+                        "Interface36711"
+                    ]
+                },
+                "Device1962": {
+                    "Device2436": [
+                        "Interface4826",
+                        "Interface89995"
+                    ],
+                    "Device262": [
+                        "Interface64059",
+                        "Interface30056"
+                    ],
+                    "Device1986": [
+                        "Interface46409",
+                        "Interface33112"
+                    ]
+                },
+                "Device1722": {
+                    "Device1571": [
+                        "Interface7620"
+                    ],
+                    "Device747": [
+                        "Interface68901"
+                    ]
+                },
+                "Device1974": {
+                    "Device2436": [
+                        "Interface13540",
+                        "Interface8701"
+                    ],
+                    "Device262": [
+                        "Interface17101",
+                        "Interface15209"
+                    ],
+                    "Device1986": [
+                        "Interface63644",
+                        "Interface49911"
+                    ]
+                },
+                "Device2436": {
+                    "Device1189": [
+                        "Interface28253",
+                        "Interface2409"
+                    ],
+                    "Device780": [
+                        "Interface63440",
+                        "Interface76572"
+                    ],
+                    "Device2106": [
+                        "Interface62965",
+                        "Interface56003"
+                    ],
+                    "Device829": [
+                        "Interface42985",
+                        "Interface25041"
+                    ]
+                },
+                "Device34": {
+                    "Device2110": [
+                        "Interface34106",
+                        "Interface19733",
+                        "Interface79794",
+                        "Interface44110",
+                        "Interface85714",
+                        "Interface66134",
+                        "Interface27878",
+                        "Interface5997",
+                        "Interface13122",
+                        "Interface57532",
+                        "Interface66114",
+                        "Interface50396"
+                    ],
+                    "Device658": [
+                        "Interface49814",
+                        "Interface37543",
+                        "Interface57678",
+                        "Interface16858",
+                        "Interface21557",
+                        "Interface4746",
+                        "Interface79744",
+                        "Interface39399",
+                        "Interface70990",
+                        "Interface91939",
+                        "Interface33647",
+                        "Interface51127",
+                        "Interface13452",
+                        "Interface22213",
+                        "Interface81411",
+                        "Interface20663"
+                    ],
+                    "Device1722": [
+                        "Interface91464",
+                        "Interface10247",
+                        "Interface69125",
+                        "Interface1439",
+                        "Interface20070",
+                        "Interface81276",
+                        "Interface45751",
+                        "Interface39555",
+                        "Interface18990",
+                        "Interface17482",
+                        "Interface39487",
+                        "Interface33890",
+                        "Interface25404",
+                        "Interface59838",
+                        "Interface83103",
+                        "Interface29582"
+                    ],
+                    "Device1660": [
+                        "Interface81711",
+                        "Interface59564",
+                        "Interface53694",
+                        "Interface706",
+                        "Interface82151",
+                        "Interface6508",
+                        "Interface34861",
+                        "Interface74535",
+                        "Interface31409",
+                        "Interface44703",
+                        "Interface50742",
+                        "Interface86205"
+                    ]
+                },
+                "Device658": {
+                    "Device1571": [
+                        "Interface7573"
+                    ],
+                    "Device747": [
+                        "Interface47575"
+                    ]
+                },
+                "Device1571": {},
+                "Device1660": {
+                    "Device1571": [
+                        "Interface13218"
+                    ],
+                    "Device747": [
+                        "Interface72938"
+                    ]
+                },
+                "Device747": {},
+                "Device492": {
+                    "Device2436": [
+                        "Interface9579",
+                        "Interface85960"
+                    ],
+                    "Device262": [
+                        "Interface4446",
+                        "Interface4873"
+                    ],
+                    "Device1986": [
+                        "Interface82250",
+                        "Interface53506"
+                    ]
+                }
+            },
+            "sourceNodes": [
+                "Device730",
+                "Device1974",
+                "Device490",
+                "Device492",
+                "Device274",
+                "Device1962",
+                "Device70"
+            ],
+            "sinkNodes": [
+                "Device747",
+                "Device1571"
+            ]
+        }
+    }
+]

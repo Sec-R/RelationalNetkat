@@ -908,13 +908,24 @@ let rec delta_r (man:man)(pk1:pk)(pk2:pk)(pk3:pk)(pk4:pk)(ro:Rel.t option)(ns:ne
                                      | _ ->  ROMap.empty)
   in Hashtbl.replace man.delta_r_cache (pk1, pk2, pk3, pk4, ro, ns) romap;
     romap  
-                                                                 
-let delta_krx_atomic (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro:(NK.t option*Rel.t option)):(MLBDD.t)NKROMap.t =
+
+let delta_k_automata (man:man) (pk1:pk) (pk2:pk) (nko:NK.t option) (k_aut: pkr NKOMap.t NKOMap.t): MLBDD.t NKOMap.t =
+  match NKOMap.find_opt nko k_aut with
+    | None -> NKOMap.empty
+    | Some pkr_map -> NKOMap.map (fun pkr -> compile_pkr_bdd man pk1 pk2 pkr) pkr_map
+
+let delta_k_hybrid (man:man) (pk1:pk) (pk2:pk) (nko:NK.t option) (k_aut_option: (pkr NKOMap.t NKOMap.t) option): MLBDD.t NKOMap.t =
+  match k_aut_option with
+    | None -> delta_k man pk1 pk2 nko
+    | Some k_aut -> delta_k_automata man pk1 pk2 nko k_aut
+
+
+let delta_krx_atomic (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro:(NK.t option*Rel.t option)) (k_aut_option: (pkr NKOMap.t NKOMap.t) option):(MLBDD.t)NKROMap.t =
     try Hashtbl.find man.delta_krx_atomic_cache (pk1, pk2, pk3, pk4, nkro)
     with Not_found ->
     let nkromap =
       let (nko,ro) = nkro in
-      let nko_map = delta_k man pk1 pk2 nko in
+      let nko_map = delta_k_hybrid man pk1 pk2 nko k_aut_option in
       let ro_map = delta_r man pk1 pk2 pk3 pk4 ro X in
       let epsilon_closure_ro_map_right = ROMap.fold (fun ro bdd acc -> union_ro_mapping (apply_ro_mapping
          (comp_bdd_4 man pk1 pk2 pk3 pk4 bdd) (delta_r man pk1 pk2 pk3 pk4 ro E)) acc) ro_map ROMap.empty in
@@ -925,7 +936,7 @@ let delta_krx_atomic (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro:(NK.t o
     
 (* pk1: x, pk2:x', pk3:y, pk4:y'*)
 (* Correspond to delta_re1^* transistion in the paper *)
-let delta_krx (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro:(NK.t option*Rel.t option)):(MLBDD.t)NKROMap.t =
+let delta_krx (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro:(NK.t option*Rel.t option)) (k_aut_option: (pkr NKOMap.t NKOMap.t) option):(MLBDD.t)NKROMap.t =
   try Hashtbl.find man.delta_krx_cache (pk1, pk2, pk3, pk4, nkro)
    with Not_found ->
   let nkromap = 
@@ -935,7 +946,7 @@ let delta_krx (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro:(NK.t option*R
      | None -> cur
      (* transition_bdd is in order of pk1 pk2 pk3 pk4*)
      | Some (nkro,transition_bdd) -> 
-       let next_map = delta_krx_atomic man pk1 pk2 pk3 pk4 nkro in
+       let next_map = delta_krx_atomic man pk1 pk2 pk3 pk4 nkro k_aut_option in
          delta_krx_aux (NKROMap.fold (fun nkro bdd acc ->
             let transition_bdd' = comp_bdd_4 man pk1 pk2 pk3 pk4 transition_bdd bdd in
             match add_nkro_mapping_updated nkro transition_bdd' acc with
@@ -952,26 +963,26 @@ let delta_krx (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro:(NK.t option*R
 (* Each computation starts from the epsilon closure of the the nkro, which means we first do the delta_re1^* transition, and then
   do the delta_re transition.
 *)
-let delta_kr (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro:NK.t option*Rel.t option) (start_flag:bool): (MLBDD.t)NKROMap.t=
+let delta_kr (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro:NK.t option*Rel.t option) (k_aut_option: (pkr NKOMap.t NKOMap.t) option) (start_flag:bool): (MLBDD.t)NKROMap.t=
   let delta_kr_aux (nkro:NK.t option*Rel.t option) :(MLBDD.t)NKROMap.t =
     try Hashtbl.find man.delta_kr_cache (pk1, pk2, pk3, pk4, nkro)
     with Not_found ->
     let nkromap =   
      let (nko,ro)= nkro in
-       let nko_map = delta_k man pk1 pk2 nko in
+       let nko_map = delta_k_hybrid man pk1 pk2 nko k_aut_option in
        let ro_y_map = delta_r man pk1 pk2 pk3 pk4 ro Y in
        let ro_xy_map = delta_r man pk1 pk2 pk3 pk4 ro XY in
          let next_y_map = ROMap.fold (fun ro rbdd acc -> add_nkro_mapping (nko,ro) rbdd acc) ro_y_map NKROMap.empty in
          let next_xy_map = NKOMap.fold (fun nko kbdd acc -> ROMap.fold (fun ro rbdd acc -> add_nkro_mapping (nko,ro) (MLBDD.dand kbdd rbdd) acc) ro_xy_map acc) nko_map NKROMap.empty in
          let next_map = union_nkro_mapping next_y_map next_xy_map in
-             NKROMap.fold (fun nkro bdd acc -> union_nkro_mapping (apply_nkro_mapping (comp_bdd_4 man pk1 pk2 pk3 pk4 bdd) (delta_krx man pk1 pk2 pk3 pk4 nkro)) acc) next_map NKROMap.empty
+             NKROMap.fold (fun nkro bdd acc -> union_nkro_mapping (apply_nkro_mapping (comp_bdd_4 man pk1 pk2 pk3 pk4 bdd) (delta_krx man pk1 pk2 pk3 pk4 nkro k_aut_option)) acc) next_map NKROMap.empty
     in Hashtbl.replace man.delta_kr_cache (pk1, pk2, pk3, pk4, nkro) nkromap;
      nkromap
     in if start_flag then
         try Hashtbl.find man.delta_kr_start_cache (pk1, pk2, pk3, pk4, nkro)
          with Not_found ->
          let nkromap = 
-           NKROMap.fold (fun nkro bdd acc -> union_nkro_mapping (apply_nkro_mapping (comp_bdd_4 man pk1 pk2 pk3 pk4 bdd) (delta_kr_aux nkro)) acc) (delta_krx man pk1 pk2 pk3 pk4 nkro) NKROMap.empty
+           NKROMap.fold (fun nkro bdd acc -> union_nkro_mapping (apply_nkro_mapping (comp_bdd_4 man pk1 pk2 pk3 pk4 bdd) (delta_kr_aux nkro)) acc) (delta_krx man pk1 pk2 pk3 pk4 nkro k_aut_option) NKROMap.empty
          in
          Hashtbl.replace man.delta_kr_start_cache (pk1, pk2, pk3, pk4, nkro) nkromap;
          nkromap
@@ -979,7 +990,7 @@ let delta_kr (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro:NK.t option*Rel
 
 (* pk1: x, pk2:x', pk3:y, pk4:y'*)
 (* The reachable set is the x y pair on each state, thus the pk1 pk3 pair on each state*)            
-let calculate_reachable_set (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (start:NK.t option*Rel.t option):(MLBDD.t)NKROMap.t =
+let calculate_reachable_set (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (start:NK.t option*Rel.t option) (k_aut_option: (pkr NKOMap.t NKOMap.t) option):(MLBDD.t)NKROMap.t =
   let support13 = generate_double_support man pk1 pk3 in
   let worklist = Queue.create() in
       let rec calculate_reachable_set_aux (cur:(MLBDD.t)NKROMap.t): (MLBDD.t)NKROMap.t=
@@ -991,7 +1002,7 @@ let calculate_reachable_set (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (start
                                                 | (next,false) -> next) 
                                                 (apply_nkro_mapping 
                   (fun nbdd -> (rename_bdd pk2 pk1 (rename_bdd pk4 pk3 (MLBDD.exists support13 (MLBDD.dand nbdd bdd)))))
-                    (delta_kr man pk1 pk2 pk3 pk4 nkro (nkro_compare start nkro = 0))) cur)
+                    (delta_kr man pk1 pk2 pk3 pk4 nkro k_aut_option (nkro_compare start nkro = 0))) cur)
      in Queue.add (start,(bdd_true man)) worklist;
        calculate_reachable_set_aux (add_nkro_mapping start (bdd_true man) NKROMap.empty) 
     
@@ -1065,15 +1076,15 @@ let is_final_nkrobs (nkrobs:NKROBSet.t):bool =
   NKROBSet.exists (fun nkrob -> is_final_nkrob nkrob) nkrobs
 
 (* pk1: x, pk2:x', pk3:y, pk4:y'*)
-let generate_all_transition(man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (start:NK.t option*Rel.t option):(BSet.t*(BSet.t)NKROMap.t)NKROMap.t=
+let generate_all_transition(man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (start:NK.t option*Rel.t option) (k_aut_option: (pkr NKOMap.t NKOMap.t) option):(BSet.t*(BSet.t)NKROMap.t)NKROMap.t=
   let support24 = generate_double_support man pk2 pk4 in
   NKROMap.mapi (fun nkro bdd -> let new_delta = NKROMap.map (fun bdd -> splitting_bdd man pk1 pk2 pk3 pk4 bdd) 
-                                    (apply_nkro_mapping (fun tbdd -> (MLBDD.dand tbdd bdd)) (delta_kr man pk1 pk2 pk3 pk4 nkro (nkro_compare start nkro = 0))) in
+                                    (apply_nkro_mapping (fun tbdd -> (MLBDD.dand tbdd bdd)) (delta_kr man pk1 pk2 pk3 pk4 nkro k_aut_option (nkro_compare start nkro = 0))) in
                                   let hidden_state_set = 
                                         if is_final_nkro nkro 
                                           then BSet.singleton (bdd_true man)
                                         else (NKROMap.fold (fun _ bset acc -> BSet.union (BSet.map (fun bdd -> MLBDD.exists support24 bdd) bset) acc) new_delta BSet.empty) in
-                                      (hidden_state_set,new_delta)) (calculate_reachable_set man pk1 pk2 pk3 pk4 start)
+                                      (hidden_state_set,new_delta)) (calculate_reachable_set man pk1 pk2 pk3 pk4 start k_aut_option)
 
 let find_bdds (nkro:NK.t option*Rel.t option)(transition:(BSet.t*(BSet.t)NKROMap.t)NKROMap.t):BSet.t=
   match NKROMap.find_opt nkro transition with
@@ -1139,8 +1150,8 @@ let determinization (start:NK.t option*Rel.t option) (transition:((MLBDD.t)NKROB
        in Queue.add set_of_start worklist;
          (determinization_aux NKROBSMap.empty,set_of_start)      
 
-let projection_compiler (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro:(NK.t option*Rel.t option)):((MLBDD.t)NKROBSMap.t)NKROBSMap.t*NKROBSet.t =
-  determinization nkro (simplify_all_transition man pk1 pk2 pk3 pk4 (generate_all_transition man pk1 pk2 pk3 pk4 nkro))    
+let projection_compiler (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro:(NK.t option*Rel.t option)) (k_aut_option: (pkr NKOMap.t NKOMap.t) option):((MLBDD.t)NKROBSMap.t)NKROBSMap.t*NKROBSet.t =
+  determinization nkro (simplify_all_transition man pk1 pk2 pk3 pk4 (generate_all_transition man pk1 pk2 pk3 pk4 nkro k_aut_option))
 
 let bisim (man:man)(pk1:pk)(pk2:pk)(start1:NKROBSet.t)(start2:NKROBSet.t)(aut1:((MLBDD.t)NKROBSMap.t)NKROBSMap.t) (aut2:((MLBDD.t)NKROBSMap.t)NKROBSMap.t):bool =
   let worklist = Queue.create() in
@@ -1179,16 +1190,3 @@ let bisim (man:man)(pk1:pk)(pk2:pk)(start1:NKROBSet.t)(start2:NKROBSet.t)(aut1:(
    Queue.add ((start1,start2),bdd_true man) worklist;
      bisim_aux NKROBSSMap.empty 
   
-
-let parse_char_to_pred (c:char):pred=
-  let i = ref (Char.code c) in
-    let pred = ref (True) in
-      for j = 0 to 7 do
-        (if !i mod 2 = 1 then
-          pred := And (!pred,Test (j,true))
-        else
-          pred := And (!pred,Test (j,false))
-          );
-          i := !i / 2
-      done;
-      !pred  
