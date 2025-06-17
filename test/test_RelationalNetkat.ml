@@ -880,6 +880,7 @@ let tests = "MLBDD tests" >::: [
           let (nkrobsmap18, start18) = RN.projection_compiler man pk1 pk2 pk3 pk4 (Some after_network, Some (RN.Rel.StarR (RN.Rel.App (Id,Id)))) true in
           assert_equal true (RN.bisim man pk3 pk4 start17 start18 nkrobsmap17 nkrobsmap18);
           Printf.printf "Rela Test time: %fs\n" (Sys.time() -. t);
+          print_endline ("Number of nodes" ^ string_of_int (Eval.StringMap.cardinal rela_man.nodes));
           );
 
       ]

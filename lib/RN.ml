@@ -994,7 +994,7 @@ let calculate_reachable_set (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (start
                     if calculate_reachable_pair then
                       rename_bdd pk2 pk1 (rename_bdd pk4 pk3 (MLBDD.exists support13 (MLBDD.dand nbdd bdd)))
                     else
-                      bdd_true man)
+                      rename_bdd pk2 pk1 (rename_bdd pk4 pk3 (MLBDD.exists support13 nbdd)))
                     (delta_kr man pk1 pk2 pk3 pk4 nkro (nkro_compare start nkro = 0))) cur)
      in Queue.add (start,(bdd_true man)) worklist;
        calculate_reachable_set_aux (add_nkro_mapping start (bdd_true man) NKROMap.empty) 
