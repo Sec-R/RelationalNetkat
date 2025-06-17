@@ -764,7 +764,7 @@ let parse_rela_local_routing_table (rela:Yojson.Basic.t) (man:man) : NK.t * NK.t
           let next_list = table |> keys in
           let next_pkr = 
             List.fold_left (fun acc next_loc ->
-                OrP (acc, parse_rela_location_to_pkr next_loc man)
+                OrP (acc, AndP (Binary (ip_pred,True),parse_rela_location_to_pkr next_loc man))
             ) (Binary (False,False)) next_list in
             if next_pkr = Binary (False,False) then
               aux acc (`Assoc xs)

@@ -979,7 +979,7 @@ let delta_kr (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro:NK.t option*Rel
 
 (* pk1: x, pk2:x', pk3:y, pk4:y'*)
 (* The reachable set is the x y pair on each state, thus the pk1 pk3 pair on each state*)            
-let calculate_reachable_set (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (start:NK.t option*Rel.t option):(MLBDD.t)NKROMap.t =
+let calculate_reachable_set (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (start:NK.t option*Rel.t option) (calculate_reachable_pair:bool):(MLBDD.t)NKROMap.t =
   let support13 = generate_double_support man pk1 pk3 in
   let worklist = Queue.create() in
       let rec calculate_reachable_set_aux (cur:(MLBDD.t)NKROMap.t): (MLBDD.t)NKROMap.t=
@@ -990,7 +990,11 @@ let calculate_reachable_set (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (start
                                                 | (next,true) -> Queue.add (nkro,bdd) worklist; next
                                                 | (next,false) -> next) 
                                                 (apply_nkro_mapping 
-                  (fun nbdd -> (rename_bdd pk2 pk1 (rename_bdd pk4 pk3 (MLBDD.exists support13 (MLBDD.dand nbdd bdd)))))
+                  (fun nbdd -> 
+                    if calculate_reachable_pair then
+                      rename_bdd pk2 pk1 (rename_bdd pk4 pk3 (MLBDD.exists support13 (MLBDD.dand nbdd bdd)))
+                    else
+                      bdd_true man)
                     (delta_kr man pk1 pk2 pk3 pk4 nkro (nkro_compare start nkro = 0))) cur)
      in Queue.add (start,(bdd_true man)) worklist;
        calculate_reachable_set_aux (add_nkro_mapping start (bdd_true man) NKROMap.empty) 
@@ -1065,7 +1069,7 @@ let is_final_nkrobs (nkrobs:NKROBSet.t):bool =
   NKROBSet.exists (fun nkrob -> is_final_nkrob nkrob) nkrobs
 
 (* pk1: x, pk2:x', pk3:y, pk4:y'*)
-let generate_all_transition(man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (start:NK.t option*Rel.t option):(BSet.t*(BSet.t)NKROMap.t)NKROMap.t=
+let generate_all_transition(man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (start:NK.t option*Rel.t option) (calculate_reachable_pair:bool):(BSet.t*(BSet.t)NKROMap.t)NKROMap.t=
   let support24 = generate_double_support man pk2 pk4 in
   NKROMap.mapi (fun nkro bdd -> let new_delta = NKROMap.map (fun bdd -> splitting_bdd man pk1 pk2 pk3 pk4 bdd) 
                                     (apply_nkro_mapping (fun tbdd -> (MLBDD.dand tbdd bdd)) (delta_kr man pk1 pk2 pk3 pk4 nkro (nkro_compare start nkro = 0))) in
@@ -1073,7 +1077,7 @@ let generate_all_transition(man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (start:
                                         if is_final_nkro nkro 
                                           then BSet.singleton (bdd_true man)
                                         else (NKROMap.fold (fun _ bset acc -> BSet.union (BSet.map (fun bdd -> MLBDD.exists support24 bdd) bset) acc) new_delta BSet.empty) in
-                                      (hidden_state_set,new_delta)) (calculate_reachable_set man pk1 pk2 pk3 pk4 start)
+                                      (hidden_state_set,new_delta)) (calculate_reachable_set man pk1 pk2 pk3 pk4 start calculate_reachable_pair)
 
 let find_bdds (nkro:NK.t option*Rel.t option)(transition:(BSet.t*(BSet.t)NKROMap.t)NKROMap.t):BSet.t=
   match NKROMap.find_opt nkro transition with
@@ -1139,8 +1143,8 @@ let determinization (start:NK.t option*Rel.t option) (transition:((MLBDD.t)NKROB
        in Queue.add set_of_start worklist;
          (determinization_aux NKROBSMap.empty,set_of_start)      
 
-let projection_compiler (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro:(NK.t option*Rel.t option)):((MLBDD.t)NKROBSMap.t)NKROBSMap.t*NKROBSet.t =
-  determinization nkro (simplify_all_transition man pk1 pk2 pk3 pk4 (generate_all_transition man pk1 pk2 pk3 pk4 nkro))    
+let projection_compiler (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro:(NK.t option*Rel.t option)) (calculate_reachable_pair:bool):((MLBDD.t)NKROBSMap.t)NKROBSMap.t*NKROBSet.t =
+  determinization nkro (simplify_all_transition man pk1 pk2 pk3 pk4 (generate_all_transition man pk1 pk2 pk3 pk4 nkro calculate_reachable_pair))    
 
 let bisim (man:man)(pk1:pk)(pk2:pk)(start1:NKROBSet.t)(start2:NKROBSet.t)(aut1:((MLBDD.t)NKROBSMap.t)NKROBSMap.t) (aut2:((MLBDD.t)NKROBSMap.t)NKROBSMap.t):bool =
   let worklist = Queue.create() in
@@ -1178,17 +1182,3 @@ let bisim (man:man)(pk1:pk)(pk2:pk)(start1:NKROBSet.t)(start2:NKROBSet.t)(aut1:(
   in
    Queue.add ((start1,start2),bdd_true man) worklist;
      bisim_aux NKROBSSMap.empty 
-  
-
-let parse_char_to_pred (c:char):pred=
-  let i = ref (Char.code c) in
-    let pred = ref (True) in
-      for j = 0 to 7 do
-        (if !i mod 2 = 1 then
-          pred := And (!pred,Test (j,true))
-        else
-          pred := And (!pred,Test (j,false))
-          );
-          i := !i / 2
-      done;
-      !pred  
