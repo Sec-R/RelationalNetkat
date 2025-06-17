@@ -298,11 +298,12 @@ type man = {
   pred_cache: (pk*pred,MLBDD.t)Hashtbl.t;
   pkr_cache: (pk*pk*pkr,MLBDD.t)Hashtbl.t;
   delta_k_cache: (pk*pk*NK.t option,MLBDD.t NKOMap.t)Hashtbl.t;
+  delta_k_automata_cache: (pk*pk*NK.t option*(pkr NKOMap.t NKOMap.t),MLBDD.t NKOMap.t)Hashtbl.t;
   delta_r_cache: (pk*pk*pk*pk*Rel.t option*next_step,MLBDD.t ROMap.t)Hashtbl.t;
-  delta_krx_atomic_cache: (pk*pk*pk*pk*(NK.t option*Rel.t option),MLBDD.t NKROMap.t)Hashtbl.t;
-  delta_krx_cache: (pk*pk*pk*pk*(NK.t option*Rel.t option),MLBDD.t NKROMap.t)Hashtbl.t;
-  delta_kr_cache: (pk*pk*pk*pk*(NK.t option*Rel.t option),MLBDD.t NKROMap.t)Hashtbl.t;
-  delta_kr_start_cache: (pk*pk*pk*pk*(NK.t option*Rel.t option),MLBDD.t NKROMap.t)Hashtbl.t;
+  delta_krx_atomic_cache: (pk*pk*pk*pk*(NK.t option*Rel.t option)*((pkr NKOMap.t NKOMap.t) option),MLBDD.t NKROMap.t)Hashtbl.t;
+  delta_krx_cache: (pk*pk*pk*pk*(NK.t option*Rel.t option)*((pkr NKOMap.t NKOMap.t) option),MLBDD.t NKROMap.t)Hashtbl.t;
+  delta_kr_cache: (pk*pk*pk*pk*(NK.t option*Rel.t option)*((pkr NKOMap.t NKOMap.t) option),MLBDD.t NKROMap.t)Hashtbl.t;
+  delta_kr_start_cache: (pk*pk*pk*pk*(NK.t option*Rel.t option)*((pkr NKOMap.t NKOMap.t) option),MLBDD.t NKROMap.t)Hashtbl.t;
   split_bdd_cache: (MLBDD.t,BSet.t)Hashtbl.t;
 }
 
@@ -454,6 +455,7 @@ let init_man (field_max:field) (bman_cache:int) =
   comp_bdd_4 = Hashtbl.create bman_cache;
    pred_cache = Hashtbl.create bman_cache;
    pkr_cache = Hashtbl.create bman_cache;
+   delta_k_automata_cache = Hashtbl.create bman_cache;
    delta_k_cache = Hashtbl.create bman_cache;
    delta_r_cache = Hashtbl.create bman_cache;
    delta_krx_atomic_cache = Hashtbl.create bman_cache;
@@ -910,9 +912,14 @@ let rec delta_r (man:man)(pk1:pk)(pk2:pk)(pk3:pk)(pk4:pk)(ro:Rel.t option)(ns:ne
     romap  
 
 let delta_k_automata (man:man) (pk1:pk) (pk2:pk) (nko:NK.t option) (k_aut: pkr NKOMap.t NKOMap.t): MLBDD.t NKOMap.t =
+  try Hashtbl.find man.delta_k_automata_cache (pk1, pk2, nko, k_aut)
+  with Not_found ->
+  let bdd =  
   match NKOMap.find_opt nko k_aut with
     | None -> NKOMap.empty
     | Some pkr_map -> NKOMap.map (fun pkr -> compile_pkr_bdd man pk1 pk2 pkr) pkr_map
+  in Hashtbl.replace man.delta_k_automata_cache (pk1, pk2, nko, k_aut) bdd;
+  bdd
 
 let delta_k_hybrid (man:man) (pk1:pk) (pk2:pk) (nko:NK.t option) (k_aut_option: (pkr NKOMap.t NKOMap.t) option): MLBDD.t NKOMap.t =
   match k_aut_option with
@@ -921,7 +928,7 @@ let delta_k_hybrid (man:man) (pk1:pk) (pk2:pk) (nko:NK.t option) (k_aut_option: 
 
 
 let delta_krx_atomic (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro:(NK.t option*Rel.t option)) (k_aut_option: (pkr NKOMap.t NKOMap.t) option):(MLBDD.t)NKROMap.t =
-    try Hashtbl.find man.delta_krx_atomic_cache (pk1, pk2, pk3, pk4, nkro)
+    try Hashtbl.find man.delta_krx_atomic_cache (pk1, pk2, pk3, pk4, nkro, k_aut_option)
     with Not_found ->
     let nkromap =
       let (nko,ro) = nkro in
@@ -931,13 +938,13 @@ let delta_krx_atomic (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro:(NK.t o
          (comp_bdd_4 man pk1 pk2 pk3 pk4 bdd) (delta_r man pk1 pk2 pk3 pk4 ro E)) acc) ro_map ROMap.empty in
       NKOMap.fold (fun nko kbdd acc -> ROMap.fold (fun ro rbdd acc -> 
           add_nkro_mapping (nko,ro) (MLBDD.dand kbdd rbdd) acc) epsilon_closure_ro_map_right acc) nko_map NKROMap.empty
-    in Hashtbl.replace man.delta_krx_atomic_cache (pk1, pk2, pk3, pk4, nkro) nkromap;
+    in Hashtbl.replace man.delta_krx_atomic_cache (pk1, pk2, pk3, pk4, nkro, k_aut_option) nkromap;
   nkromap
     
 (* pk1: x, pk2:x', pk3:y, pk4:y'*)
 (* Correspond to delta_re1^* transistion in the paper *)
 let delta_krx (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro:(NK.t option*Rel.t option)) (k_aut_option: (pkr NKOMap.t NKOMap.t) option):(MLBDD.t)NKROMap.t =
-  try Hashtbl.find man.delta_krx_cache (pk1, pk2, pk3, pk4, nkro)
+  try Hashtbl.find man.delta_krx_cache (pk1, pk2, pk3, pk4, nkro, k_aut_option)
    with Not_found ->
   let nkromap = 
    let worklist = Queue.create() in
@@ -956,7 +963,7 @@ let delta_krx (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro:(NK.t option*R
        let epsilon_closure_ro_map_left = delta_r man pk1 pk2 pk3 pk4 ro E in
          delta_krx_aux (ROMap.fold (fun ro bdd acc -> Queue.add ((nko,ro),bdd) worklist;
                          add_nkro_mapping (nko,ro) bdd acc) epsilon_closure_ro_map_left NKROMap.empty)
-  in Hashtbl.replace man.delta_krx_cache (pk1, pk2, pk3, pk4, nkro) nkromap;
+  in Hashtbl.replace man.delta_krx_cache (pk1, pk2, pk3, pk4, nkro, k_aut_option) nkromap;
     nkromap
 
 (* pk1: x, pk2:x', pk3:y, pk4:y'*)
@@ -965,7 +972,7 @@ let delta_krx (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro:(NK.t option*R
 *)
 let delta_kr (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro:NK.t option*Rel.t option) (k_aut_option: (pkr NKOMap.t NKOMap.t) option) (start_flag:bool): (MLBDD.t)NKROMap.t=
   let delta_kr_aux (nkro:NK.t option*Rel.t option) :(MLBDD.t)NKROMap.t =
-    try Hashtbl.find man.delta_kr_cache (pk1, pk2, pk3, pk4, nkro)
+    try Hashtbl.find man.delta_kr_cache (pk1, pk2, pk3, pk4, nkro, k_aut_option)
     with Not_found ->
     let nkromap =   
      let (nko,ro)= nkro in
@@ -976,15 +983,15 @@ let delta_kr (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro:NK.t option*Rel
          let next_xy_map = NKOMap.fold (fun nko kbdd acc -> ROMap.fold (fun ro rbdd acc -> add_nkro_mapping (nko,ro) (MLBDD.dand kbdd rbdd) acc) ro_xy_map acc) nko_map NKROMap.empty in
          let next_map = union_nkro_mapping next_y_map next_xy_map in
              NKROMap.fold (fun nkro bdd acc -> union_nkro_mapping (apply_nkro_mapping (comp_bdd_4 man pk1 pk2 pk3 pk4 bdd) (delta_krx man pk1 pk2 pk3 pk4 nkro k_aut_option)) acc) next_map NKROMap.empty
-    in Hashtbl.replace man.delta_kr_cache (pk1, pk2, pk3, pk4, nkro) nkromap;
+    in Hashtbl.replace man.delta_kr_cache (pk1, pk2, pk3, pk4, nkro, k_aut_option) nkromap;
      nkromap
     in if start_flag then
-        try Hashtbl.find man.delta_kr_start_cache (pk1, pk2, pk3, pk4, nkro)
+        try Hashtbl.find man.delta_kr_start_cache (pk1, pk2, pk3, pk4, nkro, k_aut_option)
          with Not_found ->
          let nkromap = 
            NKROMap.fold (fun nkro bdd acc -> union_nkro_mapping (apply_nkro_mapping (comp_bdd_4 man pk1 pk2 pk3 pk4 bdd) (delta_kr_aux nkro)) acc) (delta_krx man pk1 pk2 pk3 pk4 nkro k_aut_option) NKROMap.empty
          in
-         Hashtbl.replace man.delta_kr_start_cache (pk1, pk2, pk3, pk4, nkro) nkromap;
+         Hashtbl.replace man.delta_kr_start_cache (pk1, pk2, pk3, pk4, nkro, k_aut_option) nkromap;
          nkromap
        else delta_kr_aux nkro
 
