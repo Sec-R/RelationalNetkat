@@ -864,7 +864,8 @@ let tests = "MLBDD tests" >::: [
           let man' = RN.init_man (Eval.get_field_length man6) (Eval.get_field_length man6) in
           let network7 = Eval.json_to_network json_node_base_6 man6 false [east2_private] [east2_public] in
           let pred6 = Eval.parse_tcp_filter "ssh" man6 in
-          let relation8 = RN.Rel.SeqR (RN.Rel.Nil (RN.Binary (pred6, True)), id) in
+          let pred6' = Eval.parse_dst_ip_filter "10.20.1.207" man6 in
+          let relation8 = RN.Rel.SeqR (RN.Rel.Nil (RN.Binary (RN.And (pred6,pred6'), True)), id) in
           let t = Sys.time() in
           let (nkrobsmap16, start16) = RN.projection_compiler man' 0 1 2 3 (Some network7, Some relation8) true in
           Printf.printf "Compiled time (Test 11): %fs\n" (Sys.time() -. t);
@@ -872,7 +873,27 @@ let tests = "MLBDD tests" >::: [
           let boolean14 = (RN.bisim man' 2 3 start16 start16 nkrobsmap16 empty_map) in
           Printf.printf "Bisimulation time (Test 11): %fs\n" (Sys.time() -. t);
           assert_equal false boolean14;
-          let rela_json = Yojson.Basic.from_file "../../../dataset/combined2.json" in
+          let network8 = Eval.json_to_network json_node_base_6 man6 true [east2_public] [west2_public] in
+          let pred7 = Eval.parse_dst_ip_filter "10.40.2.80" man6  in
+          let relation9 = RN.Rel.SeqR (RN.Rel.Nil (RN.Binary (pred7, True)), id) in
+          let t = Sys.time() in
+          let (nkrobsmap17, start17) = RN.projection_compiler man' 0 1 2 3 (Some network8, Some relation9) true in
+          Printf.printf "Compiled time (Test 12): %fs\n" (Sys.time() -. t);
+          let t = Sys.time() in
+          let boolean15 = (RN.bisim man' 2 3 start17 start17 nkrobsmap17 empty_map) in
+          Printf.printf "Bisimulation time (Test 12): %fs\n" (Sys.time() -. t);
+          assert_equal true boolean15;
+          let pred8 = Eval.parse_dst_ip_filter "54.191.42.182" man6  in
+          let relation10 = RN.Rel.SeqR (RN.Rel.Nil (RN.Binary (pred8, True)), id) in
+          let t = Sys.time() in
+          let (nkrobsmap18, start18) = RN.projection_compiler man' 0 1 2 3 (Some network8, Some relation10) true in
+          Printf.printf "Compiled time (Test 13): %fs\n" (Sys.time() -. t);
+          let t = Sys.time() in
+          let boolean16 = (RN.bisim man' 2 3 start18 start18 nkrobsmap18 empty_map) in
+          Printf.printf "Bisimulation time (Test 13): %fs\n" (Sys.time() -. t);
+          assert_equal true boolean16;
+
+(*          let rela_json = Yojson.Basic.from_file "../../../dataset/combined2.json" in
           let rela_man = Eval.init_rela_man rela_json in
           let t = Sys.time() in
           let (before_network, after_network) = Eval.rela_to_network rela_json rela_man in
@@ -880,7 +901,44 @@ let tests = "MLBDD tests" >::: [
           let (nkrobsmap18, start18) = RN.projection_compiler man pk1 pk2 pk3 pk4 (Some after_network, Some (RN.Rel.StarR (RN.Rel.App (Id,Id)))) true in
           assert_equal true (RN.bisim man pk3 pk4 start17 start18 nkrobsmap17 nkrobsmap18);
           Printf.printf "Rela Test time: %fs\n" (Sys.time() -. t);
-          print_endline ("Number of nodes" ^ string_of_int (Eval.StringMap.cardinal rela_man.nodes));
+          print_endline ("Number of nodes" ^ string_of_int (Eval.StringMap.cardinal rela_man.nodes));*)
+          let gateway_json_1 = Yojson.Basic.from_file "../../../dataset/us-west-2/InternetGateways.json" in
+          let internet_gateway_1 = Eval.parse_internet_gateways gateway_json_1 in
+          let switches_json_1 = Yojson.Basic.from_file "../../../dataset/us-west-2/NetworkInterfaces.json" in
+          let gateway_json_2 = Yojson.Basic.from_file "../../../dataset/us-east-2/InternetGateways.json" in
+          let internet_gateway_2 = Eval.parse_internet_gateways gateway_json_2 in
+          let switches_json_2 = Yojson.Basic.from_file "../../../dataset/us-east-2/NetworkInterfaces.json" in
+          let updated_man = Eval.add_ip_switches switches_json_2 internet_gateway_2 (Eval.add_ip_switches switches_json_1 internet_gateway_1 man6) in
+          let network9 = Eval.json_to_network json_node_base_6 updated_man true [east2_public] [west2_public] in
+          let pred9 = Eval.parse_dst_ip_filter "54.191.42.182" updated_man in
+          let relation11 = RN.Rel.SeqR (RN.Rel.Nil (RN.Binary (pred9, True)), id) in
+          let t = Sys.time() in
+          let (nkrobsmap19, start19) = RN.projection_compiler man' 0 1 2 3 (Some network9, Some relation11) true in
+          Printf.printf "Compiled time (Test 14): %fs\n" (Sys.time() -. t);
+          let t = Sys.time() in
+          let boolean17 = (RN.bisim man' 2 3 start19 start19 nkrobsmap19 empty_map) in
+          Printf.printf "Bisimulation time (Test 14): %fs\n" (Sys.time() -. t);
+          assert_equal false boolean17;
+          let network10 = Eval.json_to_network json_node_base_6 updated_man true ["srv-101"] [east2_public] in
+          let pred10 = Eval.parse_dst_ip_filter "13.59.144.125" updated_man in
+          let relation12 = RN.Rel.SeqR (RN.Rel.Nil (RN.Binary (pred10, True)), id) in
+          let t = Sys.time() in
+          let (nkrobsmap20, start20) = RN.projection_compiler man' 0 1 2 3 (Some network10, Some relation12) true in
+          Printf.printf "Compiled time (Test 15): %fs\n" (Sys.time() -. t);
+          let t = Sys.time() in
+          let boolean18 = (RN.bisim man' 2 3 start20 start20 nkrobsmap20 empty_map) in
+          Printf.printf "Bisimulation time (Test 15): %fs\n" (Sys.time() -. t);
+          assert_equal false boolean18;
+          let pred11 = Eval.parse_dst_ip_filter "10.20.1.207" updated_man in
+          let relation13 = RN.Rel.SeqR (RN.Rel.Nil (RN.Binary (pred11, True)), id) in
+          let t = Sys.time() in
+          let (nkrobsmap21, start21) = RN.projection_compiler man' 0 1 2 3 (Some network10, Some relation13) true in
+          Printf.printf "Compiled time (Test 16): %fs\n" (Sys.time() -. t);
+          let t = Sys.time() in
+          let boolean19 = (RN.bisim man' 2 3 start21 start21 nkrobsmap21 empty_map) in
+          Printf.printf "Bisimulation time (Test 16): %fs\n" (Sys.time() -. t);
+          assert_equal false boolean19;
+
           );
 
       ]

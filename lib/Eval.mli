@@ -17,7 +17,7 @@ type man = {
   nodes: int StringMap.t;
   edges: (string*string)DStringMap.t;
   protocols: int StringMap.t;
-  interface: (pred*pred)DStringMap.t;
+  interface: (pkr*pkr)DStringMap.t;
   vrf: (int StringMap.t) StringMap.t;
   interface_to_vrf: int DStringMap.t;
   nodes_length: int;
@@ -35,6 +35,7 @@ val nodesMap_to_string : int StringMap.t -> string
 val protocol_map_to_string : int StringMap.t -> string
 val vrf_map_to_string : (int StringMap.t) StringMap.t -> string
 val interfaces_to_vrf_to_string : int DStringMap.t -> string
+val stringSet_to_string : StringSet.t -> string
 
 val parse_edges_to_map : Yojson.Basic.t -> (string * string) DStringMap.t
 val parse_nodes_to_map : Yojson.Basic.t -> int StringMap.t
@@ -68,11 +69,12 @@ val parse_protocol_filter : string -> string -> Yojson.Basic.t -> int StringMap.
 val parse_local_routing_table : string -> Yojson.Basic.t list -> man -> pkr
 val parse_global_routing_table : Yojson.Basic.t -> man -> pkr
 val json_to_network : Yojson.Basic.t -> man -> bool -> string list -> string list -> NK.t
-val find_next_loc_filter: string -> string -> man -> pred
+val find_next_loc_filter: string -> string -> man -> pkr
 val string_of_ip : int -> string
+val post_pred_pkr : pred -> pkr -> pkr
 
-val parse_start_loc_to_pred : man -> string list -> pred
-val parse_end_loc_to_pred : man -> string list -> pred
+val parse_start_loc_to_pkr : man -> string list -> pkr
+val parse_end_loc_to_pkr : man -> string list -> pkr
 val parse_tcp_filter: string -> man -> pred
 val parse_src_ip_filter: string -> man -> pred
 val parse_dst_ip_filter: string -> man -> pred
@@ -88,3 +90,5 @@ val parse_rela_global_routing_table : Yojson.Basic.t -> man -> NK.t * NK.t
 val parse_rela_src_ip_filter : string -> man -> pred
 val parse_rela_dst_ip_filter : string -> man -> pred
 val rela_to_network : Yojson.Basic.t -> man -> NK.t * NK.t
+val parse_internet_gateways : Yojson.Basic.t -> StringSet.t
+val add_ip_switches: Yojson.Basic.t -> StringSet.t -> man -> man
