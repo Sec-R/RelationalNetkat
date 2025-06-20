@@ -107,12 +107,14 @@ type next_step =
 type pkr =
   | Id
   | Empty
+  | Havoc
   | Test of field * bool
   | LeftAsgn of field * bool
   | RightAsgn of field * bool
   | Comp of pkr * pkr
   | OrP of pkr * pkr
   | AndP of pkr * pkr
+  | NegP of pkr
   | Binary of pred * pred
   | FMap of field * field
 

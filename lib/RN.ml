@@ -110,12 +110,14 @@ type next_step =
 type pkr =
   | Id
   | Empty
+  | Havoc
   | Test of field * bool 
   | LeftAsgn of field * bool
   | RightAsgn of field * bool
   | Comp of pkr * pkr
   | OrP of pkr * pkr
   | AndP of pkr * pkr
+  | NegP of pkr
   | Binary of pred * pred
   | FMap of field * field
 
@@ -319,12 +321,14 @@ let rec pkr_to_string (pkr:pkr):string=
   match pkr with
   | Id -> "Id"
   | Empty -> "Empty"
+  | Havoc -> "Havoc"
   | Test (field, b) -> "Test " ^ (string_of_int field) ^ " " ^ (string_of_bool b)
   | LeftAsgn (field, b) -> "LeftAsgn " ^ (string_of_int field) ^ " " ^ (string_of_bool b)
   | RightAsgn (field, b) -> "RightAsgn " ^ (string_of_int field) ^ " " ^ (string_of_bool b)
   | Comp (pkr1, pkr2) -> "Comp " ^ (pkr_to_string pkr1) ^ " " ^ (pkr_to_string pkr2)
   | OrP (pkr1,pkr2) -> "OrP " ^ (pkr_to_string pkr1) ^ " " ^ (pkr_to_string pkr2)
   | AndP (pkr1,pkr2) -> "AndP " ^ (pkr_to_string pkr1) ^ " " ^ (pkr_to_string pkr2)
+  | NegP pkr -> "NegP " ^ (pkr_to_string pkr)
   | Binary (pred1,pred2) -> "Binary (" ^ (pred_to_string pred1) ^ ", " ^ (pred_to_string pred2) ^ ")"
   | FMap (field1,field2) -> "FMap " ^ (string_of_int field1) ^ " " ^ (string_of_int field2)
 
@@ -596,6 +600,7 @@ let compile_pkr_bdd (man:man)(pk1:pk) (pk2:pk) (pkr:pkr):MLBDD.t =
       match pkr with
       | Id -> produce_id man pk1 pk2
       | Empty -> bdd_false man
+      | Havoc -> bdd_true man
       | Test (field, false) -> (MLBDD.dand (produce_id man pk1 pk2) (MLBDD.dnot (generate_single_var man pk1 field)))
       | Test (field, true) -> (MLBDD.dand (produce_id man pk1 pk2) (generate_single_var man pk1 field))
       | LeftAsgn (field, b) -> produce_assign man pk1 pk2 field b true
@@ -603,6 +608,7 @@ let compile_pkr_bdd (man:man)(pk1:pk) (pk2:pk) (pkr:pkr):MLBDD.t =
       | Comp (pkr1, pkr2) -> comp_bdd_2 man pk1 pk2 (compile_pkr_bdd_aux pkr1) (compile_pkr_bdd_aux pkr2)
       | OrP (pkr1,pkr2)-> MLBDD.dor (compile_pkr_bdd_aux pkr1) (compile_pkr_bdd_aux pkr2)
       | AndP (pkr1,pkr2)-> MLBDD.dand (compile_pkr_bdd_aux pkr1) (compile_pkr_bdd_aux pkr2)
+      | NegP pkr -> MLBDD.dnot (compile_pkr_bdd_aux pkr)
       | Binary (pred1,pred2) -> MLBDD.dand (compile_pred_bdd man pk1 pred1) (compile_pred_bdd man pk2 pred2)
       | FMap (field1,field2) -> MLBDD.nxor (generate_single_var man pk1 field1) (generate_single_var man pk2 field2)
     in Hashtbl.replace man.pkr_cache (pk1, pk2, pkr) bdd;
@@ -873,7 +879,7 @@ let rec delta_r (man:man)(pk1:pk)(pk2:pk)(pk3:pk)(pk4:pk)(ro:Rel.t option)(ns:ne
                             | E -> add_ro_mapping ro id1234 ROMap.empty
                             | _ -> ROMap.empty)
       | Some (Binary (nk1,nk2))-> delta_r man pk1 pk2 pk3 pk4 (Some (SeqR (Left nk1,Right nk2))) ns
-      | Some (App (pkr1,pkr2)) -> delta_r man pk1 pk2 pk3 pk4 (Some (SeqR (Nil pkr1, SeqR (SeqR (Left (Pkr (Binary (True,True))), Right (Pkr (Binary (True,True)))), Nil pkr2)))) ns
+      | Some (App (pkr1,pkr2)) -> delta_r man pk1 pk2 pk3 pk4 (Some (SeqR (Nil pkr1, SeqR (SeqR (Left (Pkr Havoc), Right (Pkr Havoc)), Nil pkr2)))) ns
       | Some (OrR rs) -> SR.fold (fun r acc -> union_ro_mapping (delta_r man pk1 pk2 pk3 pk4 (Some r) ns) acc) rs ROMap.empty                                       
       | Some (SeqR (r1,r2)) ->   let ro_map1 = delta_r man pk1 pk2 pk3 pk4 (Some r1) ns in
                                   (match ns with

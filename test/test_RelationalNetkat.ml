@@ -1,17 +1,6 @@
 open OUnit2
 open RelationalNetkat
 
-(*let print_sat l =
-  let open MLBDD in
-  let first = ref true in
-  List.iter (fun (b,v) ->
-      if !first then first := false
-      else print_string ", ";
-      if not b then print_string "~";
-      print_int v;
-    ) l;
-  print_endline ""*)
-
 let tests = "MLBDD tests" >::: [
       "var_test" >:: (fun _ctx ->
       let var_a  = RN.bddvar 1 0 in  
@@ -709,7 +698,7 @@ let tests = "MLBDD tests" >::: [
           let boolean = (RN.bisim man 2 3 start1 start1 nkrobbmap1 empty_map) in
           Printf.printf "Bisimulation Execution time: %fs\n" (Sys.time() -. t);
           assert_equal true boolean;
-          let epsilon = RN.Rel.Left (RN.NK.Seq (RN.NK.Pkr (Binary (True,True)) ,RN.NK.Star (RN.NK.Seq (RN.NK.Dup,(RN.NK.Pkr (Binary (True,True))))))) in
+          let epsilon = RN.Rel.Left (RN.NK.Seq (RN.NK.Pkr Havoc ,RN.NK.Star (RN.NK.Seq (RN.NK.Dup,(RN.NK.Pkr Havoc))))) in
           let relation2 = RN.Rel.SeqR (epsilon, RN.Rel.SeqR (RN.Rel.App (core1_filter,Id), epsilon)) in
           let t = Sys.time() in
           let (nkrobsmap2, start2) = RN.projection_compiler man 0 1 2 3 (Some network1, Some relation2) true in
@@ -804,7 +793,7 @@ let tests = "MLBDD tests" >::: [
           let boolean9 = (RN.bisim man 2 3 start9 start11 nkrobsmap9 nkrobsmap11) in
           Printf.printf "Bisimulation time (Test 6): %fs\n" (Sys.time() -. t);
           assert_equal true boolean9;
-          let relation3 = RN.Rel.Binary ((RN.NK.Seq (RN.NK.Pkr (Binary (True,True)) ,RN.NK.Star (RN.NK.Seq (RN.NK.Dup,(RN.NK.Pkr (Binary (True,True))))))),RN.NK.Pkr (Binary (True,True))) in
+          let relation3 = RN.Rel.Binary ((RN.NK.Seq (RN.NK.Pkr Havoc ,RN.NK.Star (RN.NK.Seq (RN.NK.Dup,(RN.NK.Pkr Havoc))))),RN.NK.Pkr Havoc) in
           let relation4 = RN.Rel.SeqR (RN.Rel.Nil Id, RN.Rel.SeqR (relation3, RN.Rel.Nil Id)) in
           let relation5 = RN.Rel.OrR (RN.SR.add relation4 (RN.SR.add relation RN.SR.empty)) in
           let t = Sys.time() in
