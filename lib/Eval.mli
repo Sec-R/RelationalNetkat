@@ -13,6 +13,28 @@ type header =
   | DstIp
   | DstPorts
 
+type path = 
+  | PSymbol of string
+  | PNegSymbols of string list
+  | PEmptySet
+  | PEpsilon
+  | PUnion of path * path
+  | PConcat of path * path
+  | PStar of path
+  | PIntersect of path * path
+  | PComplement of path
+
+type rel =  
+  | RProduct of path * path
+  | REmptySet
+  | REpsilon
+  | RUnion of rel * rel
+  | RConcat of rel * rel
+  | RCompose of path * rel
+  | RStar of rel
+  | RIdentity of path
+
+
 type man = {
   nodes: int StringMap.t;
   edges: (string*string)DStringMap.t;
@@ -93,6 +115,9 @@ val parse_rela_local_routing_table : Yojson.Basic.t -> man -> NK.t * NK.t
 val parse_rela_global_routing_table : Yojson.Basic.t -> man -> NK.t * NK.t
 val parse_rela_src_ip_filter : string -> man -> pred
 val parse_rela_dst_ip_filter : string -> man -> pred
+val parse_path_to_nk: man -> path -> NK.t
+val parse_rel_to_rel: man -> rel -> Rel.t
 val rela_to_network : Yojson.Basic.t -> man -> NK.t * NK.t
 val parse_internet_gateways : Yojson.Basic.t -> StringSet.t
 val add_ip_switches: Yojson.Basic.t -> StringSet.t -> man -> man
+
