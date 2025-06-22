@@ -639,7 +639,6 @@ let add_nko_mapping (con:NK.t option) (bdd:MLBDD.t) (mapping:(MLBDD.t)NKOMap.t):
       NKOMap.update con (function
         | None -> Some bdd
         | Some bdd' -> Some (MLBDD.dor bdd bdd')) mapping
-
         
 let add_ro_mapping (con:Rel.t option) (bdd:MLBDD.t) (mapping:(MLBDD.t)ROMap.t):(MLBDD.t)ROMap.t=
     if MLBDD.is_false bdd then
@@ -664,7 +663,16 @@ let add_nkrobs_mapping (con:NKROBSet.t) (bdd:MLBDD.t) (mapping:(MLBDD.t)NKROBSMa
     else
       NKROBSMap.update con (function
         | None -> Some bdd
-        | Some bdd' -> Some (MLBDD.dor bdd bdd')) mapping        
+        | Some bdd' -> Some (MLBDD.dor bdd bdd')) mapping    
+
+let add_nkrobss_mapping (con:NKROBSet.t*NKROBSet.t) (bdd:MLBDD.t) (mapping:(MLBDD.t)NKROBSSMap.t):(MLBDD.t)NKROBSSMap.t=
+    if MLBDD.is_false bdd then
+          mapping
+    else
+      NKROBSSMap.update con (function
+        | None -> Some bdd
+        | Some bdd' -> Some (MLBDD.dor bdd bdd')) mapping
+
 
 let add_nkro_mapping_updated (con:NK.t option*Rel.t option) (bdd:MLBDD.t) (mapping:(MLBDD.t)NKROMap.t):((MLBDD.t)NKROMap.t*bool)=
     if MLBDD.is_false bdd then
@@ -1213,3 +1221,43 @@ let bisim (man:man)(pk1:pk)(pk2:pk)(start1:NKROBSet.t)(start2:NKROBSet.t)(aut1:(
   in
    Queue.add ((start1,start2),bdd_true man) worklist;
      bisim_aux NKROBSSMap.empty 
+
+let exclusive_intersect (man:man)(start1:NKROBSet.t)(start2:NKROBSet.t)(aut1:((MLBDD.t)NKROBSMap.t)NKROBSMap.t) (aut2:((MLBDD.t)NKROBSMap.t)NKROBSMap.t):((MLBDD.t)NKROBSSMap.t)NKROBSSMap.t =
+  let intersect_one_transition (transition_1:(MLBDD.t)NKROBSMap.t) (transition_2:(MLBDD.t)NKROBSMap.t)=
+     let reachable_bdd_1 = (NKROBSMap.fold (fun _ bdd1 acc -> MLBDD.dor acc bdd1) transition_1 (bdd_false man)) in
+     let reachable_bdd_2 = (NKROBSMap.fold (fun _ bdd2 acc -> MLBDD.dor acc bdd2) transition_2 (bdd_false man)) in      
+       NKROBSMap.fold (fun nkrobs1 bdd1 acc -> NKROBSMap.fold 
+                                      (fun nkrobs2 bdd2 acc -> 
+                                         add_nkrobss_mapping (nkrobs1,nkrobs2) (MLBDD.dand bdd1 bdd2)
+                                         (add_nkrobss_mapping (nkrobs1,NKROBSet.empty) (MLBDD.dand bdd1 (MLBDD.dnot reachable_bdd_2))
+                                         (add_nkrobss_mapping (NKROBSet.empty,nkrobs2) (MLBDD.dand (MLBDD.dnot reachable_bdd_1) bdd2)                                         
+                                         acc))                                         
+                                        ) transition_2 acc) transition_1 NKROBSSMap.empty
+   in
+  let worklist = Queue.create() in
+  let rec exclusive_intersect_aux (acc:((MLBDD.t)NKROBSSMap.t)NKROBSSMap.t):((MLBDD.t)NKROBSSMap.t)NKROBSSMap.t =
+    match Queue.take_opt worklist with
+      | None -> acc
+      | Some (nkros1,nkros2) -> 
+        if NKROBSSMap.mem (nkros1,nkros2) acc then
+          exclusive_intersect_aux acc
+        else
+          let nexts1 = 
+            (match (NKROBSMap.find_opt nkros1 aut1) with
+            | None -> NKROBSMap.empty
+            | Some nexts1 -> nexts1) in   
+          let nexts2 = 
+            (match (NKROBSMap.find_opt nkros2 aut2) with
+            | None -> NKROBSMap.empty
+            | Some nexts2 -> nexts2) in
+          let new_transition = intersect_one_transition nexts1 nexts2 in
+            NKROBSSMap.iter (fun nkrobss _ -> 
+              Queue.add nkrobss worklist) new_transition;
+            exclusive_intersect_aux (NKROBSSMap.add (nkros1,nkros2) new_transition acc)
+   in
+  Queue.add (start1,start2) worklist;
+    exclusive_intersect_aux NKROBSSMap.empty         
+          
+let is_exclusive_final (nkrobss:(NKROBSet.t*NKROBSet.t)):bool =
+  let (nkros1,nkros2) = nkrobss in
+  is_final_nkrobs nkros1 <> is_final_nkrobs nkros2
