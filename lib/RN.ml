@@ -111,7 +111,7 @@ type pkr =
   | Id
   | Empty
   | Havoc
-  | Test of field * bool 
+  | TestP of field * bool 
   | LeftAsgn of field * bool
   | RightAsgn of field * bool
   | Comp of pkr * pkr
@@ -276,6 +276,12 @@ module BSet = Set.Make(
   let compare a b = compare (MLBDD.id a) (MLBDD.id b)
 end)
 
+module NKROSet = Set.Make(
+  struct type t = NK.t option*Rel.t option 
+  let compare = nkro_compare
+end)
+
+
 module NKROBSet = Set.Make(
   struct type t = (NK.t option*Rel.t option)*MLBDD.t 
   let compare a b = let c = nkro_compare (fst a) (fst b) in if c = 0 then compare (MLBDD.id (snd a)) (MLBDD.id (snd b)) else c
@@ -322,7 +328,7 @@ let rec pkr_to_string (pkr:pkr):string=
   | Id -> "Id"
   | Empty -> "Empty"
   | Havoc -> "Havoc"
-  | Test (field, b) -> "Test " ^ (string_of_int field) ^ " " ^ (string_of_bool b)
+  | TestP (field, b) -> "TestP " ^ (string_of_int field) ^ " " ^ (string_of_bool b)
   | LeftAsgn (field, b) -> "LeftAsgn " ^ (string_of_int field) ^ " " ^ (string_of_bool b)
   | RightAsgn (field, b) -> "RightAsgn " ^ (string_of_int field) ^ " " ^ (string_of_bool b)
   | Comp (pkr1, pkr2) -> "Comp " ^ (pkr_to_string pkr1) ^ " " ^ (pkr_to_string pkr2)
@@ -601,8 +607,8 @@ let compile_pkr_bdd (man:man)(pk1:pk) (pk2:pk) (pkr:pkr):MLBDD.t =
       | Id -> produce_id man pk1 pk2
       | Empty -> bdd_false man
       | Havoc -> bdd_true man
-      | Test (field, false) -> (MLBDD.dand (produce_id man pk1 pk2) (MLBDD.dnot (generate_single_var man pk1 field)))
-      | Test (field, true) -> (MLBDD.dand (produce_id man pk1 pk2) (generate_single_var man pk1 field))
+      | TestP (field, false) -> (MLBDD.dand (produce_id man pk1 pk2) (MLBDD.dnot (generate_single_var man pk1 field)))
+      | TestP (field, true) -> (MLBDD.dand (produce_id man pk1 pk2) (generate_single_var man pk1 field))
       | LeftAsgn (field, b) -> produce_assign man pk1 pk2 field b true
       | RightAsgn (field, b) -> produce_assign man pk1 pk2 field b false
       | Comp (pkr1, pkr2) -> comp_bdd_2 man pk1 pk2 (compile_pkr_bdd_aux pkr1) (compile_pkr_bdd_aux pkr2)
@@ -1126,10 +1132,19 @@ let determinize_transition (nexts:(MLBDD.t)NKROBMap.t):(MLBDD.t)NKROBSMap.t=
               (add_nkrobs_mapping nkrobs dbdd acc)) acc NKROBSMap.empty in
                 add_nkrobs_mapping (NKROBSet.singleton nkrob) new_bdd next_map
     in NKROBMap.fold (fun nkrob bdd acc -> add_transition nkrob bdd acc) nexts NKROBSMap.empty
+
+let union_transition (transition1:((MLBDD.t)NKROBMap.t)NKROBMap.t) (transition2:((MLBDD.t)NKROBMap.t)NKROBMap.t): ((MLBDD.t)NKROBMap.t)NKROBMap.t =
+  NKROBMap.union (fun _ map1 map2 -> Some (union_nkrob_mapping map1 map2)) transition1 transition2
+
+let union_start (start1:NKROSet.t) (start2:NKROSet.t):NKROSet.t =
+  NKROSet.union start1 start2
+  
+let start_to_set (start:NK.t option*Rel.t option):NKROSet.t =
+  NKROSet.singleton start
     
-let determinization (start:NK.t option*Rel.t option) (transition:((MLBDD.t)NKROBMap.t)NKROBMap.t):((MLBDD.t)NKROBSMap.t)NKROBSMap.t*NKROBSet.t=
+let determinization (start:NKROSet.t) (transition:((MLBDD.t)NKROBMap.t)NKROBMap.t):((MLBDD.t)NKROBSMap.t)NKROBSMap.t*NKROBSet.t=
    let worklist = Queue.create() in
-     let set_of_start = NKROBMap.fold (fun nkrob _ acc -> if nkro_compare (fst nkrob) start = 0 then NKROBSet.add nkrob acc else acc) transition NKROBSet.empty in
+     let set_of_start = NKROBMap.fold (fun nkrob _ acc -> if NKROSet.mem (fst nkrob) start then NKROBSet.add nkrob acc else acc) transition NKROBSet.empty in
        let rec determinization_aux (acc:((MLBDD.t)NKROBSMap.t)NKROBSMap.t):((MLBDD.t)NKROBSMap.t)NKROBSMap.t=
         match Queue.take_opt worklist with
           | None -> acc
@@ -1150,7 +1165,17 @@ let determinization (start:NK.t option*Rel.t option) (transition:((MLBDD.t)NKROB
          (determinization_aux NKROBSMap.empty,set_of_start)      
 
 let projection_compiler (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro:(NK.t option*Rel.t option)) (calculate_reachable_pair:bool):((MLBDD.t)NKROBSMap.t)NKROBSMap.t*NKROBSet.t =
-  determinization nkro (simplify_all_transition man pk1 pk2 pk3 pk4 (generate_all_transition man pk1 pk2 pk3 pk4 nkro calculate_reachable_pair))    
+  determinization (start_to_set nkro) (simplify_all_transition man pk1 pk2 pk3 pk4 (generate_all_transition man pk1 pk2 pk3 pk4 nkro calculate_reachable_pair))    
+
+let union_compiler (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro1:(NK.t option*Rel.t option)) (nkro2:(NK.t option*Rel.t option)) (calculate_reachable_pair:bool):((MLBDD.t)NKROBSMap.t)NKROBSMap.t*NKROBSet.t =
+  let start1 = start_to_set nkro1 in
+  let start2 = start_to_set nkro2 in
+  let transition1 = (simplify_all_transition man pk1 pk2 pk3 pk4 (generate_all_transition man pk1 pk2 pk3 pk4 nkro1 calculate_reachable_pair)) in
+  let transition2 = (simplify_all_transition man pk1 pk2 pk3 pk4 (generate_all_transition man pk1 pk2 pk3 pk4 nkro2 calculate_reachable_pair)) in
+  let transition = union_transition transition1 transition2 in
+  let start = union_start start1 start2 in
+  determinization start transition    
+
 
 let bisim (man:man)(pk1:pk)(pk2:pk)(start1:NKROBSet.t)(start2:NKROBSet.t)(aut1:((MLBDD.t)NKROBSMap.t)NKROBSMap.t) (aut2:((MLBDD.t)NKROBSMap.t)NKROBSMap.t):bool =
   let worklist = Queue.create() in

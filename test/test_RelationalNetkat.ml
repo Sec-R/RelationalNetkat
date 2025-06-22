@@ -62,40 +62,40 @@ let tests = "MLBDD tests" >::: [
         assert_equal ~cmp:MLBDD.equal bdd3 (RN.bdd_true man);
         let bdd4 = RN.compile_pkr_bdd man pk1 pk2 RN.Empty in
         assert_equal ~cmp:MLBDD.equal bdd4 (RN.bdd_false man);
-        let bdd5 = RN.compile_pkr_bdd man pk1 pk2 (RN.Test (1, true)) in
-        let bdd6 = RN.compile_pkr_bdd man pk1 pk2 (RN.Comp (RN.Id,RN.Test (1, true))) in
+        let bdd5 = RN.compile_pkr_bdd man pk1 pk2 (RN.TestP (1, true)) in
+        let bdd6 = RN.compile_pkr_bdd man pk1 pk2 (RN.Comp (RN.Id,RN.TestP (1, true))) in
         assert_equal ~cmp:MLBDD.equal bdd5 bdd6;
-        let bdd7 = RN.compile_pkr_bdd man pk1 pk2 (RN.Comp (RN.Test (1, true),RN.Test (2, true))) in
-        let bdd8 = RN.compile_pkr_bdd man pk1 pk2 (RN.Comp (RN.Test (2, true),RN.Test (1, true))) in
+        let bdd7 = RN.compile_pkr_bdd man pk1 pk2 (RN.Comp (RN.TestP (1, true),RN.TestP (2, true))) in
+        let bdd8 = RN.compile_pkr_bdd man pk1 pk2 (RN.Comp (RN.TestP (2, true),RN.TestP (1, true))) in
         assert_equal ~cmp:MLBDD.equal bdd7 bdd8;
-        let bdd9 = RN.compile_pkr_bdd man pk1 pk2 (RN.Comp (RN.Test (1, true),RN.Test (1, false))) in
+        let bdd9 = RN.compile_pkr_bdd man pk1 pk2 (RN.Comp (RN.TestP (1, true),RN.TestP (1, false))) in
         assert_equal ~cmp:MLBDD.equal bdd9 (RN.bdd_false man);
-        let bdd10 = RN.compile_pkr_bdd man pk1 pk2 (RN.Comp (RN.Test (1, true),RN.LeftAsgn (1, true))) in
+        let bdd10 = RN.compile_pkr_bdd man pk1 pk2 (RN.Comp (RN.TestP (1, true),RN.LeftAsgn (1, true))) in
         let bdd11 = RN.compile_pkr_bdd man pk1 pk2 (RN.LeftAsgn (1, true)) in
         assert_equal ~cmp:MLBDD.equal bdd10 bdd11;
-        let bdd12 = RN.compile_pkr_bdd man pk1 pk2 (RN.Comp (RN.LeftAsgn (1, true),RN.Test (1, true))) in
-        let bdd13 = RN.compile_pkr_bdd man pk1 pk2 (RN.Test (1, true)) in
+        let bdd12 = RN.compile_pkr_bdd man pk1 pk2 (RN.Comp (RN.LeftAsgn (1, true),RN.TestP (1, true))) in
+        let bdd13 = RN.compile_pkr_bdd man pk1 pk2 (RN.TestP (1, true)) in
         assert_equal ~cmp:MLBDD.equal bdd12 bdd13;
-        let bdd14 = RN.compile_pkr_bdd man pk1 pk2 (RN.Comp (RN.Test (1, true),RN.RightAsgn (1, true))) in
-        let bdd15 = RN.compile_pkr_bdd man pk1 pk2 (RN.Test (1, true)) in
+        let bdd14 = RN.compile_pkr_bdd man pk1 pk2 (RN.Comp (RN.TestP (1, true),RN.RightAsgn (1, true))) in
+        let bdd15 = RN.compile_pkr_bdd man pk1 pk2 (RN.TestP (1, true)) in
         assert_equal ~cmp:MLBDD.equal bdd14 bdd15;
-        let bdd16 = RN.compile_pkr_bdd man pk1 pk2 (RN.Comp (RN.RightAsgn (1, true),RN.Test (1, true))) in
+        let bdd16 = RN.compile_pkr_bdd man pk1 pk2 (RN.Comp (RN.RightAsgn (1, true),RN.TestP (1, true))) in
         let bdd17 = RN.compile_pkr_bdd man pk1 pk2 (RN.RightAsgn (1, true)) in
         assert_equal ~cmp:MLBDD.equal bdd16 bdd17;
         let bdd18 = RN.compile_pkr_bdd man pk1 pk2 (RN.Comp (RN.LeftAsgn (1, true),RN.RightAsgn (1, true))) in
-        let bdd19 = RN.compile_pkr_bdd man pk1 pk2 (RN.Test (1, true)) in
+        let bdd19 = RN.compile_pkr_bdd man pk1 pk2 (RN.TestP (1, true)) in
         assert_equal ~cmp:MLBDD.equal bdd18 bdd19;
-        let bdd20 = RN.compile_pkr_bdd man pk1 pk2 (RN.Comp ((RN.OrP (RN.LeftAsgn (1, true),RN.Test (2, true))),RN.RightAsgn (3, true))) in
-        let bdd21 = RN.compile_pkr_bdd man pk1 pk2 (RN.OrP (RN.Comp (RN.LeftAsgn (1, true),RN.RightAsgn (3, true)),RN.Comp(RN.Test (2, true),RN.RightAsgn (3, true)))) in
+        let bdd20 = RN.compile_pkr_bdd man pk1 pk2 (RN.Comp ((RN.OrP (RN.LeftAsgn (1, true),RN.TestP (2, true))),RN.RightAsgn (3, true))) in
+        let bdd21 = RN.compile_pkr_bdd man pk1 pk2 (RN.OrP (RN.Comp (RN.LeftAsgn (1, true),RN.RightAsgn (3, true)),RN.Comp(RN.TestP (2, true),RN.RightAsgn (3, true)))) in
         assert_equal ~cmp:MLBDD.equal bdd20 bdd21;
-        let bdd22 = RN.compile_pkr_bdd man pk1 pk2 (RN.Comp ((RN.RightAsgn (3, true)),(RN.OrP (RN.LeftAsgn (1, true),RN.Test (2, true))))) in
-        let bdd23 = RN.compile_pkr_bdd man pk1 pk2 (RN.OrP (RN.Comp (RN.RightAsgn (3, true),RN.LeftAsgn (1, true)),RN.Comp(RN.RightAsgn (3, true),RN.Test (2, true)))) in
+        let bdd22 = RN.compile_pkr_bdd man pk1 pk2 (RN.Comp ((RN.RightAsgn (3, true)),(RN.OrP (RN.LeftAsgn (1, true),RN.TestP (2, true))))) in
+        let bdd23 = RN.compile_pkr_bdd man pk1 pk2 (RN.OrP (RN.Comp (RN.RightAsgn (3, true),RN.LeftAsgn (1, true)),RN.Comp(RN.RightAsgn (3, true),RN.TestP (2, true)))) in
         assert_equal ~cmp:MLBDD.equal bdd22 bdd23;
-        let bdd24 = RN.compile_pkr_bdd man pk1 pk2 (RN.Comp (RN.Test (1, true),RN.Test (2, true))) in
+        let bdd24 = RN.compile_pkr_bdd man pk1 pk2 (RN.Comp (RN.TestP (1, true),RN.TestP (2, true))) in
         let bdd25 = (MLBDD.dand (RN.compile_pkr_bdd man pk1 pk2 (RN.RightAsgn (1, true))) (RN.compile_pkr_bdd man pk1 pk2 (RN.RightAsgn (2, true)))) in
         assert_equal ~cmp:MLBDD.equal bdd24 bdd25;
-        let bdd26 = RN.compile_pkr_bdd man pk1 pk2 (RN.AndP (RN.Test (1, true),RN.OrP (RN.Test (2, true),RN.Test (3, true)))) in
-        let bdd27 = RN.compile_pkr_bdd man pk1 pk2 (RN.OrP (RN.AndP (RN.Test (1, true),RN.Test (2, true)),RN.AndP (RN.Test (1, true),RN.Test (3, true)))) in
+        let bdd26 = RN.compile_pkr_bdd man pk1 pk2 (RN.AndP (RN.TestP (1, true),RN.OrP (RN.TestP (2, true),RN.TestP (3, true)))) in
+        let bdd27 = RN.compile_pkr_bdd man pk1 pk2 (RN.OrP (RN.AndP (RN.TestP (1, true),RN.TestP (2, true)),RN.AndP (RN.TestP (1, true),RN.TestP (3, true)))) in
         assert_equal ~cmp:MLBDD.equal bdd26 bdd27;
       );
       "compile_delta_k_test" >:: (fun _ctx ->
@@ -228,12 +228,12 @@ let tests = "MLBDD tests" >::: [
         let nkromap9 = RN.delta_krx man pk1 pk2 pk3 pk4 (Some (RN.NK.Asgn (1,true)), Some (RN.Rel.Left (RN.NK.Pkr (RightAsgn (2,true))))) in
         let nkromap10 = RN.NKROMap.add (Some (RN.NK.Asgn (1,true)), Some (RN.Rel.Left (RN.NK.Pkr (RightAsgn (2,true))))) id2bdd
         (RN.NKROMap.singleton (None,None) 
-        (MLBDD.dand (RN.produce_id man pk3 pk4) (RN.compile_pkr_bdd man pk1 pk2 (RN.Comp (RN.Test(1,true),RN.Test(2,true)))))) in
+        (MLBDD.dand (RN.produce_id man pk3 pk4) (RN.compile_pkr_bdd man pk1 pk2 (RN.Comp (RN.TestP(1,true),RN.TestP(2,true)))))) in
         assert_equal ~cmp:compare nkromap9 nkromap10;
         let nkromap11 = RN.delta_krx man pk1 pk2 pk3 pk4 ((Some RN.NK.Dup), Some (RN.Rel.SeqR (RN.Rel.Left (RN.NK.Pkr (RN.RightAsgn (1,true))), RN.Rel.Left (RN.NK.Pkr (RN.RightAsgn (2,true)))))) in
         let nkromap12 = RN.NKROMap.add ((Some RN.NK.Dup), Some (RN.Rel.SeqR (RN.Rel.Left (RN.NK.Pkr (RN.RightAsgn (1,true))), RN.Rel.Left (RN.NK.Pkr (RN.RightAsgn (2,true)))))) id2bdd
-          (RN.NKROMap.add (None,None) (MLBDD.dand (RN.produce_id man pk3 pk4)  (RN.compile_pkr_bdd man pk1 pk2 (RN.Comp (RN.Test(1,true),RN.Test(2,true)))))
-          (RN.NKROMap.singleton (Some (Pred True),Some (RN.Rel.Left (RN.NK.Pkr (RN.RightAsgn (2,true))))) (MLBDD.dand (RN.produce_id man pk3 pk4)  (RN.compile_pkr_bdd man pk1 pk2 (RN.Test(1,true))))))
+          (RN.NKROMap.add (None,None) (MLBDD.dand (RN.produce_id man pk3 pk4)  (RN.compile_pkr_bdd man pk1 pk2 (RN.Comp (RN.TestP(1,true),RN.TestP(2,true)))))
+          (RN.NKROMap.singleton (Some (Pred True),Some (RN.Rel.Left (RN.NK.Pkr (RN.RightAsgn (2,true))))) (MLBDD.dand (RN.produce_id man pk3 pk4)  (RN.compile_pkr_bdd man pk1 pk2 (RN.TestP(1,true))))))
          in
         assert_equal ~cmp:compare nkromap11 nkromap12;
         let nkromap13 = RN.delta_krx man pk1 pk2 pk3 pk4 ((Some RN.NK.Dup), Some (RN.Rel.StarR (RN.Rel.Left (RN.NK.Pkr Id)))) in
@@ -266,7 +266,7 @@ let tests = "MLBDD tests" >::: [
         let nkromap16 = RN.delta_krx man pk1 pk2 pk3 pk4 (Some (RN.NK.Star RN.NK.Dup), 
           Some (RN.Rel.StarR (RN.Rel.OrR (RN.SR.add (RN.Rel.Left (RN.NK.Pkr (RightAsgn (1,true)))) (RN.SR.add (RN.Rel.Left (RN.NK.Pkr (RightAsgn (2,true)))) RN.SR.empty))))) in
         let bdd6 = RN.NKROMap.find (None,None) nkromap16 in  
-        let bdd7 = MLBDD.dand (RN.produce_id man pk3 pk4 ) (RN.compile_pkr_bdd man pk1 pk2 (RN.OrP (RN.Test (1, true),RN.Test (2, true)))) in
+        let bdd7 = MLBDD.dand (RN.produce_id man pk3 pk4 ) (RN.compile_pkr_bdd man pk1 pk2 (RN.OrP (RN.TestP (1, true),RN.TestP (2, true)))) in
         let bdd8 = RN.NKROMap.find ((Some (RN.NK.Star RN.NK.Dup)),Some (SeqR ((RN.Rel.Left (RN.NK.Pkr (RightAsgn (1,true)))),(RN.Rel.StarR (RN.Rel.OrR (RN.SR.add (RN.Rel.Left (RN.NK.Pkr (RightAsgn (1,true)))) (RN.SR.add (RN.Rel.Left (RN.NK.Pkr (RightAsgn (2,true)))) RN.SR.empty))))))) nkromap16 in
         let bdd9 = RN.NKROMap.find (None,Some (SeqR ((RN.Rel.Left (RN.NK.Pkr (RightAsgn (1,true)))),(RN.Rel.StarR (RN.Rel.OrR (RN.SR.add (RN.Rel.Left (RN.NK.Pkr (RightAsgn (1,true)))) (RN.SR.add (RN.Rel.Left (RN.NK.Pkr (RightAsgn (2,true)))) RN.SR.empty))))))) nkromap16 in
         assert_equal ~cmp:MLBDD.equal bdd6 bdd7;
@@ -278,7 +278,7 @@ let tests = "MLBDD tests" >::: [
         let nkromap18 = RN.delta_krx man pk1 pk2 pk3 pk4 (Some (RN.NK.Star RN.NK.Dup), 
         Some (RN.Rel.StarR (RN.Rel.OrR (RN.SR.add (RN.Rel.Left (RN.NK.Pkr (RightAsgn (1,true)))) (RN.SR.add (RN.Rel.Right (RN.NK.Pkr (RightAsgn (2,true)))) RN.SR.empty))))) in
         let bdd11 = RN.NKROMap.find (Some (Seq (Pred True, Star RN.NK.Dup)),None) nkromap18 in
-        let bdd12 = MLBDD.dand (RN.produce_id man pk3 pk4) (RN.compile_pkr_bdd man pk1 pk2 (RN.Test (1, true))) in
+        let bdd12 = MLBDD.dand (RN.produce_id man pk3 pk4) (RN.compile_pkr_bdd man pk1 pk2 (RN.TestP (1, true))) in
         assert_equal ~cmp:MLBDD.equal bdd11 bdd12;
         let nkromap19 = RN.delta_krx man pk1 pk2 pk3 pk4 (Some (RN.NK.Star RN.NK.Dup),Some (RN.Rel.Left (RN.NK.Star RN.NK.Dup))) in
         let bdd13 = RN.NKROMap.find (None,None) nkromap19 in
@@ -289,7 +289,7 @@ let tests = "MLBDD tests" >::: [
         assert_equal ~cmp:MLBDD.equal bdd14 (MLBDD.dand (RN.compile_pkr_bdd man pk1 pk2 (RN.OrP (RN.RightAsgn (1, true),RN.Id))) (RN.produce_id man pk3 pk4));
         let nkromap21 = RN.delta_krx man pk1 pk2 pk3 pk4 (Some (RN.NK.Star RN.NK.Dup), 
         Some (RN.Rel.StarR (RN.Rel.OrR (RN.SR.add (RN.Rel.Left (Seq (RN.NK.Pkr (RightAsgn (1,true)),Dup))) (RN.SR.add (RN.Rel.Right (Seq (RN.NK.Pkr (RightAsgn (2,true)), Dup))) RN.SR.empty))))) in
-        let bdd15 = MLBDD.dand (RN.produce_id man pk3 pk4) (RN.compile_pkr_bdd man pk1 pk2 (RN.Test (1, true))) in
+        let bdd15 = MLBDD.dand (RN.produce_id man pk3 pk4) (RN.compile_pkr_bdd man pk1 pk2 (RN.TestP (1, true))) in
         let bdd16 = RN.NKROMap.find (None,None) nkromap21 in
         assert_equal ~cmp:MLBDD.equal bdd15 bdd16;
         let nkromap21 = RN.delta_krx man pk1 pk2 pk3 pk4 (Some (RN.NK.Star RN.NK.Dup), 
@@ -326,7 +326,7 @@ let tests = "MLBDD tests" >::: [
           let nkromap6 = RN.delta_kr man pk1 pk2 pk3 pk4 (Some (RN.NK.Star RN.NK.Dup), 
           Some (RN.Rel.StarR (RN.Rel.OrR (RN.SR.add (RN.Rel.Left (RN.NK.Pkr (RightAsgn (1,true)))) (RN.SR.add (RN.Rel.Right (RN.NK.Pkr (RightAsgn (2,true)))) RN.SR.empty))))) true in
           let bdd4 = RN.NKROMap.find (None,None) nkromap6 in
-          let bdd5 =  (MLBDD.dand (RN.compile_pkr_bdd man pk3 pk4 (RN.RightAsgn (2, true))) (RN.compile_pkr_bdd man pk1 pk2 (RN.Test (1, true)))) in
+          let bdd5 =  (MLBDD.dand (RN.compile_pkr_bdd man pk3 pk4 (RN.RightAsgn (2, true))) (RN.compile_pkr_bdd man pk1 pk2 (RN.TestP (1, true)))) in
           assert_equal ~cmp:MLBDD.equal bdd4 bdd5;
           let bdd6 = RN.NKROMap.find (Some (RN.NK.Star RN.NK.Dup),None) nkromap6 in
           let bdd7 =  (MLBDD.dand (RN.compile_pkr_bdd man pk3 pk4 (RN.RightAsgn (2, true))) (RN.produce_id man pk1 pk2)) in
@@ -355,7 +355,7 @@ let tests = "MLBDD tests" >::: [
             | MLBDD.BIf (l,v,r) -> 
               let bdd1 = RN.var_if man v l r in
               assert_equal ~cmp:MLBDD.equal bdd1 (RN.produce_id man pk1 pk3);
-          let bdd2 =  MLBDD.dand (RN.produce_id man pk1 pk3) (MLBDD.dand (RN.compile_pkr_bdd man pk3 pk4 (RN.RightAsgn (3, true))) (RN.compile_pkr_bdd man pk1 pk2 (RN.Test (2, true)))) in
+          let bdd2 =  MLBDD.dand (RN.produce_id man pk1 pk3) (MLBDD.dand (RN.compile_pkr_bdd man pk3 pk4 (RN.RightAsgn (3, true))) (RN.compile_pkr_bdd man pk1 pk2 (RN.TestP (2, true)))) in
           let bdd3 = RN.back_ordering pk1 pk2 pk3 pk4 (RN.re_ordering pk1 pk2 pk3 pk4 bdd2) in
           let bdd4 = RN.re_ordering pk1 pk2 pk3 pk4 (RN.back_ordering pk1 pk2 pk3 pk4 bdd2) in
           assert_equal ~cmp:MLBDD.equal bdd2 bdd3;
@@ -382,14 +382,14 @@ let tests = "MLBDD tests" >::: [
           let bdd8 = (RN.rename_bdd pk2 pk1 (RN.rename_bdd pk4 pk3 (MLBDD.exists support13 bdd7))) in
           assert_equal ~cmp:MLBDD.equal bdd6 bdd8;
           let nkromap3 = RN.calculate_reachable_set man pk1 pk2 pk3 pk4 (Some (RN.NK.Star (RN.NK.Asgn (1,true))), Some (RN.Rel.StarR (RN.Rel.OrR (RN.SR.add (RN.Rel.Left (RN.NK.Pkr (RightAsgn (2,true)))) (RN.SR.add (RN.Rel.Right (RN.NK.Pkr (RightAsgn (3,true)))) RN.SR.empty))))) true in
-          let bdd9 = MLBDD.dand bdd2 (MLBDD.dand (RN.compile_pkr_bdd man pk3 pk4 (RN.RightAsgn (3, true))) (RN.compile_pkr_bdd man pk1 pk2 (RN.Test (2, true)))) in
+          let bdd9 = MLBDD.dand bdd2 (MLBDD.dand (RN.compile_pkr_bdd man pk3 pk4 (RN.RightAsgn (3, true))) (RN.compile_pkr_bdd man pk1 pk2 (RN.TestP (2, true)))) in
           let bdd10 = (RN.rename_bdd pk2 pk1 (RN.rename_bdd pk4 pk3 (MLBDD.exists support13 bdd9))) in
           let bdd11 = RN.NKROMap.find (None,None) nkromap3 in
           assert_equal ~cmp:MLBDD.equal bdd10 bdd11;
-          let nkromap4 = RN.calculate_reachable_set man pk1 pk2 pk3 pk4 (Some (RN.NK.Seq (RN.NK.Asgn (1,true),(RN.NK.Star (RN.NK.Asgn (1,true))))), Some (RN.Rel.StarR (RN.Rel.OrR (RN.SR.add (RN.Rel.Left (RN.NK.Pkr (Test (1,false)))) (RN.SR.add (RN.Rel.Right (RN.NK.Pkr (RightAsgn (3,true)))) RN.SR.empty))))) true in
+          let nkromap4 = RN.calculate_reachable_set man pk1 pk2 pk3 pk4 (Some (RN.NK.Seq (RN.NK.Asgn (1,true),(RN.NK.Star (RN.NK.Asgn (1,true))))), Some (RN.Rel.StarR (RN.Rel.OrR (RN.SR.add (RN.Rel.Left (RN.NK.Pkr (TestP (1,false)))) (RN.SR.add (RN.Rel.Right (RN.NK.Pkr (RightAsgn (3,true)))) RN.SR.empty))))) true in
           assert_equal (Option.is_none (RN.NKROMap.find_opt (None,None) nkromap4)) true;
           let nkromap5 = RN.calculate_reachable_set man pk1 pk2 pk3 pk4 (Some (RN.NK.Star (RN.NK.Asgn (1,true))), Some (SeqR (Nil Id,(RN.Rel.StarR (RN.Rel.OrR (RN.SR.add (RN.Rel.Left (RN.NK.Pkr (RightAsgn (2,true)))) (RN.SR.add (RN.Rel.Right (RN.NK.Pkr (RightAsgn (3,true)))) RN.SR.empty))))))) true in
-          let bdd12 = MLBDD.dand (RN.produce_id man pk1 pk3) (MLBDD.dand (RN.compile_pkr_bdd man pk3 pk4 (RN.RightAsgn (3, true))) (RN.compile_pkr_bdd man pk1 pk2 (RN.Test (2, true)))) in
+          let bdd12 = MLBDD.dand (RN.produce_id man pk1 pk3) (MLBDD.dand (RN.compile_pkr_bdd man pk3 pk4 (RN.RightAsgn (3, true))) (RN.compile_pkr_bdd man pk1 pk2 (RN.TestP (2, true)))) in
           let bdd13 = (RN.rename_bdd pk2 pk1 (RN.rename_bdd pk4 pk3 (MLBDD.exists support13 bdd12))) in
           let bdd14 = RN.NKROMap.find (None,None) nkromap5 in
           assert_equal ~cmp:MLBDD.equal bdd13 bdd14;          
@@ -513,18 +513,18 @@ let tests = "MLBDD tests" >::: [
           let pk4 = 3 in
           let map1 = RN.NKROBMap.singleton ((None,None),RN.bdd_false man) (RN.NKROBMap.singleton ((None,None),RN.bdd_false man) (RN.produce_id man pk1 pk2)) in
           let start1 = (None,None) in
-          let (dmap1,dstart1) = RN.determinization start1 map1 in
+          let (dmap1,dstart1) = RN.determinization (RN.start_to_set start1) map1 in
           let bdd1 = (RN.NKROBSMap.find dstart1 (RN.NKROBSMap.find dstart1 dmap1)) in
           assert_equal ~cmp:MLBDD.equal bdd1 (RN.produce_id man pk1 pk2);
           assert_equal (RN.NKROBSMap.cardinal dmap1) 1;
           assert_equal (RN.NKROBSMap.cardinal (RN.NKROBSMap.find dstart1 dmap1)) 1;
           let map2 = RN.NKROBMap.singleton ((None,None),RN.bdd_false man) (RN.NKROBMap.add ((None,Some (RN.Rel.StarR (RN.Rel.Left (RN.NK.Pkr RN.Id)))),RN.bdd_true man) (RN.produce_id man pk2 pk3) (RN.NKROBMap.singleton ((None,None),RN.bdd_false man) (RN.produce_id man pk1 pk2))) in
-          let (dmap2,dstart2) = RN.determinization start1 map2 in
+          let (dmap2,dstart2) = RN.determinization (RN.start_to_set start1) map2 in
           let bdd2 = (RN.NKROBSMap.find dstart2 (RN.NKROBSMap.find dstart2 dmap2)) in
           assert_equal ~cmp:MLBDD.equal bdd2 (MLBDD.dand (RN.produce_id man pk1 pk2) (MLBDD.dnot (RN.produce_id man pk2 pk3)));
           assert_equal (RN.NKROBSMap.cardinal (RN.NKROBSMap.find dstart1 dmap2)) 3;
           let map3 = RN.NKROBMap.add ((None,Some (RN.Rel.StarR (RN.Rel.Left (RN.NK.Pkr RN.Id)))),RN.bdd_true man) (RN.NKROBMap.singleton ((None,None),RN.bdd_false man) (RN.produce_id man pk3 pk4)) map2 in
-          let (dmap3,dstart3) = RN.determinization start1 map3 in
+          let (dmap3,dstart3) = RN.determinization (RN.start_to_set start1) map3 in
           let bdd3 = (RN.NKROBSMap.find dstart3 (RN.NKROBSMap.find dstart3 dmap3)) in
           assert_equal ~cmp:MLBDD.equal bdd3 (MLBDD.dand (RN.produce_id man pk1 pk2) (MLBDD.dnot (RN.produce_id man pk2 pk3)));
           let bdd4 = (RN.NKROBSMap.find (RN.NKROBSet.add ((None,Some (RN.Rel.StarR (RN.Rel.Left (RN.NK.Pkr RN.Id)))),RN.bdd_true man) (RN.NKROBSet.singleton ((None,None),RN.bdd_false man))) (RN.NKROBSMap.find dstart3 dmap3)) in
@@ -532,7 +532,7 @@ let tests = "MLBDD tests" >::: [
           assert_equal ~cmp:MLBDD.equal bdd4 (MLBDD.dand (RN.produce_id man pk2 pk3) (RN.produce_id man pk1 pk2));
           assert_equal ~cmp:MLBDD.equal bdd5 (MLBDD.dand (MLBDD.dnot (RN.produce_id man pk2 pk3)) (MLBDD.dor (RN.produce_id man pk1 pk2) (RN.produce_id man pk3 pk4)));
           let map4 = RN.NKROBMap.add ((None,None),RN.bdd_true man) (RN.NKROBMap.singleton ((None,None),RN.bdd_false man) (RN.produce_id man pk3 pk4)) map1 in
-          let (dmap4,dstart4) = RN.determinization start1 map4 in
+          let (dmap4,dstart4) = RN.determinization (RN.start_to_set start1) map4 in
           let bdd6 = (RN.NKROBSMap.find (RN.NKROBSet.singleton ((None,None),RN.bdd_false man)) (RN.NKROBSMap.find dstart4 dmap4)) in
           assert_equal ~cmp:MLBDD.equal bdd6 (MLBDD.dor (RN.produce_id man pk3 pk4) (RN.produce_id man pk1 pk2));
         );
@@ -564,30 +564,30 @@ let tests = "MLBDD tests" >::: [
           let nkro1 = (Some (RN.NK.Star (RN.NK.Asgn (1,true))), Some (RN.Rel.SeqR (RN.Rel.Nil RN.Id,RN.Rel.StarR (RN.Rel.OrR (RN.SR.add (RN.Rel.Left (RN.NK.Pkr (RightAsgn (2,true)))) (RN.SR.add (RN.Rel.Right (RN.NK.Pkr (RightAsgn (3,true)))) RN.SR.empty)))))) in
           let nkrosmap1 = RN.generate_all_transition man pk1 pk2 pk3 pk4 nkro1 true in
           let nkrobmap1 = RN.simplify_all_transition man pk1 pk2 pk3 pk4 nkrosmap1 in
-          let (nkrobsmap1,start5) = RN.determinization nkro1 nkrobmap1 in
+          let (nkrobsmap1,start5) = RN.determinization (RN.start_to_set nkro1) nkrobmap1 in
           assert_equal true (RN.bisim man pk3 pk4 start5 start5 nkrobsmap1 nkrobsmap1);
           let nkro2 =(Some (RN.NK.Star (RN.NK.Asgn (4,true))), Some (RN.Rel.SeqR (RN.Rel.Nil RN.Id, RN.Rel.StarR (RN.Rel.OrR (RN.SR.add (RN.Rel.Left (RN.NK.Pkr (RightAsgn (2,true)))) (RN.SR.add (RN.Rel.Right (RN.NK.Pkr (RightAsgn (3,true)))) RN.SR.empty)))))) in
           let nkrosmap2 = RN.generate_all_transition man pk1 pk2 pk3 pk4 nkro2 true in
           let nkrobmap2 = RN.simplify_all_transition man pk1 pk2 pk3 pk4 nkrosmap2 in
-          let (nkrobsmap2,start6) = RN.determinization nkro2 nkrobmap2 in
+          let (nkrobsmap2,start6) = RN.determinization (RN.start_to_set nkro2) nkrobmap2 in
           assert_equal true (RN.bisim man pk3 pk4 start5 start6 nkrobsmap1 nkrobsmap2);
           let nkro3 = (Some (RN.NK.Star (RN.NK.Asgn (1,true))), Some  (RN.Rel.SeqR (RN.Rel.Nil RN.Id, RN.Rel.StarR (RN.Rel.App (Id,Id))))) in
           let nkrosmap3 = RN.generate_all_transition man pk1 pk2 pk3 pk4 nkro3 true in
           let nkrobmap3 = RN.simplify_all_transition man pk1 pk2 pk3 pk4 nkrosmap3 in
-          let (nkrobsmap3,start7) = RN.determinization nkro3 nkrobmap3 in
+          let (nkrobsmap3,start7) = RN.determinization (RN.start_to_set nkro3) nkrobmap3 in
           let nkro4 = (Some (RN.NK.Star (RN.NK.Asgn (4,true))), Some (RN.Rel.SeqR (RN.Rel.Nil RN.Id, RN.Rel.StarR (RN.Rel.OrR (RN.SR.add (RN.Rel.Left (RN.NK.Pkr (RightAsgn (2,true)))) (RN.SR.add (RN.Rel.Right (RN.NK.Pkr (RightAsgn (1,true)))) RN.SR.empty)))))) in
           let nkrosmap4 = RN.generate_all_transition man pk1 pk2 pk3 pk4 nkro4 true in
           let nkrobmap4 = RN.simplify_all_transition man pk1 pk2 pk3 pk4 nkrosmap4 in
-          let (nkrobsmap4,start8) = RN.determinization nkro4 nkrobmap4 in
+          let (nkrobsmap4,start8) = RN.determinization (RN.start_to_set nkro4) nkrobmap4 in
           assert_equal false (RN.bisim man pk3 pk4 start7 start8 nkrobsmap3 nkrobsmap4);
           let nkro5 = (Some (RN.NK.Star RN.NK.Dup), Some (RN.Rel.SeqR (RN.Rel.Nil RN.Id,RN.Rel.StarR (RN.Rel.App (Id,Id))))) in
           let nkrosmap5 = RN.generate_all_transition man pk1 pk2 pk3 pk4 nkro5 true in
           let nkrobmap5 = RN.simplify_all_transition man pk1 pk2 pk3 pk4 nkrosmap5 in
-          let (nkrobsmap5,start9) = RN.determinization nkro5 nkrobmap5 in
+          let (nkrobsmap5,start9) = RN.determinization (RN.start_to_set nkro5) nkrobmap5 in
           let nkro6 = (Some (RN.NK.Star RN.NK.Dup), Some (RN.Rel.SeqR (RN.Rel.Nil RN.Id,RN.Rel.StarR (RN.Rel.OrR (RN.SR.add (RN.Rel.Left (RN.NK.Pkr Id)) (RN.SR.add (RN.Rel.Right (RN.NK.Pkr Id)) RN.SR.empty)))))) in
           let nkrosmap6 = RN.generate_all_transition man pk1 pk2 pk3 pk4 nkro6 true in
           let nkrobmap6 = RN.simplify_all_transition man pk1 pk2 pk3 pk4 nkrosmap6 in
-          let (nkrobsmap6,start10) = RN.determinization nkro6 nkrobmap6 in
+          let (nkrobsmap6,start10) = RN.determinization (RN.start_to_set nkro6) nkrobmap6 in
           assert_equal true (RN.bisim man pk3 pk4 start9 start10 nkrobsmap5 nkrobsmap6);
           let nk1 = (RN.NK.Seq (Pred True, RN.NK.Star(RN.NK.Union (RN.SNK.add (Asgn (1,true)) (RN.SNK.add RN.NK.Dup RN.SNK.empty))))) in
           let nk2 = (RN.NK.Seq (Asgn (2,true), RN.NK.Seq (RN.NK.Dup,(RN.NK.Union (RN.SNK.add (RN.NK.Seq (Asgn (3,true),RN.NK.Dup)) (RN.SNK.add (Asgn (4,true)) RN.SNK.empty)))))) in
@@ -599,12 +599,12 @@ let tests = "MLBDD tests" >::: [
           let nkro7 = (Some (RN.NK.Inter (nk1,nk2)), Some (RN.Rel.StarR (RN.Rel.App (Id,Id)))) in
           let nkrosmap7 = RN.generate_all_transition man pk1 pk2 pk3 pk4 nkro7 true in
           let nkrobmap7 = RN.simplify_all_transition man pk1 pk2 pk3 pk4 nkrosmap7 in
-          let (nkrobsmap7,start11) = RN.determinization nkro7 nkrobmap7 in
+          let (nkrobsmap7,start11) = RN.determinization (RN.start_to_set nkro7) nkrobmap7 in
           (* nk1 |> Id (nk2) *)
           let nkro8 = (Some nk1, Some (RN.Rel.Id nk2)) in
           let nkrosmap8 = RN.generate_all_transition man pk1 pk2 pk3 pk4 nkro8 true in
           let nkrobmap8 = RN.simplify_all_transition man pk1 pk2 pk3 pk4 nkrosmap8 in
-          let (nkrobsmap8,start12) = RN.determinization nkro8 nkrobmap8 in
+          let (nkrobsmap8,start12) = RN.determinization (RN.start_to_set nkro8) nkrobmap8 in
           assert_equal true (RN.bisim man pk3 pk4 start11 start12 nkrobsmap7 nkrobsmap8);
           (* nk2 |> Id *)
           let nkro9 = (Some nk2, Some (RN.Rel.StarR (RN.Rel.App (Id,Id)))) in
@@ -616,6 +616,15 @@ let tests = "MLBDD tests" >::: [
           let nkro11 = (Some nk1, (Some (RN.Rel.IdComp ((Some nk2),(RN.Rel.StarR (RN.Rel.App (Id,Id))))))) in
           let (nkrobsmap11,start15) = RN.projection_compiler man pk1 pk2 pk3 pk4 nkro11 true in
           assert_equal true (RN.bisim man pk3 pk4 start12 start15 nkrobsmap8 nkrobsmap11);
+          let pred1 = RN.Test (1, true) in
+          let pkr1 = RN.AndP (RN.Binary (RN.Neg pred1, True), RN.Id) in
+          let relation1 = RN.Rel.StarR (RN.Rel.App (pkr1,pkr1)) in
+          let (nkrobsmap12,start16) = RN.projection_compiler man pk1 pk2 pk3 pk4 (Some (RN.NK.Inter (nk1,nk2)), Some relation1) true in
+          let pkr2 = RN.Binary (Neg pred1, Neg pred1) in
+          let relation2 = RN.Rel.StarR (RN.Rel.SeqR (RN.Rel.Nil Id, RN.Rel.SeqR( RN.Rel.Binary (RN.NK.Pkr pkr2,RN.NK.Pkr Havoc),RN.Rel.Nil Id))) in
+          let (nkrobsmap13,start17) = RN.projection_compiler man pk1 pk2 pk3 pk4 (Some (RN.NK.Inter (nk1,nk2)), Some relation2) true in
+          assert_equal true (RN.bisim man pk3 pk4 start16 start17 nkrobsmap12 nkrobsmap13);
+
           );
         "json_test" >:: (fun _ctx ->
           let pk1 = 0 in
@@ -691,7 +700,7 @@ let tests = "MLBDD tests" >::: [
           let nkrobmap1 = RN.simplify_all_transition man pk1 pk2 pk3 pk4 nkrobsmap1 in
           Printf.printf "Simplify Transition (after caching) Execution time: %fs\n" (Sys.time() -. t);
           let t = Sys.time() in
-          let (nkrobbmap1,start1) = RN.determinization (Some network1, Some relation) nkrobmap1 in
+          let (nkrobbmap1,start1) = RN.determinization (RN.start_to_set (Some network1, Some relation)) nkrobmap1 in
           Printf.printf "Determinization Execution time: %fs\n" (Sys.time() -. t);
           Printf.printf "Cardinal of nkrobbmap1: %d\n" (RN.NKROBSMap.cardinal nkrobbmap1);
           let t = Sys.time() in
@@ -891,16 +900,19 @@ let tests = "MLBDD tests" >::: [
           assert_equal true (RN.bisim man pk3 pk4 start17 start18 nkrobsmap17 nkrobsmap18);
           Printf.printf "Rela Test time: %fs\n" (Sys.time() -. t);
           print_endline ("Number of nodes" ^ string_of_int (Eval.StringMap.cardinal rela_man.nodes));*)
+
           let gateway_json_1 = Yojson.Basic.from_file "../../../dataset/us-west-2/InternetGateways.json" in
           let internet_gateway_1 = Eval.parse_internet_gateways gateway_json_1 in
           let switches_json_1 = Yojson.Basic.from_file "../../../dataset/us-west-2/NetworkInterfaces.json" in
           let gateway_json_2 = Yojson.Basic.from_file "../../../dataset/us-east-2/InternetGateways.json" in
           let internet_gateway_2 = Eval.parse_internet_gateways gateway_json_2 in
           let switches_json_2 = Yojson.Basic.from_file "../../../dataset/us-east-2/NetworkInterfaces.json" in
-          let updated_man = Eval.add_ip_switches switches_json_2 internet_gateway_2 (Eval.add_ip_switches switches_json_1 internet_gateway_1 man6) in
+          let updated_man_2 = Eval.add_ip_switches switches_json_1 internet_gateway_1 man6 in
+          let updated_man = Eval.add_ip_switches switches_json_2 internet_gateway_2 updated_man_2 in
           let network9 = Eval.json_to_network json_node_base_6 updated_man true [east2_public] [west2_public] in
           let pred9 = Eval.parse_dst_ip_filter "54.191.42.182" updated_man in
-          let relation11 = RN.Rel.SeqR (RN.Rel.Nil (RN.Binary (pred9, True)), id) in
+          let pred9' = Eval.parse_dst_ip_filter "10.40.2.80" updated_man in
+          let relation11 = RN.Rel.SeqR (RN.Rel.Nil (RN.Binary (pred9, True)), RN.Rel.SeqR (id,RN.Rel.Nil (RN.Binary (pred9', True)))) in
           let t = Sys.time() in
           let (nkrobsmap19, start19) = RN.projection_compiler man' 0 1 2 3 (Some network9, Some relation11) true in
           Printf.printf "Compiled time (Test 14): %fs\n" (Sys.time() -. t);
@@ -927,6 +939,54 @@ let tests = "MLBDD tests" >::: [
           let boolean19 = (RN.bisim man' 2 3 start21 start21 nkrobsmap21 empty_map) in
           Printf.printf "Bisimulation time (Test 16): %fs\n" (Sys.time() -. t);
           assert_equal false boolean19;
+          let pred12 = RN.Neg (Or (Eval.parse_dst_ip_filter_list ["54.191.42.182";"10.40.2.80";"13.59.144.125";"10.20.1.207"] updated_man,
+          Eval.parse_src_ip_filter_list ["54.191.42.182";"10.40.2.80";"13.59.144.125";"10.20.1.207"] updated_man )) in
+          let pkr12 = RN.AndP (Binary (pred12, True), Id) in
+          let relation14 = RN.Rel.StarR (RN.Rel.App (pkr12,pkr12)) in
+          let t = Sys.time() in
+          let network11 = Eval.json_to_network json_node_base_6 man6 true [] [] in
+          let (nkrobsmap22, start22) = RN.projection_compiler man' 0 1 2 3 (Some network11, Some relation14) true in
+          let network12 = Eval.json_to_network json_node_base_6 updated_man true [] [] in
+          let (nkrobsmap23, start23) = RN.projection_compiler man' 0 1 2 3 (Some network12, Some relation14) true in
+          Printf.printf "Compiled time (Test 17): %fs\n" (Sys.time() -. t);
+          let t = Sys.time() in
+          let boolean20 = (RN.bisim man' 2 3 start22 start23 nkrobsmap22 nkrobsmap23) in
+          Printf.printf "Bisimulation time (Test 17): %fs\n" (Sys.time() -. t);
+          assert_equal true boolean20;
+         (* let network12 = Eval.json_to_network json_node_base_6 updated_man true [] [] in
+          let network13 = Eval.json_to_network json_node_base_6 updated_man_2 true [] [] in
+          let gateway_pred = Eval.parse_location_to_pred "igw-02fd68f94367a67c7" false updated_man_2 in
+          let backbone_pred = Eval.parse_location_to_pred "isp_16509" false updated_man_2 in
+          let gateway_pkr = Eval.parse_location_to_pkr "igw-02fd68f94367a67c7" false updated_man_2 in
+          let backbone_pkr = Eval.parse_location_to_pkr "isp_16509" false updated_man_2 in
+          let dst_ip_pred = Eval.parse_dst_ip_filter "13.59.144.125" updated_man_2 in
+          let src_ip_pred = Eval.parse_src_ip_filter "10.20.1.207" updated_man_2 in
+          let dst_ip_pkr = Eval.parse_dst_ip_pkr "10.20.1.207" updated_man_2 in
+          let src_ip_pkr = Eval.parse_src_ip_pkr "13.59.144.125" updated_man_2 in
+          let pkr13 = RN.Binary (And (gateway_pred,src_ip_pred), backbone_pred) in
+          let pkr14 = RN.Binary (And (backbone_pred,dst_ip_pred), gateway_pred) in
+          let pkr15 = RN.NegP (RN.OrP (pkr13,pkr14)) in
+          let pkr16 = RN.AndP (pkr13, RN.Comp (src_ip_pkr,backbone_pkr)) in
+          let pkr17 = RN.AndP (pkr14, RN.Comp (dst_ip_pkr,gateway_pkr)) in
+          let pkr18 = RN.OrP (pkr16, pkr17) in
+          let entry = RN.NK.Seq (RN.NK.Pkr pkr18, RN.NK.Dup) in
+          let havocnk = RN.NK.Seq (RN.NK.Pkr Havoc, RN.NK.Star (RN.NK.Seq (RN.NK.Dup, RN.NK.Pkr Havoc))) in
+          let filternk = RN.NK.Star (RN.NK.Seq (RN.NK.Pkr pkr15, RN.NK.Dup)) in
+          let relation15 = RN.Rel.Id filternk in
+          let relation16 = RN.Rel.SeqR (RN.Rel.Nil Id ,RN.Rel.Binary (RN.NK.Pkr Id, RN.NK.Seq (network13,(RN.NK.Seq(entry,network13))))) in
+          let relation17 = RN.Rel.OrR (RN.SR.add relation16 (RN.SR.singleton relation15)) in
+          let t = Sys.time() in 
+          let (nkrobsmap24, start24) = RN.projection_compiler man' 0 1 2 3 (Some network12, Some id) true in
+          let (nkrobsmap25, start25) = RN.projection_compiler man' 0 1 2 3 (Some network13, Some relation17) true in
+          Printf.printf "Compiled time (Test 18): %fs\n" (Sys.time() -. t);
+          let t = Sys.time() in
+          let boolean21 = (RN.bisim man' 2 3 start24 start25 nkrobsmap24 nkrobsmap25) in
+          Printf.printf "Bisimulation time (Test 18): %fs\n" (Sys.time() -. t);
+          assert_equal true boolean21;*)
+
+
+
+
 
           );
 

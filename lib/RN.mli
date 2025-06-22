@@ -108,7 +108,7 @@ type pkr =
   | Id
   | Empty
   | Havoc
-  | Test of field * bool
+  | TestP of field * bool
   | LeftAsgn of field * bool
   | RightAsgn of field * bool
   | Comp of pkr * pkr
@@ -157,6 +157,7 @@ module BMap : Map.S with type key = MLBDD.t
 module NKROMap : Map.S with type key = NK.t option * Rel.t option
 module NKROBMap : Map.S with type key = (NK.t option * Rel.t option) * MLBDD.t
 module BSet : Set.S with type elt = MLBDD.t
+module NKROSet : Set.S with type elt = NK.t option * Rel.t option
 module NKROBSet : Set.S with type elt = (NK.t option * Rel.t option) * MLBDD.t
 module NKROBSMap : Map.S with type key = NKROBSet.t
 module NKROBSSMap : Map.S with type key = NKROBSet.t * NKROBSet.t
@@ -234,6 +235,8 @@ val find_bdds : NK.t option * Rel.t option -> (BSet.t * BSet.t NKROMap.t) NKROMa
 val simplify_all_transition : man -> pk -> pk -> pk -> pk -> (BSet.t * BSet.t NKROMap.t) NKROMap.t -> MLBDD.t NKROBMap.t NKROBMap.t
 val is_final_state : (NK.t option * Rel.t option) * MLBDD.t -> bool
 val determinize_transition : MLBDD.t NKROBMap.t -> MLBDD.t NKROBSMap.t
-val determinization : NK.t option * Rel.t option -> MLBDD.t NKROBMap.t NKROBMap.t -> MLBDD.t NKROBSMap.t NKROBSMap.t * NKROBSet.t
+val start_to_set : NK.t option*Rel.t option -> NKROSet.t
+val determinization : NKROSet.t -> MLBDD.t NKROBMap.t NKROBMap.t -> MLBDD.t NKROBSMap.t NKROBSMap.t * NKROBSet.t
 val projection_compiler : man -> pk -> pk -> pk ->  pk -> (NK.t option * Rel.t option) -> bool -> MLBDD.t NKROBSMap.t NKROBSMap.t * NKROBSet.t
+val union_compiler : man -> pk -> pk -> pk ->  pk -> (NK.t option * Rel.t option) -> (NK.t option * Rel.t option) -> bool -> MLBDD.t NKROBSMap.t NKROBSMap.t * NKROBSet.t
 val bisim : man -> pk -> pk -> NKROBSet.t -> NKROBSet.t -> MLBDD.t NKROBSMap.t NKROBSMap.t -> MLBDD.t NKROBSMap.t NKROBSMap.t -> bool

@@ -77,7 +77,11 @@ val parse_start_loc_to_pkr : man -> string list -> pkr
 val parse_end_loc_to_pkr : man -> string list -> pkr
 val parse_tcp_filter: string -> man -> pred
 val parse_src_ip_filter: string -> man -> pred
+val parse_src_ip_filter_list: string list -> man -> pred
+val parse_src_ip_pkr: string -> man -> pkr
 val parse_dst_ip_filter: string -> man -> pred
+val parse_dst_ip_filter_list: string list -> man -> pred
+val parse_dst_ip_pkr: string -> man -> pkr
 val parse_dstports_filter: int -> bool -> man -> pred
 
 val parse_rela_nodes: Yojson.Basic.t -> int StringMap.t
