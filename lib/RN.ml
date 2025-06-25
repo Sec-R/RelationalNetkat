@@ -1018,7 +1018,12 @@ let calculate_reachable_set (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (start
                     (delta_kr man pk1 pk2 pk3 pk4 nkro (nkro_compare start nkro = 0))) cur)
      in Queue.add (start,(bdd_true man)) worklist;
        calculate_reachable_set_aux (add_nkro_mapping start (bdd_true man) NKROMap.empty) 
-    
+
+let emptiness_check (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (start:NK.t option*Rel.t option):bool =
+  let reachable_set = calculate_reachable_set man pk1 pk2 pk3 pk4 start true in
+    not (NKROMap.mem (None,None) reachable_set)
+       
+
 (* pk1: x, pk2:x', pk3:y, pk4:y'*)
 (*But should be re-ordered to 0:y, 1:x, 2:y', 3:x'*)
 let re_ordering (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (bdd:MLBDD.t):MLBDD.t=

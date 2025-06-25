@@ -655,7 +655,9 @@ let tests = "MLBDD tests" >::: [
           let relation = RN.Rel.SeqR (id, RN.Rel.SeqR (RN.Rel.Nil core1_filter, id)) in
           let network0 = Eval.json_to_network json_node_base man0 false ["border1[GigabitEthernet0/0]";"border2[GigabitEthernet0/0]"] ["host-db";"host-www"] in
           let t = Sys.time() in
-          let (nkrobsmap0, start0) = RN.projection_compiler man 0 1 2 3 (Some network0, Some relation) true in
+          let boolean = RN.emptiness_check man 0 1 2 3 (Some network0, Some relation) in
+          assert_equal false boolean;
+          Printf.printf "Base Test Constuction time: %fs\n" (Sys.time() -. t);
           let pred1 = Eval.parse_location_to_pred "core1" true man0 in
           let pkr1 = Eval.parse_location_to_pkr "core1" true man0 in
           let pkr2 = (RN.AndP (RN.Binary (pred1,RN.True),RN.Id)) in
@@ -670,11 +672,6 @@ let tests = "MLBDD tests" >::: [
           let bdd5 = RN.compile_pred_bdd man 0 (And (Eval.get_ge_pred 0 15 80, Eval.get_le_pred 0 15 80)) in
           let bdd6 = RN.compile_pred_bdd man 0 (Eval.binary_to_pred 0 16 15 80) in
           assert_equal ~cmp:MLBDD.equal bdd5 bdd6;
-          Printf.printf "Base Test Constuction time: %fs\n" (Sys.time() -. t);
-          let t = Sys.time() in
-          let boolean = (RN.bisim man 2 3 start0 start0 nkrobsmap0 empty_map) in
-          Printf.printf "Base Test Bisimulation time: %fs\n" (Sys.time() -. t);
-          assert_equal false boolean;
           let json_node_base_1 = Yojson.Basic.from_file "../../../dataset/change1-node.json" in
           let json_edge_base_2 = Yojson.Basic.from_file "../../../dataset/change1-edge.json" in
           let man1 = Eval.init_man json_node_base_1 json_edge_base_2 json_protocol json_interface in
@@ -683,39 +680,15 @@ let tests = "MLBDD tests" >::: [
           let core1_filter = (RN.AndP (Id,RN.Binary (core1_loc, True))) in
           let relation = RN.Rel.SeqR (id, RN.Rel.SeqR (RN.Rel.Nil core1_filter, id)) in
           let t = Sys.time() in
-          let (nkrobsmap1, start1) = RN.projection_compiler man 0 1 2 3 (Some network1, Some relation) true in
-          Printf.printf "Change 1 Construction time: %fs\n" (Sys.time() -. t);
-          let t = Sys.time() in
-          let boolean = (RN.bisim man 2 3 start1 start1 nkrobsmap1 empty_map) in
-          Printf.printf "Change 1 Bisimulation time: %fs\n" (Sys.time() -. t);
+          let boolean = RN.emptiness_check man 0 1 2 3 (Some network1, Some relation) in
           assert_equal true boolean;
-          (* Currently the cache has all been trained, so any derivative calculation can be reused*)
-          let t = Sys.time () in
-          let _ = RN.calculate_reachable_set man pk1 pk2 pk3 pk4 (Some network1, Some relation) true in
-          Printf.printf "Calculate reachable states Execution time: %fs\n" (Sys.time() -. t);
-          let t = Sys.time() in
-          let nkrobsmap1 = RN.generate_all_transition man pk1 pk2 pk3 pk4 (Some network1, Some relation) true in
-          Printf.printf "Generate Transition (after caching) Execution time: %fs\n" (Sys.time() -. t);
-          let t = Sys.time() in
-          let nkrobmap1 = RN.simplify_all_transition man pk1 pk2 pk3 pk4 nkrobsmap1 in
-          Printf.printf "Simplify Transition (after caching) Execution time: %fs\n" (Sys.time() -. t);
-          let t = Sys.time() in
-          let (nkrobbmap1,start1) = RN.determinization (RN.start_to_set (Some network1, Some relation)) nkrobmap1 in
-          Printf.printf "Determinization Execution time: %fs\n" (Sys.time() -. t);
-          Printf.printf "Cardinal of nkrobbmap1: %d\n" (RN.NKROBSMap.cardinal nkrobbmap1);
-          let t = Sys.time() in
-          let boolean = (RN.bisim man 2 3 start1 start1 nkrobbmap1 empty_map) in
-          Printf.printf "Bisimulation Execution time: %fs\n" (Sys.time() -. t);
-          assert_equal true boolean;
+          Printf.printf "Change 1 Test time: %fs\n" (Sys.time() -. t);
           let epsilon = RN.Rel.Left (RN.NK.Seq (RN.NK.Pkr Havoc ,RN.NK.Star (RN.NK.Seq (RN.NK.Dup,(RN.NK.Pkr Havoc))))) in
           let relation2 = RN.Rel.SeqR (epsilon, RN.Rel.SeqR (RN.Rel.App (core1_filter,Id), epsilon)) in
           let t = Sys.time() in
-          let (nkrobsmap2, start2) = RN.projection_compiler man 0 1 2 3 (Some network1, Some relation2) true in
-          Printf.printf "Compiled time (optmized): %fs\n" (Sys.time() -. t);
-          let t = Sys.time() in
-          let boolean2 = (RN.bisim man 2 3 start2 start2 nkrobsmap2 empty_map) in
+          let boolean2 = RN.emptiness_check man 0 1 2 3 (Some network1, Some relation2) in
           assert_equal true boolean2;
-          Printf.printf "Bisimulation time (optmized): %fs\n" (Sys.time() -. t);
+          Printf.printf "Test time (optmized): %fs\n" (Sys.time() -. t);
           let dup_free_network0 = Eval.json_to_network json_node_base man0 true ["border1[GigabitEthernet0/0]";"border2[GigabitEthernet0/0]"] ["host-db";"host-www"] in
           let dup_free_network1 = Eval.json_to_network json_node_base_1 man1 true ["border1[GigabitEthernet0/0]";"border2[GigabitEthernet0/0]"] ["host-db";"host-www"] in
           let t = Sys.time() in
@@ -736,12 +709,9 @@ let tests = "MLBDD tests" >::: [
           let core1_filter = RN.Binary (core1_loc, True) in
           let relation = RN.Rel.SeqR (id, RN.Rel.SeqR (RN.Rel.Nil core1_filter, id)) in
           let t = Sys.time() in
-          let (nkrobsmap5, start5) = RN.projection_compiler man 0 1 2 3 (Some network2, Some relation) true in
-          Printf.printf "Compiled time (Test 3): %fs\n" (Sys.time() -. t);
-          let t = Sys.time() in
-          let boolean4 = (RN.bisim man 2 3 start5 start5 nkrobsmap5 empty_map) in
-          Printf.printf "Bisimulation time (Test 3): %fs\n" (Sys.time() -. t);
+          let boolean4 = RN.emptiness_check man 0 1 2 3 (Some network2, Some relation) in
           assert_equal true boolean4;
+          Printf.printf "Test time (Test 3): %fs\n" (Sys.time() -. t);
           let dup_free_network2 = Eval.json_to_network json_node_base_2 man2 true ["border1[GigabitEthernet0/0]";"border2[GigabitEthernet0/0]"] ["host-db";"host-www"] in
           let t = Sys.time() in
           let (nkrobsmap6, start6) = RN.projection_compiler man 0 1 2 3 (Some dup_free_network2, Some id) true in
@@ -760,12 +730,9 @@ let tests = "MLBDD tests" >::: [
           let filter = RN.Binary (pred2, True) in
           let relation = RN.Rel.SeqR (RN.Rel.Nil filter, id) in
           let t = Sys.time() in
-          let (nkrobsmap7, start7) = RN.projection_compiler man 0 1 2 3 (Some network3, Some relation) true in
-          Printf.printf "Compiled time (Test 5): %fs\n" (Sys.time() -. t);
-          let t = Sys.time() in
-          let boolean6 = (RN.bisim man 2 3 start7 start7 nkrobsmap7 empty_map) in
-          Printf.printf "Bisimulation time (Test 5): %fs\n" (Sys.time() -. t);
+          let boolean6 = RN.emptiness_check man 0 1 2 3 (Some network3, Some relation) in
           assert_equal false boolean6;
+          Printf.printf "Test time (Test 5): %fs\n" (Sys.time() -. t);
           let dup_free_network3 = Eval.json_to_network json_node_base_3 man3 true ["border1[GigabitEthernet0/0]";"border2[GigabitEthernet0/0]"] ["host-db"] in
           let dup_free_network4 = Eval.json_to_network json_node_base man0 true ["border1[GigabitEthernet0/0]";"border2[GigabitEthernet0/0]"] ["host-db"] in
           let t = Sys.time() in
@@ -776,8 +743,6 @@ let tests = "MLBDD tests" >::: [
           let boolean7 = (RN.bisim man 2 3 start8 start9 nkrobsmap8 nkrobsmap9) in
           Printf.printf "Bisimulation time (Test 5): %fs\n" (Sys.time() -. t);
           assert_equal false boolean7;
-          let boolean_tmp = RN.bisim man 2 3 start8 start8 nkrobsmap8 empty_map in
-          assert_equal false boolean_tmp;
           let json_node_base_4 = Yojson.Basic.from_file "../../../dataset/change4-node.json" in
           let json_edge_base_4 = Yojson.Basic.from_file "../../../dataset/change4-edge.json" in
           let json_protocol_4 = Yojson.Basic.from_file "../../../dataset/change4-named-structure.json" in
@@ -788,12 +753,9 @@ let tests = "MLBDD tests" >::: [
           let filter = RN.Binary (pred3, True) in
           let relation = RN.Rel.SeqR (RN.Rel.Nil filter, id) in
           let t = Sys.time() in
-          let (nkrobsmap10, start10) = RN.projection_compiler man 0 1 2 3 (Some network5, Some relation) true in
-          Printf.printf "Compiled time (Test 5): %fs\n" (Sys.time() -. t);
-          let t = Sys.time() in
-          let boolean8 = (RN.bisim man 2 3 start10 start10 nkrobsmap10 empty_map) in
-          Printf.printf "Bisimulation time (Test 5): %fs\n" (Sys.time() -. t);
+          let boolean8 = RN.emptiness_check man 0 1 2 3 (Some network5, Some relation) in
           assert_equal false boolean8;
+          Printf.printf "Test time (Test 5): %fs\n" (Sys.time() -. t);
           let dup_free_network5 = Eval.json_to_network json_node_base_4 man4 true ["border1[GigabitEthernet0/0]";"border2[GigabitEthernet0/0]"] ["host-db"] in
           let t = Sys.time() in
           let (nkrobsmap11, start11) = RN.projection_compiler man 0 1 2 3 (Some dup_free_network5, Some relation) true in
@@ -831,12 +793,9 @@ let tests = "MLBDD tests" >::: [
           let filter = RN.Binary (RN.And (pred4, RN.And (srcip_filter, dstip_filter)), True) in
           let relation6 = RN.Rel.SeqR (RN.Rel.Nil filter, RN.Rel.StarR (RN.Rel.App (Id,Id))) in
           let t = Sys.time() in
-          let (nkrobsmap14, start14) = RN.projection_compiler man 0 1 2 3 (Some network6, Some relation6) true in
-          Printf.printf "Compiled time (Test 9): %fs\n" (Sys.time() -. t);
-          let t = Sys.time() in
-          let boolean12 = (RN.bisim man 2 3 start14 start14 nkrobsmap14 empty_map) in
-          Printf.printf "Bisimulation time (Test 9): %fs\n" (Sys.time() -. t);
+          let boolean12 = RN.emptiness_check man 0 1 2 3 (Some network6, Some relation6) in
           assert_equal false boolean12;
+          Printf.printf "Test time (Test 9): %fs\n" (Sys.time() -. t);
           let pred5 = Eval.parse_protocols_to_pred ["TCP"] man5 in
           let srcip_filter = Eval.parse_src_ip_filter "101.164.101.231" man5 in
           let dstip_filter = Eval.parse_dst_ip_filter "101.164.9.0/24" man5 in
@@ -844,12 +803,9 @@ let tests = "MLBDD tests" >::: [
           let filter2 = RN.Binary (RN.And (pred5, RN.And (srcip_filter, RN.And (dstip_filter, ports_filter))), True) in
           let relation7 = RN.Rel.SeqR (RN.Rel.Nil filter2, RN.Rel.StarR (RN.Rel.App (Id,Id))) in
           let t = Sys.time() in
-          let (nkrobsmap15, start15) = RN.projection_compiler man 0 1 2 3 (Some network6, Some relation7) true in
-          Printf.printf "Compiled time (Test 10): %fs\n" (Sys.time() -. t);
-          let t = Sys.time() in
-          let boolean13 = (RN.bisim man 2 3 start15 start15 nkrobsmap15 empty_map) in
-          Printf.printf "Bisimulation time (Test 10): %fs\n" (Sys.time() -. t);
+          let boolean13 = RN.emptiness_check man 0 1 2 3 (Some network6, Some relation7) in
           assert_equal false boolean13;
+          Printf.printf "Test time (Test 10): %fs\n" (Sys.time() -. t);
           let json_node_base_6 = Yojson.Basic.from_file "../../../dataset/hybrid-node.json" in
           let json_edge_base_6 = Yojson.Basic.from_file "../../../dataset/hybrid-edge.json" in
           let json_protocol_6 = Yojson.Basic.from_file "../../../dataset/hybrid-named-structure.json" in
@@ -865,31 +821,22 @@ let tests = "MLBDD tests" >::: [
           let pred6' = Eval.parse_dst_ip_filter "10.20.1.207" man6 in
           let relation8 = RN.Rel.SeqR (RN.Rel.Nil (RN.Binary (RN.And (pred6,pred6'), True)), id) in
           let t = Sys.time() in
-          let (nkrobsmap16, start16) = RN.projection_compiler man' 0 1 2 3 (Some network7, Some relation8) true in
-          Printf.printf "Compiled time (Test 11): %fs\n" (Sys.time() -. t);
-          let t = Sys.time() in
-          let boolean14 = (RN.bisim man' 2 3 start16 start16 nkrobsmap16 empty_map) in
-          Printf.printf "Bisimulation time (Test 11): %fs\n" (Sys.time() -. t);
+          let boolean14 = RN.emptiness_check man' 0 1 2 3 (Some network7, Some relation8) in
           assert_equal false boolean14;
+          Printf.printf "Test time (Test 11): %fs\n" (Sys.time() -. t);
           let network8 = Eval.json_to_network json_node_base_6 man6 false [east2_public] [west2_public] in
           let pred7 = Eval.parse_dst_ip_filter "10.40.2.80" man6  in
           let relation9 = RN.Rel.SeqR (RN.Rel.Nil (RN.Binary (pred7, True)), id) in
           let t = Sys.time() in
-          let (nkrobsmap17, start17) = RN.projection_compiler man' 0 1 2 3 (Some network8, Some relation9) true in
-          Printf.printf "Compiled time (Test 12): %fs\n" (Sys.time() -. t);
-          let t = Sys.time() in
-          let boolean15 = (RN.bisim man' 2 3 start17 start17 nkrobsmap17 empty_map) in
-          Printf.printf "Bisimulation time (Test 12): %fs\n" (Sys.time() -. t);
+          let boolean15 = RN.emptiness_check man' 0 1 2 3 (Some network8, Some relation9) in
           assert_equal true boolean15;
+          Printf.printf "Test time (Test 12): %fs\n" (Sys.time() -. t);
           let pred8 = Eval.parse_dst_ip_filter "54.191.42.182" man6  in
           let relation10 = RN.Rel.SeqR (RN.Rel.Nil (RN.Binary (pred8, True)), id) in
           let t = Sys.time() in
-          let (nkrobsmap18, start18) = RN.projection_compiler man' 0 1 2 3 (Some network8, Some relation10) true in
-          Printf.printf "Compiled time (Test 13): %fs\n" (Sys.time() -. t);
-          let t = Sys.time() in
-          let boolean16 = (RN.bisim man' 2 3 start18 start18 nkrobsmap18 empty_map) in
-          Printf.printf "Bisimulation time (Test 13): %fs\n" (Sys.time() -. t);
+          let boolean16 = RN.emptiness_check man' 0 1 2 3 (Some network8, Some relation10) in
           assert_equal true boolean16;
+          Printf.printf "Test time (Test 13): %fs\n" (Sys.time() -. t);
 
      (*     let rela_json = Yojson.Basic.from_file "../../../dataset/combined2.json" in
           let rela_man = Eval.init_rela_man rela_json in
@@ -914,31 +861,22 @@ let tests = "MLBDD tests" >::: [
           let pred9' = Eval.parse_dst_ip_filter "10.40.2.80" updated_man in
           let relation11 = RN.Rel.SeqR (RN.Rel.Nil (RN.Binary (pred9, True)), RN.Rel.SeqR (id,RN.Rel.Nil (RN.Binary (pred9', True)))) in
           let t = Sys.time() in
-          let (nkrobsmap19, start19) = RN.projection_compiler man' 0 1 2 3 (Some network9, Some relation11) true in
-          Printf.printf "Compiled time (Test 14): %fs\n" (Sys.time() -. t);
-          let t = Sys.time() in
-          let boolean17 = (RN.bisim man' 2 3 start19 start19 nkrobsmap19 empty_map) in
-          Printf.printf "Bisimulation time (Test 14): %fs\n" (Sys.time() -. t);
+          let boolean17 = RN.emptiness_check man' 0 1 2 3 (Some network9, Some relation11) in
           assert_equal false boolean17;
+          Printf.printf "Test time (Test 14): %fs\n" (Sys.time() -. t);
           let network10 = Eval.json_to_network json_node_base_6 updated_man false ["srv-101"] [east2_public] in
           let pred10 = Eval.parse_dst_ip_filter "13.59.144.125" updated_man in
           let relation12 = RN.Rel.SeqR (RN.Rel.Nil (RN.Binary (pred10, True)), id) in
           let t = Sys.time() in
-          let (nkrobsmap20, start20) = RN.projection_compiler man' 0 1 2 3 (Some network10, Some relation12) true in
-          Printf.printf "Compiled time (Test 15): %fs\n" (Sys.time() -. t);
-          let t = Sys.time() in
-          let boolean18 = (RN.bisim man' 2 3 start20 start20 nkrobsmap20 empty_map) in
-          Printf.printf "Bisimulation time (Test 15): %fs\n" (Sys.time() -. t);
+          let boolean18 = RN.emptiness_check man' 0 1 2 3 (Some network10, Some relation12) in
           assert_equal false boolean18;
+          Printf.printf "Test time (Test 15): %fs\n" (Sys.time() -. t);
           let pred11 = Eval.parse_dst_ip_filter "10.20.1.207" updated_man in
           let relation13 = RN.Rel.SeqR (RN.Rel.Nil (RN.Binary (pred11, True)), id) in
           let t = Sys.time() in
-          let (nkrobsmap21, start21) = RN.projection_compiler man' 0 1 2 3 (Some network10, Some relation13) true in
-          Printf.printf "Compiled time (Test 16): %fs\n" (Sys.time() -. t);
-          let t = Sys.time() in
-          let boolean19 = (RN.bisim man' 2 3 start21 start21 nkrobsmap21 empty_map) in
-          Printf.printf "Bisimulation time (Test 16): %fs\n" (Sys.time() -. t);
+          let boolean19 = RN.emptiness_check man' 0 1 2 3 (Some network10, Some relation13) in
           assert_equal false boolean19;
+          Printf.printf "Test time (Test 16): %fs\n" (Sys.time() -. t);
           let pred12 = RN.Neg (Or (Eval.parse_dst_ip_filter_list ["54.191.42.182";"10.40.2.80";"13.59.144.125";"10.20.1.207"] updated_man,
           Eval.parse_src_ip_filter_list ["54.191.42.182";"10.40.2.80";"13.59.144.125";"10.20.1.207"] updated_man )) in
           let pkr12 = RN.AndP (Binary (pred12, True), Id) in
@@ -957,13 +895,21 @@ let tests = "MLBDD tests" >::: [
           let network13 = Eval.json_to_network json_node_base_6 updated_man_2 false [] [] in
           let gateway_pred = Eval.parse_location_to_pred "igw-02fd68f94367a67c7" false updated_man_2 in
           let backbone_pred = Eval.parse_location_to_pred "isp_16509" false updated_man_2 in
+          let gateway_pkr = Eval.parse_location_to_pkr "igw-02fd68f94367a67c7" false updated_man_2 in
+          let backbone_pkr = Eval.parse_location_to_pkr "isp_16509" false updated_man_2 in
           let dst_ip_pred = Eval.parse_dst_ip_filter "13.59.144.125" updated_man_2 in
           let src_ip_pred = Eval.parse_src_ip_filter "10.20.1.207" updated_man_2 in
+          let dst_ip_pkr = Eval.parse_dst_ip_pkr "10.20.1.207" updated_man_2 in
+          let src_ip_pkr = Eval.parse_src_ip_pkr "13.59.144.125" updated_man_2 in
           let pkr13 = RN.Binary (And (gateway_pred,src_ip_pred), backbone_pred) in
           let pkr14 = RN.Binary (And (backbone_pred,dst_ip_pred), gateway_pred) in
           let pkr15 = RN.NegP (RN.OrP (pkr13,pkr14)) in
+          let pkr16 = RN.AndP (pkr13, RN.Comp (src_ip_pkr,backbone_pkr)) in
+          let pkr17 = RN.AndP (pkr14, RN.Comp (dst_ip_pkr,gateway_pkr)) in
+          let pkr18 = RN.NegP (RN.OrP (pkr16, pkr17)) in
           let filternk = RN.NK.Star (RN.NK.Seq (RN.NK.Pkr pkr15, RN.NK.Dup)) in
           let relation15 = RN.Rel.Id filternk in
+          let relation16 = RN.Rel.Id (RN.NK.Star (RN.NK.Seq (RN.NK.Pkr pkr18, RN.NK.Dup))) in
           let t = Sys.time() in 
           let (nkrobsmap24, start24) = RN.projection_compiler man' 0 1 2 3 (Some network12, Some relation15) true in
           let (nkrobsmap25, start25) = RN.projection_compiler man' 0 1 2 3 (Some network13, Some relation15) true in
@@ -978,22 +924,9 @@ let tests = "MLBDD tests" >::: [
           let boolean22 = (RN.bisim man' 2 3 start24 start26 nkrobsmap24 nkrobsmap26) in
           Printf.printf "Bisimulation time (Test 19): %fs\n" (Sys.time() -. t);
           assert_equal true boolean22;
-          let (nkrobsmap27, start27) = RN.projection_compiler man' 0 1 2 3 (Some (RN.NK.Diff (network12,network13)), Some relation15) true in
-          Printf.printf "Compiled time (Test 20): %fs\n" (Sys.time() -. t);
-          let t = Sys.time() in
-          let boolean23 = (RN.bisim man' 2 3 start27 start27 nkrobsmap27 empty_map) in
-          Printf.printf "Bisimulation time (Test 20): %fs\n" (Sys.time() -. t);
+          let boolean23 = RN.emptiness_check man' 0 1 2 3 (Some (RN.NK.Diff (network12,network13)), Some relation16) in
           assert_equal true boolean23;
-          let (nkrobsmap28, start28) = RN.projection_compiler man' 0 1 2 3 (Some (RN.NK.Diff (network13,network12)), Some relation15) true in
-          Printf.printf "Compiled time (Test 21): %fs\n" (Sys.time() -. t);
-          let t = Sys.time() in
-          let boolean24 = (RN.bisim man' 2 3 start28 start28 nkrobsmap28 empty_map) in
-          Printf.printf "Bisimulation time (Test 21): %fs\n" (Sys.time() -. t);
-          assert_equal true boolean24;
-
-
-
-
+          Printf.printf "Test time (Test 20): %fs\n" (Sys.time() -. t);
 
           );
 

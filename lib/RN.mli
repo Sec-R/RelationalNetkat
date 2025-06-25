@@ -221,6 +221,7 @@ val delta_r : man -> pk -> pk -> pk -> pk -> Rel.t option -> next_step -> MLBDD.
 val delta_krx : man -> pk -> pk -> pk -> pk -> NK.t option * Rel.t option -> MLBDD.t NKROMap.t
 val delta_kr : man -> pk -> pk -> pk -> pk -> NK.t option * Rel.t option -> bool -> MLBDD.t NKROMap.t
 val calculate_reachable_set : man -> pk -> pk -> pk -> pk -> NK.t option * Rel.t option -> bool -> MLBDD.t NKROMap.t
+val emptiness_check: man -> pk -> pk -> pk -> pk -> NK.t option * Rel.t option -> bool
 val re_ordering : pk -> pk -> pk -> pk -> MLBDD.t -> MLBDD.t
 val back_ordering : pk -> pk -> pk -> pk -> MLBDD.t -> MLBDD.t
 val var_low_branch : man -> int -> MLBDD.t -> MLBDD.t
