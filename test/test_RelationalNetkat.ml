@@ -626,7 +626,73 @@ let tests = "MLBDD tests" >::: [
           assert_equal true (RN.bisim man pk3 pk4 start16 start17 nkrobsmap12 nkrobsmap13);
 
           );
-        "json_test" >:: (fun _ctx ->
+          (*
+         "rela_id_test" >:: (fun _ctx ->
+          let pk1 = 0 in
+          let pk2 = 1 in
+          let pk3 = 2 in
+          let pk4 = 3 in
+          let rela_json = Yojson.Basic.from_file "../../../dataset/rela_test.json" in
+          let rela_man = Eval.init_rela_man rela_json in
+          let man = RN.init_man (Eval.get_field_length rela_man) (Eval.get_field_length rela_man) in
+          for i = 1 to 20 do
+            let t = Sys.time() in
+            let (before_network, after_network) = Eval.sized_rela_to_network rela_json i rela_man in
+            let (nkrobsmap1, start1) = RN.projection_compiler man pk1 pk2 pk3 pk4 (Some before_network, Some (RN.Rel.StarR (RN.Rel.App (Id,Id)))) true in
+            let (nkrobsmap2, start2) = RN.projection_compiler man pk1 pk2 pk3 pk4 (Some after_network, Some (RN.Rel.StarR (RN.Rel.App (Id,Id)))) true in
+            assert_equal true (RN.bisim man pk3 pk4 start1 start2 nkrobsmap1 nkrobsmap2);            
+            print_endline ("Rela Test " ^ string_of_int i ^ " time: ");
+            let formatted_float = Printf.sprintf "%.3f" (Sys.time() -. t) in
+            print_endline (formatted_float ^ "s");
+          done;
+         );*)
+         (*
+         "rela_delete_test" >:: (fun _ctx ->
+          let pk1 = 0 in
+          let pk2 = 1 in
+          let pk3 = 2 in
+          let pk4 = 3 in
+          let rela_json = Yojson.Basic.from_file "../../../dataset/rela_test.json" in
+          let rela_man = Eval.init_rela_man rela_json in
+          let man = RN.init_man (Eval.get_field_length rela_man) (Eval.get_field_length rela_man) in
+          for i = 1 to 20 do
+            let t = Sys.time() in
+            let loc_pred = RN.Neg (Eval.parse_location_to_pred "Device262" false rela_man) in
+            let pkr = RN.AndP (RN.Binary (loc_pred, RN.True),Id) in
+            let (before_network, after_network) = Eval.sized_rela_to_network rela_json i rela_man in
+            let (nkrobsmap1, start1) = RN.projection_compiler man pk1 pk2 pk3 pk4 (Some before_network, Some (RN.Rel.StarR (RN.Rel.App (pkr,pkr)))) true in
+            let (nkrobsmap2, start2) = RN.projection_compiler man pk1 pk2 pk3 pk4 (Some after_network, Some (RN.Rel.StarR (RN.Rel.App (pkr,pkr)))) true in
+            assert_equal true (RN.bisim man pk3 pk4 start1 start2 nkrobsmap1 nkrobsmap2);            
+            print_endline ("Rela Test " ^ string_of_int i ^ " time: ");
+            let formatted_float = Printf.sprintf "%.3f" (Sys.time() -. t) in
+            print_endline (formatted_float ^ "s");
+          done;
+         );*)
+         
+          "rela_change_test" >:: (fun _ctx ->
+          let pk1 = 0 in
+          let pk2 = 1 in
+          let pk3 = 2 in
+          let pk4 = 3 in
+          let rela_json = Yojson.Basic.from_file "../../../dataset/rela_test.json" in
+          let rela_man = Eval.init_rela_man rela_json in
+          let man = RN.init_man (Eval.get_field_length rela_man) (Eval.get_field_length rela_man) in
+          for i = 1 to 20 do
+            let t = Sys.time() in
+            let loc_pred = Eval.parse_location_to_pred "Device262" false rela_man in
+            let loc_pkr = Eval.parse_location_to_pkr "Device2063" false rela_man in
+            let pkr = RN.OrP (RN.AndP (RN.Binary (loc_pred, RN.True),loc_pkr),RN.AndP (RN.Binary (RN.Neg loc_pred, RN.True),Id)) in
+            let (before_network, after_network) = Eval.sized_rela_to_network rela_json i rela_man in
+            let (nkrobsmap1, start1) = RN.projection_compiler man pk1 pk2 pk3 pk4 (Some before_network, Some (RN.Rel.StarR (RN.Rel.App (pkr,pkr)))) true in
+            let (nkrobsmap2, start2) = RN.projection_compiler man pk1 pk2 pk3 pk4 (Some after_network, Some (RN.Rel.StarR (RN.Rel.App (pkr,pkr)))) true in
+            assert_equal true (RN.bisim man pk3 pk4 start1 start2 nkrobsmap1 nkrobsmap2);            
+            print_endline ("Rela Test " ^ string_of_int i ^ " time: ");
+            let formatted_float = Printf.sprintf "%.3f" (Sys.time() -. t) in
+            print_endline (formatted_float ^ "s");
+          done;
+         );
+         
+(*        "json_test" >:: (fun _ctx ->
           let pk1 = 0 in
           let pk2 = 1 in
           let pk3 = 2 in
@@ -837,17 +903,6 @@ let tests = "MLBDD tests" >::: [
           let boolean16 = RN.emptiness_check man' 0 1 2 3 (Some network8, Some relation10) in
           assert_equal true boolean16;
           Printf.printf "Test time (Test 13): %fs\n" (Sys.time() -. t);
-
-     (*     let rela_json = Yojson.Basic.from_file "../../../dataset/combined2.json" in
-          let rela_man = Eval.init_rela_man rela_json in
-          let t = Sys.time() in
-          let (before_network, after_network) = Eval.rela_to_network rela_json rela_man in
-          let (nkrobsmap17, start17) = RN.projection_compiler man pk1 pk2 pk3 pk4 (Some before_network, Some (RN.Rel.StarR (RN.Rel.App (Id,Id)))) true in
-          let (nkrobsmap18, start18) = RN.projection_compiler man pk1 pk2 pk3 pk4 (Some after_network, Some (RN.Rel.StarR (RN.Rel.App (Id,Id)))) true in
-          assert_equal true (RN.bisim man pk3 pk4 start17 start18 nkrobsmap17 nkrobsmap18);
-          Printf.printf "Rela Test time: %fs\n" (Sys.time() -. t);
-          print_endline ("Number of nodes" ^ string_of_int (Eval.StringMap.cardinal rela_man.nodes));*)
-
           let gateway_json_1 = Yojson.Basic.from_file "../../../dataset/us-west-2/InternetGateways.json" in
           let internet_gateway_1 = Eval.parse_internet_gateways gateway_json_1 in
           let switches_json_1 = Yojson.Basic.from_file "../../../dataset/us-west-2/NetworkInterfaces.json" in
@@ -928,11 +983,11 @@ let tests = "MLBDD tests" >::: [
           assert_equal true boolean23;
           Printf.printf "Test time (Test 20): %fs\n" (Sys.time() -. t);
 
-          );
+          );*)
 
       ]
 
 let _ =
   run_test_tt_main begin "all" >::: [
       tests;
-    ] end
+    ] end;

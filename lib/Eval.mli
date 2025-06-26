@@ -118,6 +118,7 @@ val parse_rela_dst_ip_filter : string -> man -> pred
 val parse_path_to_nk: man -> path -> NK.t
 val parse_rel_to_rel: man -> rel -> Rel.t
 val rela_to_network : Yojson.Basic.t -> man -> NK.t * NK.t
+val sized_rela_to_network : Yojson.Basic.t -> int -> man -> NK.t * NK.t
 val parse_internet_gateways : Yojson.Basic.t -> StringSet.t
 val add_ip_switches: Yojson.Basic.t -> StringSet.t -> man -> man
 

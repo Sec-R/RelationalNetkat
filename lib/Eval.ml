@@ -929,8 +929,24 @@ let parse_rela_global_routing_table (rela:Yojson.Basic.t) (man:man) : NK.t * NK.
     (* Convert the sets to networks *)
     (Union before_set, Union after_set)
 
+let rec take n xs =
+  match n, xs with
+  | 0, _ -> []  (* Base case: taking 0 elements results in an empty list *)
+  | _, [] -> []  (* Base case: taking elements from an empty list results in an empty list *)
+  | n, h :: t when n > 0 -> h :: take (n - 1) t (* Recursive step: prepend the head and recurse on the tail *)
+  | _ -> [] (* Catch any other cases (e.g., negative n) *)    
+
+let truncate_rela (rela:Yojson.Basic.t) (i:int) : Yojson.Basic.t =
+  match rela with
+  | `List l -> `List (take i l)
+  | _ -> failwith "Unexpected JSON format for rela"
+
 let rela_to_network (rela:Yojson.Basic.t) (man:man) : NK.t * NK.t =
   parse_rela_global_routing_table rela man
+
+let sized_rela_to_network (rela:Yojson.Basic.t) (i:int) (man:man) : NK.t * NK.t =
+  let truncated_rela = truncate_rela rela i in
+  parse_rela_global_routing_table truncated_rela man 
   
 let parse_internet_gateways (internet_gateways:Yojson.Basic.t): StringSet.t =
   internet_gateways |> member "InternetGateways" |> to_list |> filter_member "InternetGatewayId" |> filter_string |> StringSet.of_list 
