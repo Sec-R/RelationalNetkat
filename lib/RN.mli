@@ -180,6 +180,7 @@ val nkros_map_to_string : BSet.t NKROMap.t -> string
 val transition_set_map_to_string : (BSet.t * BSet.t NKROMap.t) NKROMap.t -> string
 val transition_map_to_string : MLBDD.t NKROBMap.t NKROBMap.t -> string
 val determinized_transition_map_to_string : MLBDD.t NKROBSMap.t NKROBSMap.t -> string
+val simplified_determinized_transition_map_to_string : MLBDD.t NKROBSMap.t NKROBSMap.t -> string
 
 val init_man : field -> int -> man
 val bddvar : pk -> field -> int

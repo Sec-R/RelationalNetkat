@@ -12,6 +12,7 @@ type header =
   | SrcPorts
   | DstIp
   | DstPorts
+  | Tunnel
 
 type path = 
   | PSymbol of string
@@ -42,9 +43,11 @@ type man = {
   interface: (pkr*pkr)DStringMap.t;
   vrf: (int StringMap.t) StringMap.t;
   interface_to_vrf: int DStringMap.t;
+  interfaces_to_tunnels: (int DStringMap.t)*(int DStringMap.t);
   nodes_length: int;
   vrf_length: int;
   protocols_length: int;
+  tunnel_length: int;
   length: int;
 }
 
@@ -65,7 +68,8 @@ val parse_protocols_to_map : Yojson.Basic.t -> int StringMap.t
 val parse_interfaces_to_map : Yojson.Basic.t -> (string * string) DStringMap.t
 val parse_vrf_to_map : Yojson.Basic.t -> (int StringMap.t) StringMap.t
 
-val init_man : Yojson.Basic.t -> Yojson.Basic.t -> Yojson.Basic.t -> Yojson.Basic.t -> man
+val init_man : Yojson.Basic.t -> Yojson.Basic.t -> Yojson.Basic.t -> Yojson.Basic.t -> Yojson.Basic.t option -> man
+val init_man_disable_tunnel : Yojson.Basic.t -> Yojson.Basic.t -> Yojson.Basic.t -> Yojson.Basic.t -> Yojson.Basic.t option -> man
 val get_field_length : man -> int
 
 val binary_to_pred : int -> int -> int -> int -> pred
@@ -91,6 +95,7 @@ val parse_protocol_filter : string -> string -> Yojson.Basic.t -> int StringMap.
 val parse_local_routing_table : string -> Yojson.Basic.t list -> man -> pkr
 val parse_global_routing_table : Yojson.Basic.t -> man -> pkr
 val json_to_network : Yojson.Basic.t -> man -> bool -> string list -> string list -> NK.t
+val encrypted_json_to_network : Yojson.Basic.t -> man -> bool -> string list -> string list -> string list -> NK.t
 val find_next_loc_filter: string -> string -> man -> pkr
 val string_of_ip : int -> string
 val post_pred_pkr : pred -> pkr -> pkr
@@ -122,3 +127,11 @@ val sized_rela_to_network : Yojson.Basic.t -> int -> man -> NK.t * NK.t
 val parse_internet_gateways : Yojson.Basic.t -> StringSet.t
 val add_ip_switches: Yojson.Basic.t -> StringSet.t -> man -> man
 
+val parse_ipsec_tunnels : Yojson.Basic.t -> (int DStringMap.t)*(int DStringMap.t) 
+val compare_interface : man -> man -> unit
+val compare_interface_with_edgeMap : man -> man -> unit
+val compare_node : man -> man -> Yojson.Basic.t -> unit
+val encrypt_network: Yojson.Basic.t -> man -> string list -> pkr
+val encrypt_network_from_routing_table: pkr -> man -> string list -> pkr
+val encrypt_packet_relation :  man -> string list -> pkr
+val encrypt_to_pkr: man -> int -> pkr
