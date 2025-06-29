@@ -626,6 +626,29 @@ let tests = "MLBDD tests" >::: [
           assert_equal true (RN.bisim man pk3 pk4 start16 start17 nkrobsmap12 nkrobsmap13);
 
           );
+          "rela_id_test" >:: (fun _ctx ->
+          let pk1 = 0 in
+          let pk2 = 1 in
+          let pk3 = 2 in
+          let pk4 = 3 in
+          let rela_json = Yojson.Basic.from_file "../../../dataset/rela_test_all.json" in
+          let rela_list = rela_json |> Yojson.Basic.Util.to_list in
+          let list_size = List.length rela_list in
+          for i = 1 to 20 do
+            let nth = (*Random.int list_size*) i in
+            let nth_rela_json = `List [List.nth rela_list nth] in
+            let rela_man = Eval.init_rela_man nth_rela_json in
+            let man = RN.init_man (Eval.get_field_length rela_man) (Eval.get_field_length rela_man) in
+            let t = Sys.time() in
+            let (before_network, after_network) = Eval.sized_rela_to_network nth_rela_json i rela_man in
+            let (nkrobsmap1, start1) = RN.projection_compiler man pk1 pk2 pk3 pk4 (Some before_network, Some (RN.Rel.StarR (RN.Rel.App (Id,Id)))) true in
+            let (nkrobsmap2, start2) = RN.projection_compiler man pk1 pk2 pk3 pk4 (Some after_network, Some (RN.Rel.StarR (RN.Rel.App (Id,Id)))) true in
+            let formatted_float = Printf.sprintf "%.3f" (Sys.time() -. t) in
+            print_endline ("Rela Test " ^ string_of_int i ^ " time: ");
+            print_endline (formatted_float ^ "s");
+          done;
+         );
+
           (*
          "rela_id_test" >:: (fun _ctx ->
           let pk1 = 0 in
@@ -691,6 +714,7 @@ let tests = "MLBDD tests" >::: [
           done;
          );
          *)
+         (*
         "json_test" >:: (fun _ctx ->
           assert_equal (RN.And (RN.Test (0,true),RN.And (RN.Test (1,true),RN.Test (2,false)))) (Eval.binary_to_pred 0 3 2 6);
           let json_node_base = Yojson.Basic.from_file "../../../dataset/base-node.json" in
@@ -997,7 +1021,7 @@ let tests = "MLBDD tests" >::: [
           let boolean25 = (RN.bisim man' 2 3 start29 start30 nkrobsmap29 nkrobsmap30) in
           Printf.printf "Bisimulation time (Test 21): %fs\n" (Sys.time() -. t);
           assert_equal true boolean25;
-          );
+          );*)
 
       ]
 

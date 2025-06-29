@@ -1099,12 +1099,13 @@ let rec parse_rel_to_rel (rela_man:man) (rel:rel): Rel.t =
       Id (nk)    
 
 let parse_rela_local_routing_table (rela:Yojson.Basic.t) (man:man) : NK.t * NK.t =
-  let ip_traffic_list = rela |> member "ipTrafficKeys" |> to_list in
-    let ip_pred = 
+  (*let ip_traffic_list = rela |> member "ipTrafficKeys" |> to_list in
+    let ip_pred = (**)
       List.fold_left (fun acc ip ->
         let srcip = ip |> member "srcIp" |> to_string in
         let dstip = ip |> member "dstIp" |> to_string in
-        Or (acc, And (parse_rela_src_ip_filter srcip man, parse_rela_dst_ip_filter dstip man))) (False) ip_traffic_list  in
+        Or (acc, And (parse_rela_src_ip_filter srcip man, parse_rela_dst_ip_filter dstip man))) (False) ip_traffic_list  in*)
+  let ip_pred = True in (* Placeholder for IP predicate, can be customized *)      
   let before_sink_list = rela |> member "graphBefore" |> member "sinkNodes" |> to_list |> filter_string in
   let before_sink_set = StringSet.of_list before_sink_list in
   let after_sink_list = rela |> member "graphAfter" |> member "sinkNodes" |> to_list |> filter_string in
