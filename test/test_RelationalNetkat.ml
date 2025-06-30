@@ -626,6 +626,7 @@ let tests = "MLBDD tests" >::: [
           assert_equal true (RN.bisim man pk3 pk4 start16 start17 nkrobsmap12 nkrobsmap13);
 
           );
+          (*
           "rela_id_test" >:: (fun _ctx ->
           let pk1 = 0 in
           let pk2 = 1 in
@@ -634,86 +635,92 @@ let tests = "MLBDD tests" >::: [
           let rela_json = Yojson.Basic.from_file "../../../dataset/rela_test_all.json" in
           let rela_list = rela_json |> Yojson.Basic.Util.to_list in
           let list_size = List.length rela_list in
+          let havocnk = RN.NK.Seq (RN.NK.Pkr Havoc, RN.NK.Star (RN.NK.Seq (RN.NK.Dup, RN.NK.Pkr Havoc))) in
+          let id = RN.Rel.Id havocnk in
+          let result_list = ref [] in
           for i = 1 to 20 do
-            let nth = (*Random.int list_size*) i in
+            let nth = Random.int list_size in
             let nth_rela_json = `List [List.nth rela_list nth] in
             let rela_man = Eval.init_rela_man nth_rela_json in
             let man = RN.init_man (Eval.get_field_length rela_man) (Eval.get_field_length rela_man) in
             let t = Sys.time() in
             let (before_network, after_network) = Eval.sized_rela_to_network nth_rela_json i rela_man in
-            let (nkrobsmap1, start1) = RN.projection_compiler man pk1 pk2 pk3 pk4 (Some before_network, Some (RN.Rel.StarR (RN.Rel.App (Id,Id)))) true in
-            let (nkrobsmap2, start2) = RN.projection_compiler man pk1 pk2 pk3 pk4 (Some after_network, Some (RN.Rel.StarR (RN.Rel.App (Id,Id)))) true in
-            let formatted_float = Printf.sprintf "%.3f" (Sys.time() -. t) in
-            print_endline ("Rela Test " ^ string_of_int i ^ " time: ");
-            print_endline (formatted_float ^ "s");
+            let (nkrobsmap1, start1) = RN.projection_compiler man pk1 pk2 pk3 pk4 (Some before_network, Some id) true in
+            let (nkrobsmap2, start2) = RN.projection_compiler man pk1 pk2 pk3 pk4 (Some after_network, Some id) true in
+            let _ = (RN.bisim man pk3 pk4 start1 start2 nkrobsmap1 nkrobsmap2) in
+            result_list := (Sys.time() -. t) :: !result_list;         
           done;
-         );
-
-          (*
-         "rela_id_test" >:: (fun _ctx ->
+          Out_channel.with_open_text "../../../a.txt" (fun chan ->
+            List.iter (Printf.fprintf chan "%.6f\n") !result_list
+          );
+         );*)
+          "rela_delete_test" >:: (fun _ctx ->
           let pk1 = 0 in
           let pk2 = 1 in
           let pk3 = 2 in
           let pk4 = 3 in
-          let rela_json = Yojson.Basic.from_file "../../../dataset/rela_test.json" in
-          let rela_man = Eval.init_rela_man rela_json in
-          let man = RN.init_man (Eval.get_field_length rela_man) (Eval.get_field_length rela_man) in
+          let rela_json = Yojson.Basic.from_file "../../../dataset/rela_test_all.json" in
+          let rela_list = rela_json |> Yojson.Basic.Util.to_list in
+          let list_size = List.length rela_list in
+          let havocnk = RN.NK.Seq (RN.NK.Pkr Havoc, RN.NK.Star (RN.NK.Seq (RN.NK.Dup, RN.NK.Pkr Havoc))) in
+          let id = RN.Rel.Id havocnk in
+          let result_list = ref [] in
           for i = 1 to 20 do
+            let nth = Random.int list_size in
+            let nth_rela_json = `List [List.nth rela_list nth] in
+            let rela_man = Eval.init_rela_man nth_rela_json in
+            let man = RN.init_man (Eval.get_field_length rela_man) (Eval.get_field_length rela_man) in
+            let length = rela_man.nodes_length in
+            let delete_loc_id = 2 * (Random.int (Eval.StringMap.cardinal rela_man.nodes)) in
+            let loc_pred = RN.Neg (Eval.binary_to_pred (Eval.header_placement Loc rela_man) length (length-1) delete_loc_id) in
+            let pkr = RN.AndP (RN.Binary (loc_pred, RN.True), Id) in
             let t = Sys.time() in
-            let (before_network, after_network) = Eval.sized_rela_to_network rela_json i rela_man in
-            let (nkrobsmap1, start1) = RN.projection_compiler man pk1 pk2 pk3 pk4 (Some before_network, Some (RN.Rel.StarR (RN.Rel.App (Id,Id)))) true in
-            let (nkrobsmap2, start2) = RN.projection_compiler man pk1 pk2 pk3 pk4 (Some after_network, Some (RN.Rel.StarR (RN.Rel.App (Id,Id)))) true in
-            assert_equal true (RN.bisim man pk3 pk4 start1 start2 nkrobsmap1 nkrobsmap2);            
-            print_endline ("Rela Test " ^ string_of_int i ^ " time: ");
-            let formatted_float = Printf.sprintf "%.3f" (Sys.time() -. t) in
-            print_endline (formatted_float ^ "s");
+            let (before_network, after_network) = Eval.sized_rela_to_network nth_rela_json i rela_man in
+            let (nkrobsmap1, start1) = RN.projection_compiler man pk1 pk2 pk3 pk4 (Some before_network, Some (RN.Rel.Apply(pkr,havocnk))) true in
+            let (nkrobsmap2, start2) = RN.projection_compiler man pk1 pk2 pk3 pk4 (Some after_network, Some id) true in
+            let _ = (RN.bisim man pk3 pk4 start1 start2 nkrobsmap1 nkrobsmap2) in
+            result_list := (Sys.time() -. t) :: !result_list;
           done;
+          Out_channel.with_open_text "../../../b.txt" (fun chan ->
+            List.iter (Printf.fprintf chan "%.6f\n") !result_list
+          );
          );
-         "rela_delete_test" >:: (fun _ctx ->
-          let pk1 = 0 in
-          let pk2 = 1 in
-          let pk3 = 2 in
-          let pk4 = 3 in
-          let rela_json = Yojson.Basic.from_file "../../../dataset/rela_test.json" in
-          let rela_man = Eval.init_rela_man rela_json in
-          let man = RN.init_man (Eval.get_field_length rela_man) (Eval.get_field_length rela_man) in
-          for i = 1 to 20 do
-            let t = Sys.time() in
-            let loc_pred = RN.Neg (Eval.parse_location_to_pred "Device262" false rela_man) in
-            let pkr = RN.AndP (RN.Binary (loc_pred, RN.True),Id) in
-            let (before_network, after_network) = Eval.sized_rela_to_network rela_json i rela_man in
-            let (nkrobsmap1, start1) = RN.projection_compiler man pk1 pk2 pk3 pk4 (Some before_network, Some (RN.Rel.StarR (RN.Rel.App (pkr,pkr)))) true in
-            let (nkrobsmap2, start2) = RN.projection_compiler man pk1 pk2 pk3 pk4 (Some after_network, Some (RN.Rel.StarR (RN.Rel.App (pkr,pkr)))) true in
-            assert_equal true (RN.bisim man pk3 pk4 start1 start2 nkrobsmap1 nkrobsmap2);            
-            print_endline ("Rela Test " ^ string_of_int i ^ " time: ");
-            let formatted_float = Printf.sprintf "%.3f" (Sys.time() -. t) in
-            print_endline (formatted_float ^ "s");
-          done;
-         );
-         
           "rela_change_test" >:: (fun _ctx ->
           let pk1 = 0 in
           let pk2 = 1 in
           let pk3 = 2 in
           let pk4 = 3 in
-          let rela_json = Yojson.Basic.from_file "../../../dataset/rela_test.json" in
-          let rela_man = Eval.init_rela_man rela_json in
-          let man = RN.init_man (Eval.get_field_length rela_man) (Eval.get_field_length rela_man) in
+          let rela_json = Yojson.Basic.from_file "../../../dataset/rela_test_all.json" in
+          let rela_list = rela_json |> Yojson.Basic.Util.to_list in
+          let list_size = List.length rela_list in
+          let havocnk = RN.NK.Seq (RN.NK.Pkr Havoc, RN.NK.Star (RN.NK.Seq (RN.NK.Dup, RN.NK.Pkr Havoc))) in
+          let id = RN.Rel.Id havocnk in
+          let result_list = ref [] in
           for i = 1 to 20 do
+            let nth = Random.int list_size in
+            let nth_rela_json = `List [List.nth rela_list nth] in
+            let rela_man = Eval.init_rela_man nth_rela_json in
+            let man = RN.init_man (Eval.get_field_length rela_man) (Eval.get_field_length rela_man) in
+            let length = rela_man.nodes_length in
+            let delete_loc_id = 2 * (Random.int (Eval.StringMap.cardinal rela_man.nodes)) in
+            let forward_loc_id = 2 * (Random.int (Eval.StringMap.cardinal rela_man.nodes)) in
+            let loc_pred = Eval.binary_to_pred (Eval.header_placement Loc rela_man) length (length-1) delete_loc_id in
+            let loc_pkr = Eval.binary_to_pkr (Eval.header_placement Loc rela_man) length (length-1) forward_loc_id in
+            let pkr1 = RN.AndP (RN.Binary (RN.Neg loc_pred, RN.True), Id) in
+            let pkr2 = RN.OrP (RN.AndP (RN.Binary (loc_pred, RN.True),loc_pkr),RN.AndP (RN.Binary (RN.Neg loc_pred, RN.True),Id)) in
+            let matchnk = RN.NK.Seq (RN.NK.Pkr (RN.Binary (True,loc_pred)), RN.NK.Seq (RN.NK.Dup,RN.NK.Pkr Havoc))in
+            let relation = RN.Rel.SeqR (RN.Rel.Apply(pkr1,havocnk), RN.Rel.SeqR (RN.Rel.Apply(pkr2,matchnk),RN.Rel.Apply(pkr1,havocnk))) in
             let t = Sys.time() in
-            let loc_pred = Eval.parse_location_to_pred "Device262" false rela_man in
-            let loc_pkr = Eval.parse_location_to_pkr "Device2063" false rela_man in
-            let pkr = RN.OrP (RN.AndP (RN.Binary (loc_pred, RN.True),loc_pkr),RN.AndP (RN.Binary (RN.Neg loc_pred, RN.True),Id)) in
-            let (before_network, after_network) = Eval.sized_rela_to_network rela_json i rela_man in
-            let (nkrobsmap1, start1) = RN.projection_compiler man pk1 pk2 pk3 pk4 (Some before_network, Some (RN.Rel.StarR (RN.Rel.App (pkr,pkr)))) true in
-            let (nkrobsmap2, start2) = RN.projection_compiler man pk1 pk2 pk3 pk4 (Some after_network, Some (RN.Rel.StarR (RN.Rel.App (pkr,pkr)))) true in
-            assert_equal true (RN.bisim man pk3 pk4 start1 start2 nkrobsmap1 nkrobsmap2);            
-            print_endline ("Rela Test " ^ string_of_int i ^ " time: ");
-            let formatted_float = Printf.sprintf "%.3f" (Sys.time() -. t) in
-            print_endline (formatted_float ^ "s");
+            let (before_network, after_network) = Eval.sized_rela_to_network nth_rela_json i rela_man in
+            let (nkrobsmap1, start1) = RN.projection_compiler man pk1 pk2 pk3 pk4 (Some before_network, Some relation) true in
+            let (nkrobsmap2, start2) = RN.projection_compiler man pk1 pk2 pk3 pk4 (Some after_network, Some id) true in
+            let _ = (RN.bisim man pk3 pk4 start1 start2 nkrobsmap1 nkrobsmap2) in
+            result_list := (Sys.time() -. t) :: !result_list;         
           done;
+          Out_channel.with_open_text "../../../c.txt" (fun chan ->
+            List.iter (Printf.fprintf chan "%.6f\n") !result_list
+          );
          );
-         *)
          (*
         "json_test" >:: (fun _ctx ->
           assert_equal (RN.And (RN.Test (0,true),RN.And (RN.Test (1,true),RN.Test (2,false)))) (Eval.binary_to_pred 0 3 2 6);
