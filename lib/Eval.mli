@@ -110,6 +110,7 @@ val parse_dst_ip_filter: string -> man -> pred
 val parse_dst_ip_filter_list: string list -> man -> pred
 val parse_dst_ip_pkr: string -> man -> pkr
 val parse_dstports_filter: int -> bool -> man -> pred
+val parse_srcports_filter: int -> bool -> man -> pred
 
 val parse_rela_nodes: Yojson.Basic.t -> int StringMap.t
 val init_rela_man: Yojson.Basic.t -> man

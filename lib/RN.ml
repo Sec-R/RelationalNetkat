@@ -1252,6 +1252,11 @@ let bisim (man:man)(pk1:pk)(pk2:pk)(start1:NKROBSet.t)(start2:NKROBSet.t)(aut1:(
    Queue.add ((start1,start2),bdd_true man) worklist;
      bisim_aux NKROBSSMap.empty 
 
+let equivalence_checker (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro1:(NK.t option*Rel.t option)) (nkro2:(NK.t option*Rel.t option)) (calculate_reachable_pair:bool):bool =
+  let (aut1,start1) = projection_compiler man pk1 pk2 pk3 pk4 nkro1 calculate_reachable_pair in
+  let (aut2,start2) = projection_compiler man pk1 pk2 pk3 pk4 nkro2 calculate_reachable_pair in
+  bisim man pk3 pk4 start1 start2 aut1 aut2
+
 let exclusive_intersect (man:man)(start1:NKROBSet.t)(start2:NKROBSet.t)(aut1:((MLBDD.t)NKROBSMap.t)NKROBSMap.t) (aut2:((MLBDD.t)NKROBSMap.t)NKROBSMap.t):((MLBDD.t)NKROBSSMap.t)NKROBSSMap.t =
   let intersect_one_transition (transition_1:(MLBDD.t)NKROBSMap.t) (transition_2:(MLBDD.t)NKROBSMap.t)=
      let reachable_bdd_1 = (NKROBSMap.fold (fun _ bdd1 acc -> MLBDD.dor acc bdd1) transition_1 (bdd_false man)) in
@@ -1286,8 +1291,8 @@ let exclusive_intersect (man:man)(start1:NKROBSet.t)(start2:NKROBSet.t)(aut1:((M
             exclusive_intersect_aux (NKROBSSMap.add (nkros1,nkros2) new_transition acc)
    in
   Queue.add (start1,start2) worklist;
-    exclusive_intersect_aux NKROBSSMap.empty         
-          
+    exclusive_intersect_aux NKROBSSMap.empty             
+
 let is_exclusive_final (nkrobss:(NKROBSet.t*NKROBSet.t)):bool =
   let (nkros1,nkros2) = nkrobss in
   is_final_nkrobs nkros1 <> is_final_nkrobs nkros2

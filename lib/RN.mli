@@ -242,6 +242,7 @@ val determinization : NKROSet.t -> MLBDD.t NKROBMap.t NKROBMap.t -> MLBDD.t NKRO
 val projection_compiler : man -> pk -> pk -> pk ->  pk -> (NK.t option * Rel.t option) -> bool -> MLBDD.t NKROBSMap.t NKROBSMap.t * NKROBSet.t
 val union_compiler : man -> pk -> pk -> pk ->  pk -> (NK.t option * Rel.t option) -> (NK.t option * Rel.t option) -> bool -> MLBDD.t NKROBSMap.t NKROBSMap.t * NKROBSet.t
 val bisim : man -> pk -> pk -> NKROBSet.t -> NKROBSet.t -> MLBDD.t NKROBSMap.t NKROBSMap.t -> MLBDD.t NKROBSMap.t NKROBSMap.t -> bool
+val equivalence_checker : man -> pk -> pk -> pk -> pk -> (NK.t option * Rel.t option) -> (NK.t option * Rel.t option) -> bool -> bool
 val exclusive_intersect: man -> NKROBSet.t -> NKROBSet.t -> ((MLBDD.t)NKROBSMap.t) NKROBSMap.t -> ((MLBDD.t)NKROBSMap.t) NKROBSMap.t -> ((MLBDD.t)NKROBSSMap.t) NKROBSSMap.t
 val is_exclusive_final : NKROBSet.t*NKROBSet.t -> bool
 

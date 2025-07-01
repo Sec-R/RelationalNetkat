@@ -1,0 +1,386 @@
+{
+    "0": {
+        "Interface": {
+            "hostname": "border1",
+            "interface": "GigabitEthernet1/0"
+        },
+        "IPs": [
+            "2.12.11.1"
+        ],
+        "Remote_Interface": {
+            "hostname": "core1",
+            "interface": "GigabitEthernet0/0"
+        },
+        "Remote_IPs": [
+            "2.12.11.2"
+        ]
+    },
+    "1": {
+        "Interface": {
+            "hostname": "border1",
+            "interface": "GigabitEthernet2/0"
+        },
+        "IPs": [
+            "2.12.12.1"
+        ],
+        "Remote_Interface": {
+            "hostname": "core2",
+            "interface": "GigabitEthernet1/0"
+        },
+        "Remote_IPs": [
+            "2.12.12.2"
+        ]
+    },
+    "2": {
+        "Interface": {
+            "hostname": "border2",
+            "interface": "GigabitEthernet1/0"
+        },
+        "IPs": [
+            "2.12.22.1"
+        ],
+        "Remote_Interface": {
+            "hostname": "core2",
+            "interface": "GigabitEthernet0/0"
+        },
+        "Remote_IPs": [
+            "2.12.22.2"
+        ]
+    },
+    "3": {
+        "Interface": {
+            "hostname": "border2",
+            "interface": "GigabitEthernet2/0"
+        },
+        "IPs": [
+            "2.12.21.1"
+        ],
+        "Remote_Interface": {
+            "hostname": "core1",
+            "interface": "GigabitEthernet1/0"
+        },
+        "Remote_IPs": [
+            "2.12.21.2"
+        ]
+    },
+    "4": {
+        "Interface": {
+            "hostname": "core1",
+            "interface": "GigabitEthernet0/0"
+        },
+        "IPs": [
+            "2.12.11.2"
+        ],
+        "Remote_Interface": {
+            "hostname": "border1",
+            "interface": "GigabitEthernet1/0"
+        },
+        "Remote_IPs": [
+            "2.12.11.1"
+        ]
+    },
+    "5": {
+        "Interface": {
+            "hostname": "core1",
+            "interface": "GigabitEthernet1/0"
+        },
+        "IPs": [
+            "2.12.21.2"
+        ],
+        "Remote_Interface": {
+            "hostname": "border2",
+            "interface": "GigabitEthernet2/0"
+        },
+        "Remote_IPs": [
+            "2.12.21.1"
+        ]
+    },
+    "6": {
+        "Interface": {
+            "hostname": "core1",
+            "interface": "GigabitEthernet2/0"
+        },
+        "IPs": [
+            "2.23.11.2"
+        ],
+        "Remote_Interface": {
+            "hostname": "spine1",
+            "interface": "GigabitEthernet0/0"
+        },
+        "Remote_IPs": [
+            "2.23.11.3"
+        ]
+    },
+    "7": {
+        "Interface": {
+            "hostname": "core1",
+            "interface": "GigabitEthernet3/0"
+        },
+        "IPs": [
+            "2.23.12.2"
+        ],
+        "Remote_Interface": {
+            "hostname": "spine2",
+            "interface": "GigabitEthernet1/0"
+        },
+        "Remote_IPs": [
+            "2.23.12.3"
+        ]
+    },
+    "8": {
+        "Interface": {
+            "hostname": "core2",
+            "interface": "GigabitEthernet0/0"
+        },
+        "IPs": [
+            "2.12.22.2"
+        ],
+        "Remote_Interface": {
+            "hostname": "border2",
+            "interface": "GigabitEthernet1/0"
+        },
+        "Remote_IPs": [
+            "2.12.22.1"
+        ]
+    },
+    "9": {
+        "Interface": {
+            "hostname": "core2",
+            "interface": "GigabitEthernet1/0"
+        },
+        "IPs": [
+            "2.12.12.2"
+        ],
+        "Remote_Interface": {
+            "hostname": "border1",
+            "interface": "GigabitEthernet2/0"
+        },
+        "Remote_IPs": [
+            "2.12.12.1"
+        ]
+    },
+    "10": {
+        "Interface": {
+            "hostname": "core2",
+            "interface": "GigabitEthernet2/0"
+        },
+        "IPs": [
+            "2.23.22.2"
+        ],
+        "Remote_Interface": {
+            "hostname": "spine2",
+            "interface": "GigabitEthernet0/0"
+        },
+        "Remote_IPs": [
+            "2.23.22.3"
+        ]
+    },
+    "11": {
+        "Interface": {
+            "hostname": "core2",
+            "interface": "GigabitEthernet3/0"
+        },
+        "IPs": [
+            "2.23.21.2"
+        ],
+        "Remote_Interface": {
+            "hostname": "spine1",
+            "interface": "GigabitEthernet1/0"
+        },
+        "Remote_IPs": [
+            "2.23.21.3"
+        ]
+    },
+    "12": {
+        "Interface": {
+            "hostname": "host-db",
+            "interface": "eth0"
+        },
+        "IPs": [
+            "2.128.0.1"
+        ],
+        "Remote_Interface": {
+            "hostname": "leaf1",
+            "interface": "GigabitEthernet2/0"
+        },
+        "Remote_IPs": [
+            "2.128.0.2"
+        ]
+    },
+    "13": {
+        "Interface": {
+            "hostname": "host-www",
+            "interface": "eth0"
+        },
+        "IPs": [
+            "2.128.1.1"
+        ],
+        "Remote_Interface": {
+            "hostname": "leaf1",
+            "interface": "GigabitEthernet3/0"
+        },
+        "Remote_IPs": [
+            "2.128.1.2"
+        ]
+    },
+    "14": {
+        "Interface": {
+            "hostname": "leaf1",
+            "interface": "GigabitEthernet0/0"
+        },
+        "IPs": [
+            "2.34.101.4"
+        ],
+        "Remote_Interface": {
+            "hostname": "spine1",
+            "interface": "GigabitEthernet2/0"
+        },
+        "Remote_IPs": [
+            "2.34.101.3"
+        ]
+    },
+    "15": {
+        "Interface": {
+            "hostname": "leaf1",
+            "interface": "GigabitEthernet1/0"
+        },
+        "IPs": [
+            "2.34.201.4"
+        ],
+        "Remote_Interface": {
+            "hostname": "spine2",
+            "interface": "GigabitEthernet2/0"
+        },
+        "Remote_IPs": [
+            "2.34.201.3"
+        ]
+    },
+    "16": {
+        "Interface": {
+            "hostname": "leaf1",
+            "interface": "GigabitEthernet2/0"
+        },
+        "IPs": [
+            "2.128.0.2"
+        ],
+        "Remote_Interface": {
+            "hostname": "host-db",
+            "interface": "eth0"
+        },
+        "Remote_IPs": [
+            "2.128.0.1"
+        ]
+    },
+    "17": {
+        "Interface": {
+            "hostname": "leaf1",
+            "interface": "GigabitEthernet3/0"
+        },
+        "IPs": [
+            "2.128.1.2"
+        ],
+        "Remote_Interface": {
+            "hostname": "host-www",
+            "interface": "eth0"
+        },
+        "Remote_IPs": [
+            "2.128.1.1"
+        ]
+    },
+    "18": {
+        "Interface": {
+            "hostname": "spine1",
+            "interface": "GigabitEthernet0/0"
+        },
+        "IPs": [
+            "2.23.11.3"
+        ],
+        "Remote_Interface": {
+            "hostname": "core1",
+            "interface": "GigabitEthernet2/0"
+        },
+        "Remote_IPs": [
+            "2.23.11.2"
+        ]
+    },
+    "19": {
+        "Interface": {
+            "hostname": "spine1",
+            "interface": "GigabitEthernet1/0"
+        },
+        "IPs": [
+            "2.23.21.3"
+        ],
+        "Remote_Interface": {
+            "hostname": "core2",
+            "interface": "GigabitEthernet3/0"
+        },
+        "Remote_IPs": [
+            "2.23.21.2"
+        ]
+    },
+    "20": {
+        "Interface": {
+            "hostname": "spine1",
+            "interface": "GigabitEthernet2/0"
+        },
+        "IPs": [
+            "2.34.101.3"
+        ],
+        "Remote_Interface": {
+            "hostname": "leaf1",
+            "interface": "GigabitEthernet0/0"
+        },
+        "Remote_IPs": [
+            "2.34.101.4"
+        ]
+    },
+    "21": {
+        "Interface": {
+            "hostname": "spine2",
+            "interface": "GigabitEthernet0/0"
+        },
+        "IPs": [
+            "2.23.22.3"
+        ],
+        "Remote_Interface": {
+            "hostname": "core2",
+            "interface": "GigabitEthernet2/0"
+        },
+        "Remote_IPs": [
+            "2.23.22.2"
+        ]
+    },
+    "22": {
+        "Interface": {
+            "hostname": "spine2",
+            "interface": "GigabitEthernet1/0"
+        },
+        "IPs": [
+            "2.23.12.3"
+        ],
+        "Remote_Interface": {
+            "hostname": "core1",
+            "interface": "GigabitEthernet3/0"
+        },
+        "Remote_IPs": [
+            "2.23.12.2"
+        ]
+    },
+    "23": {
+        "Interface": {
+            "hostname": "spine2",
+            "interface": "GigabitEthernet2/0"
+        },
+        "IPs": [
+            "2.34.201.3"
+        ],
+        "Remote_Interface": {
+            "hostname": "leaf1",
+            "interface": "GigabitEthernet1/0"
+        },
+        "Remote_IPs": [
+            "2.34.201.4"
+        ]
+    }
+}

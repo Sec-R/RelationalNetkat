@@ -1,0 +1,146 @@
+{
+    "0": {
+        "Source_Interface": {
+            "hostname": "tgw-06b348adabd13452d",
+            "interface": "external-vpn-01c45673532d3e33e-1"
+        },
+        "Tunnel_Interface": {
+            "hostname": "tgw-06b348adabd13452d",
+            "interface": "vpn-vpn-01c45673532d3e33e-1"
+        },
+        "Remote_Source_Interface": {
+            "hostname": "exitgw",
+            "interface": "GigabitEthernet3"
+        },
+        "Remote_Tunnel_Interface": {
+            "hostname": "exitgw",
+            "interface": "Tunnel1"
+        }
+    },
+    "1": {
+        "Source_Interface": {
+            "hostname": "tgw-0888a76c8a371246d",
+            "interface": "external-vpn-0dc7abdb974ff8a69-1"
+        },
+        "Tunnel_Interface": {
+            "hostname": "tgw-0888a76c8a371246d",
+            "interface": "vpn-vpn-0dc7abdb974ff8a69-1"
+        },
+        "Remote_Source_Interface": {
+            "hostname": "exitgw",
+            "interface": "GigabitEthernet3"
+        },
+        "Remote_Tunnel_Interface": {
+            "hostname": "exitgw",
+            "interface": "Tunnel3"
+        }
+    },
+    "2": {
+        "Source_Interface": {
+            "hostname": "tgw-06b348adabd13452d",
+            "interface": "external-vpn-01c45673532d3e33e-2"
+        },
+        "Tunnel_Interface": {
+            "hostname": "tgw-06b348adabd13452d",
+            "interface": "vpn-vpn-01c45673532d3e33e-2"
+        },
+        "Remote_Source_Interface": {
+            "hostname": "exitgw",
+            "interface": "GigabitEthernet3"
+        },
+        "Remote_Tunnel_Interface": {
+            "hostname": "exitgw",
+            "interface": "Tunnel2"
+        }
+    },
+    "3": {
+        "Source_Interface": {
+            "hostname": "exitgw",
+            "interface": "GigabitEthernet3"
+        },
+        "Tunnel_Interface": {
+            "hostname": "exitgw",
+            "interface": "Tunnel4"
+        },
+        "Remote_Source_Interface": {
+            "hostname": "tgw-0888a76c8a371246d",
+            "interface": "external-vpn-0dc7abdb974ff8a69-2"
+        },
+        "Remote_Tunnel_Interface": {
+            "hostname": "tgw-0888a76c8a371246d",
+            "interface": "vpn-vpn-0dc7abdb974ff8a69-2"
+        }
+    },
+    "4": {
+        "Source_Interface": {
+            "hostname": "tgw-0888a76c8a371246d",
+            "interface": "external-vpn-0dc7abdb974ff8a69-2"
+        },
+        "Tunnel_Interface": {
+            "hostname": "tgw-0888a76c8a371246d",
+            "interface": "vpn-vpn-0dc7abdb974ff8a69-2"
+        },
+        "Remote_Source_Interface": {
+            "hostname": "exitgw",
+            "interface": "GigabitEthernet3"
+        },
+        "Remote_Tunnel_Interface": {
+            "hostname": "exitgw",
+            "interface": "Tunnel4"
+        }
+    },
+    "5": {
+        "Source_Interface": {
+            "hostname": "exitgw",
+            "interface": "GigabitEthernet3"
+        },
+        "Tunnel_Interface": {
+            "hostname": "exitgw",
+            "interface": "Tunnel1"
+        },
+        "Remote_Source_Interface": {
+            "hostname": "tgw-06b348adabd13452d",
+            "interface": "external-vpn-01c45673532d3e33e-1"
+        },
+        "Remote_Tunnel_Interface": {
+            "hostname": "tgw-06b348adabd13452d",
+            "interface": "vpn-vpn-01c45673532d3e33e-1"
+        }
+    },
+    "6": {
+        "Source_Interface": {
+            "hostname": "exitgw",
+            "interface": "GigabitEthernet3"
+        },
+        "Tunnel_Interface": {
+            "hostname": "exitgw",
+            "interface": "Tunnel2"
+        },
+        "Remote_Source_Interface": {
+            "hostname": "tgw-06b348adabd13452d",
+            "interface": "external-vpn-01c45673532d3e33e-2"
+        },
+        "Remote_Tunnel_Interface": {
+            "hostname": "tgw-06b348adabd13452d",
+            "interface": "vpn-vpn-01c45673532d3e33e-2"
+        }
+    },
+    "7": {
+        "Source_Interface": {
+            "hostname": "exitgw",
+            "interface": "GigabitEthernet3"
+        },
+        "Tunnel_Interface": {
+            "hostname": "exitgw",
+            "interface": "Tunnel3"
+        },
+        "Remote_Source_Interface": {
+            "hostname": "tgw-0888a76c8a371246d",
+            "interface": "external-vpn-0dc7abdb974ff8a69-1"
+        },
+        "Remote_Tunnel_Interface": {
+            "hostname": "tgw-0888a76c8a371246d",
+            "interface": "vpn-vpn-0dc7abdb974ff8a69-1"
+        }
+    }
+}

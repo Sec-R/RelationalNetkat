@@ -952,6 +952,14 @@ let parse_dstports_filter (ports:int) (negate:bool) (man:man): pred =
     else
       pred
 
+let parse_srcports_filter (ports:int) (negate:bool) (man:man): pred =
+    let pred = binary_to_pred (header_placement SrcPorts man) 16 15 ports in
+    if negate then
+      Neg pred
+    else
+      pred
+
+
 let insert_rela_node (key:string) (map:int StringMap.t) =
   if StringMap.mem key map then
     map
