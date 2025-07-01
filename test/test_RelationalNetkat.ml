@@ -858,28 +858,6 @@ let tests = "MLBDD tests" >::: [
           let east2_public = "i-01602d9efaed4409a" in
           let west2_private = "i-0a5d64b8b58c6dd09" in
           let west2_public = "i-02cae6eaa9edeed70" in
-          let man' = RN.init_man (Eval.get_field_length man6) (Eval.get_field_length man6) in
-          let network7 = Eval.json_to_network json_node_base_6 man6 false [east2_private] [east2_public] in
-          let pred6 = Eval.parse_tcp_filter "ssh" man6 in
-          let pred6' = Eval.parse_dst_ip_filter "10.20.1.207" man6 in
-          let relation8 = RN.Rel.SeqR (RN.Rel.Nil (RN.Binary (RN.And (pred6,pred6'), True)), id) in
-          let t = Sys.time() in
-          let boolean14 = RN.emptiness_check man' 0 1 2 3 (Some network7, Some relation8) in
-          assert_equal false boolean14;
-          Printf.printf "Test time (Test 11): %fs\n" (Sys.time() -. t);
-          let network8 = Eval.json_to_network json_node_base_6 man6 false [east2_public] [west2_public] in
-          let pred7 = Eval.parse_dst_ip_filter "10.40.2.80" man6  in
-          let relation9 = RN.Rel.SeqR (RN.Rel.Nil (RN.Binary (pred7, True)), id) in
-          let t = Sys.time() in
-          let boolean15 = RN.emptiness_check man' 0 1 2 3 (Some network8, Some relation9) in
-          assert_equal true boolean15;
-          Printf.printf "Test time (Test 12): %fs\n" (Sys.time() -. t);
-          let pred8 = Eval.parse_dst_ip_filter "54.191.42.182" man6  in
-          let relation10 = RN.Rel.SeqR (RN.Rel.Nil (RN.Binary (pred8, True)), id) in
-          let t = Sys.time() in
-          let boolean16 = RN.emptiness_check man' 0 1 2 3 (Some network8, Some relation10) in
-          assert_equal true boolean16;
-          Printf.printf "Test time (Test 13): %fs\n" (Sys.time() -. t);
           let gateway_json_1 = Yojson.Basic.from_file "../../../dataset/us-west-2/InternetGateways.json" in
           let internet_gateway_1 = Eval.parse_internet_gateways gateway_json_1 in
           let switches_json_1 = Yojson.Basic.from_file "../../../dataset/us-west-2/NetworkInterfaces.json" in
@@ -888,43 +866,67 @@ let tests = "MLBDD tests" >::: [
           let switches_json_2 = Yojson.Basic.from_file "../../../dataset/us-east-2/NetworkInterfaces.json" in
           let updated_man_2 = Eval.add_ip_switches switches_json_1 internet_gateway_1 man6 in
           let updated_man = Eval.add_ip_switches switches_json_2 internet_gateway_2 updated_man_2 in
-          let network9 = Eval.json_to_network json_node_base_6 updated_man false [east2_public] [west2_public] in
-          let pred9 = Eval.parse_dst_ip_filter "54.191.42.182" updated_man in
-          let pred9' = Eval.parse_dst_ip_filter "10.40.2.80" updated_man in
-          let relation11 = RN.Rel.SeqR (RN.Rel.Nil (RN.Binary (pred9, True)), RN.Rel.SeqR (id,RN.Rel.Nil (RN.Binary (pred9', True)))) in
+          let man' = RN.init_man (Eval.get_field_length updated_man) (Eval.get_field_length updated_man) in
+          let network = Eval.json_to_network json_node_base_6 updated_man false [] [] in
+          let east2_private_pred = Eval.parse_location_to_pred east2_private false updated_man in
+          let east2_public_pred = Eval.parse_location_to_pred east2_public false updated_man in
+          let east2_public_ip_pred  = Eval.parse_dst_ip_filter "10.20.1.207" updated_man in
+          let ssh_pred = Eval.parse_tcp_filter "ssh" updated_man in
+          let start_filter = RN.AndP (RN.Binary (And (east2_private_pred, And (ssh_pred, east2_public_ip_pred)), True),Id) in
+          let end_filter = RN.AndP (RN.Binary (east2_public_pred, True),Id) in
+          let relation = RN.Rel.SeqR (RN.Rel.SeqR (RN.Rel.Nil start_filter, id), RN.Rel.Nil end_filter) in
           let t = Sys.time() in
-          let boolean17 = RN.emptiness_check man' 0 1 2 3 (Some network9, Some relation11) in
-          assert_equal false boolean17;
-          Printf.printf "Test time (Test 14): %fs\n" (Sys.time() -. t);
-          let network10 = Eval.json_to_network json_node_base_6 updated_man false ["srv-101"] [east2_public] in
-          let pred10 = Eval.parse_dst_ip_filter "13.59.144.125" updated_man in
-          let relation12 = RN.Rel.SeqR (RN.Rel.Nil (RN.Binary (pred10, True)), id) in
+          let boolean = RN.emptiness_check man' 0 1 2 3 (Some network, Some relation) in
+          assert_equal false boolean;
+          Printf.printf "Traceroute 1 (time): %fs\n" (Sys.time() -. t);
+          let west2_public_pred = Eval.parse_location_to_pred west2_public false updated_man in
+          let west2_public_ip_pred = Eval.parse_dst_ip_filter "54.191.42.182" updated_man in
+          let west2_private_ip_pred = Eval.parse_dst_ip_filter "10.40.2.80" updated_man in
+          let start_filter2 = RN.AndP (RN.Binary (And (east2_public_pred, And (west2_private_ip_pred, ssh_pred)), True),Id) in
+          let end_filter2 = RN.AndP (RN.Binary (west2_public_pred, True),Id) in
+          let relation2 = RN.Rel.SeqR (RN.Rel.SeqR (RN.Rel.Nil start_filter2, id), RN.Rel.Nil end_filter2) in
           let t = Sys.time() in
-          let boolean18 = RN.emptiness_check man' 0 1 2 3 (Some network10, Some relation12) in
-          assert_equal false boolean18;
-          Printf.printf "Test time (Test 15): %fs\n" (Sys.time() -. t);
-          let pred11 = Eval.parse_dst_ip_filter "10.20.1.207" updated_man in
-          let relation13 = RN.Rel.SeqR (RN.Rel.Nil (RN.Binary (pred11, True)), id) in
+          let boolean2 = RN.emptiness_check man' 0 1 2 3 (Some network, Some relation2) in
+          Printf.printf "Traceroute 2 (time): %fs\n" (Sys.time() -. t);
+          assert_equal true boolean2;
+          let start_filter3 = RN.AndP (RN.Binary (And (east2_public_pred, And (west2_public_ip_pred, ssh_pred)), True),Id) in
+          let relation3 = RN.Rel.SeqR (RN.Rel.SeqR (RN.Rel.Nil start_filter3, id), RN.Rel.Nil end_filter2) in
           let t = Sys.time() in
-          let boolean19 = RN.emptiness_check man' 0 1 2 3 (Some network10, Some relation13) in
-          assert_equal false boolean19;
-          Printf.printf "Test time (Test 16): %fs\n" (Sys.time() -. t);
-          let pred12 = RN.Neg (Or (Eval.parse_dst_ip_filter_list ["54.191.42.182";"10.40.2.80";"13.59.144.125";"10.20.1.207"] updated_man,
+          let boolean3 = RN.emptiness_check man' 0 1 2 3 (Some network, Some relation3) in
+          Printf.printf "Traceroute 3 (time): %fs\n" (Sys.time() -. t);
+          assert_equal false boolean3;
+          let srv_pred = Eval.parse_location_to_pred "srv-101" false updated_man in
+          let east2_public_public_ip_pred = Eval.parse_dst_ip_filter "13.59.144.125" updated_man in
+          let start_filter4 = RN.AndP (RN.Binary (And (srv_pred, And (east2_public_ip_pred, ssh_pred)), True),Id) in
+          let end_filter4 = RN.AndP (RN.Binary (east2_public_pred, True),Id) in
+          let relation4 = RN.Rel.SeqR (RN.Rel.SeqR (RN.Rel.Nil start_filter4, id), RN.Rel.Nil end_filter4) in
+          let t = Sys.time() in
+          let boolean4 = RN.emptiness_check man' 0 1 2 3 (Some network, Some relation4) in
+          Printf.printf "Traceroute 4 (time): %fs\n" (Sys.time() -. t);
+          assert_equal false boolean4;
+          let start_filter5 = RN.AndP (RN.Binary (And (srv_pred, And (east2_public_public_ip_pred, ssh_pred)), True),Id) in
+          let relation5 = RN.Rel.SeqR (RN.Rel.SeqR (RN.Rel.Nil start_filter5, id), RN.Rel.Nil end_filter4) in
+          let t = Sys.time() in
+          let boolean5 = RN.emptiness_check man' 0 1 2 3 (Some network, Some relation5) in
+          Printf.printf "Traceroute 5 (time): %fs\n" (Sys.time() -. t);
+          assert_equal false boolean5;
+          let internet_pred = Eval.parse_location_to_pred "internet" false updated_man in
+          let start_filter6 = RN.AndP (RN.Binary (And (internet_pred, Neg ssh_pred), True),Id) in
+          let reachability_relation = RN.Rel.SeqR (RN.Rel.Nil start_filter6, RN.Rel.SeqR (RN.Rel.Binary (havocnk,RN.NK.Pkr Havoc), RN.Rel.Nil end_filter4)) in
+          let t = Sys.time() in
+          let boolean6 = RN.emptiness_check man' 0 1 2 3 (Some network, Some reachability_relation) in
+          Printf.printf "Reachability 1 (time): %fs\n" (Sys.time() -. t);
+          assert_equal false boolean6;
+          let un_affected_pred = RN.Neg (Or (Eval.parse_dst_ip_filter_list ["54.191.42.182";"10.40.2.80";"13.59.144.125";"10.20.1.207"] updated_man,
           Eval.parse_src_ip_filter_list ["54.191.42.182";"10.40.2.80";"13.59.144.125";"10.20.1.207"] updated_man )) in
-          let pkr12 = RN.AndP (Binary (pred12, True), Id) in
+          let pkr12 = RN.AndP (Binary (un_affected_pred, True), Id) in
           let relation14 = RN.Rel.Apply (pkr12,havocnk) in
+          let nat_network1 = Eval.json_to_network json_node_base_6 updated_man_2 false [] [] in
           let t = Sys.time() in
-          let network11 = Eval.json_to_network json_node_base_6 man6 false [] [] in
-          let (nkrobsmap22, start22) = RN.projection_compiler man' 0 1 2 3 (Some network11, Some relation14) true in
-          let network12 = Eval.json_to_network json_node_base_6 updated_man false [] [] in
-          let (nkrobsmap23, start23) = RN.projection_compiler man' 0 1 2 3 (Some network12, Some relation14) true in
-          Printf.printf "Compiled time (Test 17): %fs\n" (Sys.time() -. t);
-          let t = Sys.time() in
-          let boolean20 = (RN.bisim man' 2 3 start22 start23 nkrobsmap22 nkrobsmap23) in
-          Printf.printf "Bisimulation time (Test 17): %fs\n" (Sys.time() -. t);
-          assert_equal true boolean20;
-          let network13 = Eval.json_to_network json_node_base_6 updated_man_2 false [] [] in
-          let gateway_pred = Eval.parse_location_to_pred "igw-02fd68f94367a67c7" false updated_man_2 in
+          let boolean7 = RN.equivalence_checker man' 0 1 2 3 (Some network, Some relation14) (Some nat_network1, Some relation14) true in
+          Printf.printf "NAT unchanged 1: %fs\n" (Sys.time() -. t);
+          assert_equal true boolean7;
+         let gateway_pred = Eval.parse_location_to_pred "igw-02fd68f94367a67c7" false updated_man_2 in
           let backbone_pred = Eval.parse_location_to_pred "isp_16509" false updated_man_2 in
           let gateway_pkr = Eval.parse_location_to_pkr "igw-02fd68f94367a67c7" false updated_man_2 in
           let backbone_pkr = Eval.parse_location_to_pkr "isp_16509" false updated_man_2 in
@@ -941,43 +943,35 @@ let tests = "MLBDD tests" >::: [
           let filternk = RN.NK.Star (RN.NK.Seq (RN.NK.Pkr pkr15, RN.NK.Dup)) in
           let relation15 = RN.Rel.Id filternk in
           let relation16 = RN.Rel.Id (RN.NK.Star (RN.NK.Seq (RN.NK.Pkr pkr18, RN.NK.Dup))) in
-          let t = Sys.time() in 
-          let (nkrobsmap24, start24) = RN.projection_compiler man' 0 1 2 3 (Some network12, Some relation15) true in
-          let (nkrobsmap25, start25) = RN.projection_compiler man' 0 1 2 3 (Some network13, Some relation15) true in
-          Printf.printf "Compiled time (Test 18): %fs\n" (Sys.time() -. t);
           let t = Sys.time() in
-          let boolean21 = (RN.bisim man' 2 3 start24 start25 nkrobsmap24 nkrobsmap25) in
-          Printf.printf "Bisimulation time (Test 18): %fs\n" (Sys.time() -. t);
-          assert_equal true boolean21;
-          let (nkrobsmap26, start26) = RN.projection_compiler man' 0 1 2 3 (Some network12, Some (RN.Rel.Id network13)) true in
-          Printf.printf "Compiled time (Test 19): %fs\n" (Sys.time() -. t);
+          let boolean8 = RN.equivalence_checker man' 0 1 2 3 (Some network, Some relation15) (Some nat_network1, Some relation15) true in 
+          Printf.printf "NAT unchanged 2: %fs\n" (Sys.time() -. t);
+          assert_equal true boolean8;
+          let start_filter6 = RN.AndP (RN.Binary (And (west2_public_pred, east2_public_ip_pred), True),Id) in
+          let end_filter6 = RN.AndP (RN.Binary (east2_public_pred, True),Id) in
+          let relation6 = RN.Rel.SeqR (RN.Rel.SeqR (RN.Rel.Nil start_filter6, id), RN.Rel.Nil end_filter6) in
           let t = Sys.time() in
-          let boolean22 = (RN.bisim man' 2 3 start24 start26 nkrobsmap24 nkrobsmap26) in
-          Printf.printf "Bisimulation time (Test 19): %fs\n" (Sys.time() -. t);
-          assert_equal true boolean22;
-          let boolean23 = RN.emptiness_check man' 0 1 2 3 (Some (RN.NK.Diff (network12,network13)), Some relation16) in
-          assert_equal true boolean23;
-          let man_2 = Eval.init_man_disable_tunnel json_node_base_6 json_edge_base_6 json_protocol_6 json_interface_6 (Some json_ipsec) in
-          let network14 = Eval.json_to_network json_node_base_6 man_2 false [] [] in
-          let network11 = Eval.json_to_network json_node_base_6 man6 false [] [] in
+          let boolean9 = RN.emptiness_check man' 0 1 2 3 (Some nat_network1, Some relation6) in
+          Printf.printf "NAT changed 1: %fs\n" (Sys.time() -. t);
+          assert_equal true boolean9;
           let t = Sys.time() in
-          let (nkrobsmap27, start27) = RN.projection_compiler man' 0 1 2 3 (Some network14, Some id) true in
-          let (nkrobsmap28, start28) = RN.projection_compiler man' 0 1 2 3 (Some network11, Some id) true in
-          Printf.printf "Compiled time (Test 20): %fs\n" (Sys.time() -. t);
+          let boolean10 = RN.emptiness_check man' 0 1 2 3 (Some (RN.NK.Diff (network,nat_network1)), Some relation16) in
+          Printf.printf "NAT changed 2: %fs\n" (Sys.time() -. t);
+          assert_equal true boolean10;
+          let untunnel_man = Eval.init_man_disable_tunnel json_node_base_6 json_edge_base_6 json_protocol_6 json_interface_6 (Some json_ipsec) in
+          let updated_untunnel_man_2 = Eval.add_ip_switches switches_json_1 internet_gateway_1 untunnel_man in
+          let updated_untunnel_man = Eval.add_ip_switches switches_json_2 internet_gateway_2 updated_untunnel_man_2 in
+          let un_tunneled_network = Eval.json_to_network json_node_base_6 updated_untunnel_man false [] [] in
           let t = Sys.time() in
-          let boolean24 = (RN.bisim man' 2 3 start27 start28 nkrobsmap27 nkrobsmap28) in
-          Printf.printf "Bisimulation time (Test 20): %fs\n" (Sys.time() -. t);
-          assert_equal true boolean24;
-          let network16 = Eval.encrypted_json_to_network json_node_base_6 man_2 false [west2_private] [] [] in
-          let pkr17 = Eval.encrypt_packet_relation man_2 [west2_private] in
+          let boolean11 = RN.equivalence_checker man' 0 1 2 3 (Some network, Some id) (Some un_tunneled_network, Some id) true in
+          Printf.printf "Tunnel 1: %fs\n" (Sys.time() -. t);
+          assert_equal true boolean11;
+          let encrypt_network = Eval.encrypted_json_to_network json_node_base_6 updated_untunnel_man false [west2_private;east2_public;"srv-101"] [] [] in
+          let pkr17 = Eval.encrypt_packet_relation updated_untunnel_man [west2_private;east2_public;"srv-101"] in
           let t = Sys.time() in
-          let (nkrobsmap29, start29) = RN.projection_compiler man' 0 1 2 3 (Some network16, Some id) true in
-          let (nkrobsmap30, start30) = RN.projection_compiler man' 0 1 2 3 (Some network14, Some (RN.Rel.Apply (pkr17,havocnk))) true in
-          Printf.printf "Compiled time (Test 21): %fs\n" (Sys.time() -. t);
-          let t = Sys.time() in
-          let boolean25 = (RN.bisim man' 2 3 start29 start30 nkrobsmap29 nkrobsmap30) in
-          Printf.printf "Bisimulation time (Test 21): %fs\n" (Sys.time() -. t);
-          assert_equal true boolean25;
+          let boolean12 = RN.equivalence_checker man' 0 1 2 3 (Some encrypt_network, Some id) (Some un_tunneled_network, Some (RN.Rel.Apply (pkr17,havocnk))) true in
+          Printf.printf "Tunnel 2: %fs\n" (Sys.time() -. t);
+          assert_equal true boolean12;
           );
 
       ]
