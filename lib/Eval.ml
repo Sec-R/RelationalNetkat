@@ -1077,7 +1077,7 @@ let rec parse_path_to_nk (rela_man:man) (path:path): NK.t =
       let havocnk = RN.NK.Seq (RN.NK.Pkr Havoc, RN.NK.Star (RN.NK.Seq (RN.NK.Dup, RN.NK.Pkr Havoc))) in
       Diff (havocnk, nk)    
       
-let rec parse_rel_to_rel (rela_man:man) (rel:rel): Rel.t =
+let rec parse_rela_to_rel (rela_man:man) (rel:rel): Rel.t =
   match rel with
   | RProduct (p1, p2) ->
       let nk1 = parse_path_to_nk rela_man p1 in
@@ -1088,19 +1088,19 @@ let rec parse_rel_to_rel (rela_man:man) (rel:rel): Rel.t =
   | REpsilon ->
       Nil Havoc
   | RUnion (r1, r2) ->
-      let rel1 = parse_rel_to_rel rela_man r1 in
-      let rel2 = parse_rel_to_rel rela_man r2 in
+      let rel1 = parse_rela_to_rel rela_man r1 in
+      let rel2 = parse_rela_to_rel rela_man r2 in
       OrR (SR.add rel1 (SR.singleton rel2))
   | RConcat (r1, r2) ->
-      let rel1 = parse_rel_to_rel rela_man r1 in
-      let rel2 = parse_rel_to_rel rela_man r2 in
+      let rel1 = parse_rela_to_rel rela_man r1 in
+      let rel2 = parse_rela_to_rel rela_man r2 in
       SeqR (rel1, rel2)
   | RCompose (p, r) ->
       let nk = parse_path_to_nk rela_man p in
-      let rel = parse_rel_to_rel rela_man r in
+      let rel = parse_rela_to_rel rela_man r in
       IdComp (Some nk, rel)
   | RStar r ->
-      let rel = parse_rel_to_rel rela_man r in
+      let rel = parse_rela_to_rel rela_man r in
       StarR rel
   | RIdentity p ->
       let nk = parse_path_to_nk rela_man p in
