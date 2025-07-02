@@ -1257,7 +1257,7 @@ let equivalence_checker (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro1:(NK
   let (aut2,start2) = projection_compiler man pk1 pk2 pk3 pk4 nkro2 calculate_reachable_pair in
   bisim man pk3 pk4 start1 start2 aut1 aut2
 
-let exclusive_intersect (man:man)(start1:NKROBSet.t)(start2:NKROBSet.t)(aut1:((MLBDD.t)NKROBSMap.t)NKROBSMap.t) (aut2:((MLBDD.t)NKROBSMap.t)NKROBSMap.t):((MLBDD.t)NKROBSSMap.t)NKROBSSMap.t =
+let symmetric_difference (man:man)(start1:NKROBSet.t)(start2:NKROBSet.t)(aut1:((MLBDD.t)NKROBSMap.t)NKROBSMap.t) (aut2:((MLBDD.t)NKROBSMap.t)NKROBSMap.t):((MLBDD.t)NKROBSSMap.t)NKROBSSMap.t =
   let intersect_one_transition (transition_1:(MLBDD.t)NKROBSMap.t) (transition_2:(MLBDD.t)NKROBSMap.t)=
      let reachable_bdd_1 = (NKROBSMap.fold (fun _ bdd1 acc -> MLBDD.dor acc bdd1) transition_1 (bdd_false man)) in
      let reachable_bdd_2 = (NKROBSMap.fold (fun _ bdd2 acc -> MLBDD.dor acc bdd2) transition_2 (bdd_false man)) in      
@@ -1270,12 +1270,12 @@ let exclusive_intersect (man:man)(start1:NKROBSet.t)(start2:NKROBSet.t)(aut1:((M
                                         ) transition_2 acc) transition_1 NKROBSSMap.empty
    in
   let worklist = Queue.create() in
-  let rec exclusive_intersect_aux (acc:((MLBDD.t)NKROBSSMap.t)NKROBSSMap.t):((MLBDD.t)NKROBSSMap.t)NKROBSSMap.t =
+  let rec symmetric_difference_aux (acc:((MLBDD.t)NKROBSSMap.t)NKROBSSMap.t):((MLBDD.t)NKROBSSMap.t)NKROBSSMap.t =
     match Queue.take_opt worklist with
       | None -> acc
       | Some (nkros1,nkros2) -> 
         if NKROBSSMap.mem (nkros1,nkros2) acc then
-          exclusive_intersect_aux acc
+          symmetric_difference_aux acc
         else
           let nexts1 = 
             (match (NKROBSMap.find_opt nkros1 aut1) with
@@ -1288,11 +1288,11 @@ let exclusive_intersect (man:man)(start1:NKROBSet.t)(start2:NKROBSet.t)(aut1:((M
           let new_transition = intersect_one_transition nexts1 nexts2 in
             NKROBSSMap.iter (fun nkrobss _ -> 
               Queue.add nkrobss worklist) new_transition;
-            exclusive_intersect_aux (NKROBSSMap.add (nkros1,nkros2) new_transition acc)
+            symmetric_difference_aux (NKROBSSMap.add (nkros1,nkros2) new_transition acc)
    in
   Queue.add (start1,start2) worklist;
-    exclusive_intersect_aux NKROBSSMap.empty             
+    symmetric_difference_aux NKROBSSMap.empty             
 
-let is_exclusive_final (nkrobss:(NKROBSet.t*NKROBSet.t)):bool =
+let is_symm_final (nkrobss:(NKROBSet.t*NKROBSet.t)):bool =
   let (nkros1,nkros2) = nkrobss in
   is_final_nkrobs nkros1 <> is_final_nkrobs nkros2
