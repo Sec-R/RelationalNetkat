@@ -118,6 +118,8 @@ type pkr =
   | Binary of pred * pred
   | FMap of field * field
 
+module IntMap : Map.S with type key = int
+
 module rec NK : sig
   type t =
     | Pred of pred
@@ -129,7 +131,7 @@ module rec NK : sig
     | Diff of t * t
     | Star of t
     | Dup
-
+    | Automata of (pk * pk * int * (MLBDD.t IntMap.t IntMap.t))
   val compare : t -> t -> int
 end
 and SNK : Set.S with type elt = NK.t
@@ -245,4 +247,5 @@ val bisim : man -> pk -> pk -> NKROBSet.t -> NKROBSet.t -> MLBDD.t NKROBSMap.t N
 val equivalence_checker : man -> pk -> pk -> pk -> pk -> (NK.t option * Rel.t option) -> (NK.t option * Rel.t option) -> bool -> bool
 val symmetric_difference: man -> NKROBSet.t -> NKROBSet.t -> ((MLBDD.t)NKROBSMap.t) NKROBSMap.t -> ((MLBDD.t)NKROBSMap.t) NKROBSMap.t -> ((MLBDD.t)NKROBSSMap.t) NKROBSSMap.t
 val is_symm_final : NKROBSet.t*NKROBSet.t -> bool
+val convert_transition_to_int_map : (MLBDD.t)NKROBSMap.t NKROBSMap.t -> MLBDD.t IntMap.t IntMap.t
 

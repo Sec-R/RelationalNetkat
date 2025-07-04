@@ -121,6 +121,10 @@ type pkr =
   | Binary of pred * pred
   | FMap of field * field
 
+module IntMap = Map.Make(
+  struct type t = int 
+  let compare = Stdlib.compare end)
+
 module rec NK : sig
     type t = 
     | Pred of pred
@@ -132,6 +136,7 @@ module rec NK : sig
     | Diff of t * t
     | Star of t
     | Dup
+    | Automata of (pk * pk * int * (MLBDD.t IntMap.t IntMap.t))
     val compare: t -> t -> int
   end
 = struct
@@ -145,6 +150,7 @@ module rec NK : sig
     | Diff of t * t
     | Star of t
     | Dup
+    | Automata of (pk * pk * int * (MLBDD.t IntMap.t IntMap.t))
   let rec compare t1 t2 =
       match (t1, t2) with
       | (Pred p1, Pred p2) -> Stdlib.compare p1 p2
@@ -172,6 +178,17 @@ module rec NK : sig
       | (Star _, _) -> 1
       | (_, Star _) -> -1
       | (Dup, Dup) -> 0
+      | (Dup, _) -> 1
+      | (_, Dup) -> -1
+      | (Automata (pk1, pk2, i1, m1), Automata (pk3, pk4, i2, m2)) ->
+          let c = Stdlib.compare pk1 pk3 in
+          if c = 0 then
+            let c = Stdlib.compare pk2 pk4 in
+            if c = 0 then
+              let c = Stdlib.compare i1 i2 in
+              if c = 0 then IntMap.compare (IntMap.compare (fun a b -> Stdlib.compare (MLBDD.id a) (MLBDD.id b))) m1 m2 else c
+            else c
+          else c
   end
 and SNK : Set.S with type elt = NK.t
 = Set.Make(NK)
@@ -349,6 +366,7 @@ let rec nk_to_string (nk:NK.t):string=
   | Diff (nk1, nk2) -> "Diff " ^ (nk_to_string nk1) ^ " " ^ (nk_to_string nk2)
   | Star nk -> "Star " ^ (nk_to_string nk)
   | Dup -> "Dup"
+  | Automata (pk1, pk2, i, _) -> "Automata (" ^ (string_of_int pk1) ^ ", " ^ (string_of_int pk2) ^ ", " ^ (string_of_int i) ^ ", mapping)"
 
 let rec rel_to_string (rel:Rel.t):string =
   match rel with
@@ -563,6 +581,18 @@ let comp_bdd_4 (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (bdd1:MLBDD.t) (bdd
     in
       Hashtbl.replace man.comp_bdd_4 (pk1, pk2, pk3, pk4, bdd1, bdd2) bdd;
       bdd
+
+let is_final_nkro (nkro:NK.t option*Rel.t option):bool =
+  Option.is_none (fst nkro)&& Option.is_none (snd nkro)
+
+let is_final_nkrob (nkrob:(NK.t option*Rel.t option)*MLBDD.t):bool =
+  is_final_nkro (fst nkrob)
+  
+let is_final_nkrobs (nkrobs:NKROBSet.t):bool =
+  NKROBSet.exists (fun nkrob -> is_final_nkrob nkrob) nkrobs
+
+let is_final_i (i:int):bool =
+  i = 0
 
 let compile_pred_bdd (man:man)(pk:pk) (predicate:pred):MLBDD.t = 
   let rec compile_pred_bdd_aux (predicate:pred):MLBDD.t =
@@ -835,6 +865,19 @@ let rec delta_k (man:man)(pk1:pk)(pk2:pk)(nko:NK.t option): (MLBDD.t)NKOMap.t=
                                             (add_nko_mapping None (produce_id man pk1 pk2)
                                               (concatenate_nko_mapping (filtering_epsilon_k (delta_k man pk1 pk2 (Some nk))) (Some (Star nk)))) 
       | Some Dup -> add_nko_mapping (Some (Pred True)) (produce_id man pk1 pk2) NKOMap.empty
+      | Some (Automata (pk1',pk2',i, i_map)) -> 
+        let next_map =
+          (match IntMap.find_opt i i_map with
+              | None -> IntMap.empty
+              | Some i_map -> IntMap.map (fun bdd -> rename_bdd pk1 pk1' (rename_bdd pk2 pk2' bdd)) i_map
+          ) in
+        let nko_map =
+          IntMap.fold (fun i bdd acc ->
+            let nko = if is_final_i i then None
+                      else Some (NK.Automata (pk1', pk2', i, i_map)) in
+                   add_nko_mapping nko bdd acc) next_map NKOMap.empty in
+         nko_map          
+
    in Hashtbl.replace man.delta_k_cache (pk1, pk2, nko) nkomap;
     nkomap
 
@@ -1099,15 +1142,6 @@ let splitting_bdd (man:man)(pk1:pk)(pk2:pk)(pk3:pk)(pk4:pk) (bdd:MLBDD.t): BSet.
   in
     BSet.map (fun bdd -> back_ordering pk1 pk2 pk3 pk4 bdd) (loop (re_ordering pk1 pk2 pk3 pk4 bdd))
 
-let is_final_nkro (nkro:NK.t option*Rel.t option):bool =
-  Option.is_none (fst nkro)&& Option.is_none (snd nkro)
-
-let is_final_nkrob (nkrob:(NK.t option*Rel.t option)*MLBDD.t):bool =
-  is_final_nkro (fst nkrob)
-  
-let is_final_nkrobs (nkrobs:NKROBSet.t):bool =
-  NKROBSet.exists (fun nkrob -> is_final_nkrob nkrob) nkrobs
-
 (* pk1: x, pk2:x', pk3:y, pk4:y'*)
 let generate_all_transition(man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (start:NK.t option*Rel.t option) (calculate_reachable_pair:bool):(BSet.t*(BSet.t)NKROMap.t)NKROMap.t=
   let reachable_set = calculate_reachable_set man pk1 pk2 pk3 pk4 start calculate_reachable_pair in
@@ -1296,3 +1330,32 @@ let symmetric_difference (man:man)(start1:NKROBSet.t)(start2:NKROBSet.t)(aut1:((
 let is_symm_final (nkrobss:(NKROBSet.t*NKROBSet.t)):bool =
   let (nkros1,nkros2) = nkrobss in
   is_final_nkrobs nkros1 <> is_final_nkrobs nkros2
+
+let insert_nkrobs (key:NKROBSet.t) (map:int NKROBSMap.t) =
+  if NKROBSMap.mem key map then
+    map
+  else
+    if is_final_nkrobs key then
+      NKROBSMap.add key 0 map
+    else
+      NKROBSMap.add key ((NKROBSMap.cardinal map) + 1) map
+
+let parse_transition_nkrobs (map:(MLBDD.t)NKROBSMap.t NKROBSMap.t): int NKROBSMap.t =
+  NKROBSMap.fold (fun nkrobs nkrobs_map acc -> 
+    insert_nkrobs nkrobs (NKROBSMap.fold (fun nkrobs _ acc ->
+        insert_nkrobs nkrobs acc
+      ) nkrobs_map acc)
+  ) map NKROBSMap.empty
+
+let find_nkrobs (nkrobs:NKROBSet.t) (map:int NKROBSMap.t):int =
+  try NKROBSMap.find nkrobs map
+  with Not_found -> failwith "NKROBSet not found in the map"  
+
+let convert_transition_to_int_map (map:(MLBDD.t)NKROBSMap.t NKROBSMap.t): MLBDD.t IntMap.t IntMap.t =
+  let int_map = parse_transition_nkrobs map in
+  NKROBSMap.fold (fun nkrobs nkrobs_map acc ->
+    IntMap.add (find_nkrobs nkrobs int_map) (NKROBSMap.fold (fun nkrobs bdd acc ->
+        IntMap.add (find_nkrobs nkrobs int_map) bdd acc
+      ) nkrobs_map IntMap.empty) acc
+  ) map IntMap.empty
+
