@@ -104,13 +104,16 @@ This is the core implementation of the language. It defines:
   - `NK`: NetKAT expressions
   - `Rel`: Relational NetKAT expressions
 
-- **Automata Construction**:
-  - Implements derivatives-based automata for both NetKAT and relational NetKAT -- delta_k delta_r delta_krx delta_kr
+- **K and R Automata Construction**:
+  - Implements derivatives-based automata for both NetKAT and relational NetKAT -- delta_k delta_r delta_krx 
   - Defines how to symbolically compile atomics into BDDs  -- compile_pred_bdd, compile_pkr_bdd
 
-- **Automata Operations**:
+- **Compilation Pipeline**:
+  - Synchronization -- delta_kr
+  - Reachability -- calculate_reachable_set
   - Splitting -- generate_all_transitions
   - Projection -- simplify_all_transitions
+  - Determinization -- determinization
   - Bisimulation checking -- bisim
 
 
