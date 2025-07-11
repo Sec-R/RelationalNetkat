@@ -105,10 +105,11 @@ This is the core implementation of the language. It defines:
   - `Rel`: Relational NetKAT expressions
 
 - **K and R Automata Construction**:
-  - Implements derivatives-based automata for both NetKAT and relational NetKAT -- delta_k delta_r delta_krx 
+  - Implements derivatives-based automata for both NetKAT and relational NetKAT -- delta_k delta_r 
   - Defines how to symbolically compile atomics into BDDs  -- compile_pred_bdd, compile_pkr_bdd
 
 - **Compilation Pipeline**:
+  - Cross product -- delta_krx
   - Synchronization -- delta_kr
   - Reachability -- calculate_reachable_set
   - Splitting -- generate_all_transitions
