@@ -122,6 +122,6 @@ This file supports Batfish and Rela interfaces.
   - Loads and parses input/output format from Batfish -- parse_global_routing_table 
 
 - **Rela JSON Parsing**:
-  - Loads and parses topology input/output format from Rela -- parse_rela_global_routing_table, parse_rela_to_rel
+  - Loads and parses input/output format from Rela -- parse_rela_global_routing_table, parse_rela_to_rel
 
 	
