@@ -54,12 +54,12 @@ Below are instructions for running each set of experiments.
 	This runs tests on the `preserve` and `delete` scenarios.  
 	The `change` scenario is commented out by default due to expected timeout. You may uncomment it in `test/test_RelationalNetkat.ml` to verify the timeout behavior.
 
-3. **Locality Pruning (L(0) and L(32))**  
+3. **Splitting Algorithm (L(0) and L(32))**  
 	Navigate to the `L0/` and `L32/` directories and run: `dune runtest --no-buffer`. 
 	
 	All tests should complete successfully.
 
-4. **Stress Tests (L(64) and Naive)**  
+4. **TIMEOUT Splitting Algorithm (L(64) and Naive)**  
 	Navigate to the `L64/` and `Naive/` directories and run: `dune runtest --no-buffer`. 
 
 	All tests are expected to timeout.
