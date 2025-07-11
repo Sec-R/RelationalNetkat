@@ -38,21 +38,31 @@ Below are instructions for running each set of experiments.
 
 ### Relational NetKAT
 
-1. The main verision is in the directory `RN/`, go to that directory and type `dune runtest` or `dune runtest --no-buffer`(recommanded).
-   We have annotated our output so one will be able to see the test result of rela comparsion (on randomly selected 20 datas) 
-   and batfish comparsion (integrate with it we show the NAT and tunneling). It is normal to have a long test time (>5min).
+1. **Main Evaluation (RN Directory)**  
+   Navigate to the `RN/` directory and run: `dune runtest --no-buffer`.
    
-   Aside from these comparsion, we also integrate a lot of tests to ensure the correctness of our compiler. While it is related to
-   none of the test data in the paper, one can also check it if interested.
+	This runs all benchmarks, including:
+	- Comparison with Rela (20 randomly selected inputs)
+	- Comparison with Batfish (including NAT and tunneling scenarios)
 
-2. For test on R0 and R1, go the the directory `R0/` and `R1/` and type `dune runtest --no-buffer`. One will see the test result on the senarios
-   preserve and delete. We comment out the test change as it is going to timeout. One can verify such timeout by uncommenting that part
-   in `test/test_RelationalNetkat.ml`  and type `dune runtest --no-buffer`.
-   
-3. For test on L0 and L32, go the the directory `L0/` and `L32/` and type `dune runtest --no-buffer`. One can expect seeing all of the result.
+	The test may take over 5 minutes to complete.  
+	Additionally, this directory includes unit tests for compiler correctness, which are unrelated to the paper's benchmarks but may be of interest. 
+ 
+2. **Reachability Pruning (R(0) and R(1))**  
+	Navigate to the `R0/` and `R1/` directories and run: `dune runtest --no-buffer`. 
 
-4. For test on L64 and Naive, go the the directory `L64/` and `Naive/` and type `dune runtest --no-buffer`. One should expect timeout on all of 
-   the tests.
+	This runs tests on the `preserve` and `delete` scenarios.  
+	The `change` scenario is commented out by default due to expected timeout. You may uncomment it in `test/test_RelationalNetkat.ml` to verify the timeout behavior.
+
+3. **Locality Pruning (L(0) and L(32))**  
+	Navigate to the `L0/` and `L32/` directories and run: `dune runtest --no-buffer`. 
+	
+	All tests should complete successfully.
+
+4. **Stress Tests (L(64) and Naive)**  
+	Navigate to the `L64/` and `Naive/` directories and run: `dune runtest --no-buffer`. 
+
+	All tests are expected to timeout.
 
 
 ### Batfish
@@ -76,4 +86,44 @@ https://github.com/alibaba/rela
 	- `rela_preserve.txt`, `rela_delete.txt`, `rela_change.txt` — each containing 2000 examples for the corresponding scenario
 	
 	
+### Code documentation
+
+# Relational NetKAT (RN)
+
+This project provides an implementation of **Relational NetKAT** in the directory `RN/`,  a language for specifying and verifying relational properties between two network configurations.
+
+It consists of two main OCaml files:
+
+---
+
+## RN.ml
+
+This is the core implementation of the language. It defines:
+
+- **Syntax**:
+  - `field`, `pk`, `pred`, `pkr`: basic building blocks for packet and field manipulation
+  - `NK`: NetKAT expressions
+  - `Rel`: Relational NetKAT expressions
+
+- **Automata Construction**:
+  - Implements derivatives-based automata for both NetKAT and relational NetKAT -- delta_k delta_r delta_krx delta_kr
+  - Defines how to symbolically compile atomics into BDDs  -- compile_pred_bdd, compile_pkr_bdd
+
+- **Automata Operations**:
+  - Splitting -- generate_all_transitions
+  - Projection -- simplify_all_transitions
+  - Bisimulation checking -- bisim
+
+---
+
+## Eval.ml
+
+This file supports Batfish and Rela interfaces.
+
+- **Batfish JSON Parsing**:
+  - Loads and parses topology information exported from Batfish -- parse_global_routing_table 
+
+- **Rela JSON Parsing**:
+  - Loads and parses topology information exported from Rela -- parse_rela_global_routing_table, parse_rela_to_rel
+
 	
