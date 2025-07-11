@@ -38,7 +38,7 @@ Below are instructions for running each set of experiments.
 
 ### Relational NetKAT
 
-1. **Main Evaluation (RN Directory)**  
+1. **Main Evaluation (RN Directory)**:  
    Navigate to the `RN/` directory and run: `dune runtest --no-buffer`.
    
 	This runs all benchmarks, including:
@@ -48,18 +48,18 @@ Below are instructions for running each set of experiments.
 	The test may take over 5 minutes to complete.  
 	Additionally, this directory includes unit tests for compiler correctness, which are unrelated to the paper's benchmarks but may be of interest. 
  
-2. **Reachability Pruning (R(0) and R(1))**  
+2. **Reachability Pruning (R(0) and R(1))**:  
 	Navigate to the `R0/` and `R1/` directories and run: `dune runtest --no-buffer`. 
 
 	This runs tests on the `preserve` and `delete` scenarios.  
 	The `change` scenario is commented out by default due to expected timeout. You may uncomment it in `test/test_RelationalNetkat.ml` to verify the timeout behavior.
 
-3. **Splitting Algorithm (L(0) and L(32))**  
+3. **Splitting Algorithm (L(0) and L(32))**:  
 	Navigate to the `L0/` and `L32/` directories and run: `dune runtest --no-buffer`. 
 	
 	All tests should complete successfully.
 
-4. **TIMEOUT Splitting Algorithm (L(64) and Naive)**  
+4. **TIMEOUT Splitting Algorithm (L(64) and Naive)**:
 	Navigate to the `L64/` and `Naive/` directories and run: `dune runtest --no-buffer`. 
 
 	All tests are expected to timeout.
@@ -94,7 +94,6 @@ This project provides an implementation of **Relational NetKAT** in the director
 
 It consists of two main OCaml files:
 
----
 
 ## RN.ml
 
@@ -114,16 +113,15 @@ This is the core implementation of the language. It defines:
   - Projection -- simplify_all_transitions
   - Bisimulation checking -- bisim
 
----
 
 ## Eval.ml
 
 This file supports Batfish and Rela interfaces.
 
 - **Batfish JSON Parsing**:
-  - Loads and parses topology information exported from Batfish -- parse_global_routing_table 
+  - Loads and parses input/output format from Batfish -- parse_global_routing_table 
 
 - **Rela JSON Parsing**:
-  - Loads and parses topology information exported from Rela -- parse_rela_global_routing_table, parse_rela_to_rel
+  - Loads and parses topology input/output format from Rela -- parse_rela_global_routing_table, parse_rela_to_rel
 
 	
