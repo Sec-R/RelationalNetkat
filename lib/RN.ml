@@ -1142,6 +1142,51 @@ let splitting_bdd (man:man)(pk1:pk)(pk2:pk)(pk3:pk)(pk4:pk) (bdd:MLBDD.t): BSet.
   in
     BSet.map (fun bdd -> back_ordering pk1 pk2 pk3 pk4 bdd) (loop (re_ordering pk1 pk2 pk3 pk4 bdd))
 
+
+let add_nkro_transition (nkro1:NK.t option*Rel.t option) (nkro2:NK.t option*Rel.t option) (bdd:MLBDD.t) (transition:(MLBDD.t NKROMap.t)NKROMap.t):(MLBDD.t NKROMap.t)NKROMap.t=
+  if MLBDD.is_false bdd then
+    transition
+  else
+  NKROMap.update nkro1 (fun mapo -> match mapo with
+    | None -> Some (NKROMap.singleton nkro2 bdd)
+    | Some map -> Some (NKROMap.add nkro2 bdd map)) transition
+
+
+let add_nkrob_transition (nkrob1:(NK.t option*Rel.t option)*MLBDD.t) (nkrob2:(NK.t option*Rel.t option)*MLBDD.t) (bdd:MLBDD.t) (transition:(MLBDD.t NKROBMap.t)NKROBMap.t):(MLBDD.t NKROBMap.t)NKROBMap.t=
+  if MLBDD.is_false bdd then
+    transition
+  else
+  NKROBMap.update nkrob1 (fun mapo -> match mapo with
+    | None -> Some (NKROBMap.singleton nkrob2 bdd)
+    | Some map -> Some (NKROBMap.add nkrob2 bdd map)) transition
+
+let reverse_nkro_transition (transition:(MLBDD.t NKROMap.t)NKROMap.t):(MLBDD.t NKROMap.t)NKROMap.t=
+  NKROMap.fold (fun nkro1 nkromap acc -> NKROMap.fold (fun nkro2 bdd acc ->
+                                        add_nkro_transition nkro2 nkro1 bdd acc) nkromap acc) transition NKROMap.empty    
+
+let add_partition_to_bset (man:man) (partition:MLBDD.t) (bset:BSet.t) :(BSet.t) =
+  BSet.fold (fun bdd acc -> BSet.add (MLBDD.dand (MLBDD.dnot partition) bdd) (BSet.add (MLBDD.dand partition bdd) acc)) bset 
+    (BSet.singleton (MLBDD.dand (MLBDD.dnot (BSet.fold (fun bdd acc -> MLBDD.dor bdd acc) bset (bdd_false man))) partition))
+  
+let add_partitions_to_bset (man:man) (partitions:BSet.t) (bset:BSet.t):(BSet.t) =
+  BSet.fold (fun partition acc -> add_partition_to_bset man partition acc) partitions bset
+
+let generate_new_partitions (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (transition_bdd:MLBDD.t) :(BSet.t)=
+  let supportx' = generate_support man pk2 in
+  let supporty' = generate_support man pk4 in
+  let new_transition_bdds = splitting_bdd man pk1 pk2 pk3 pk4 (MLBDD.exists supportx' transition_bdd) in
+    BSet.map (fun bdd -> MLBDD.exists supporty' bdd) new_transition_bdds    
+  
+
+let generate_new_bisimilar_class (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (transition_bdd:MLBDD.t) (bset:BSet.t):(BSet.t) =
+  let output_bset = BSet.map (fun bdd -> rename_bdd pk1 pk2 (rename_bdd pk3 pk4 bdd)) bset in
+    BSet.fold (fun bdd acc -> BSet.union (generate_new_partitions man pk1 pk2 pk3 pk4 (MLBDD.dand transition_bdd bdd)) acc) output_bset BSet.empty
+
+let merge_new_bisimilar_class (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (transition_bdd:MLBDD.t) (old_bset:BSet.t) (next_bset:BSet.t):(BSet.t) =
+  let new_bset = generate_new_bisimilar_class man pk1 pk2 pk3 pk4 transition_bdd next_bset in
+  add_partitions_to_bset man new_bset old_bset
+
+
 (* pk1: x, pk2:x', pk3:y, pk4:y'*)
 let generate_all_transition(man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (start:NK.t option*Rel.t option) (calculate_reachable_pair:bool):(BSet.t*(BSet.t)NKROMap.t)NKROMap.t=
   let reachable_set = calculate_reachable_set man pk1 pk2 pk3 pk4 start calculate_reachable_pair in
@@ -1155,7 +1200,50 @@ let generate_all_transition(man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (start:
                                         if is_final_nkro nkro 
                                           then BSet.singleton (bdd_true man)
                                         else (NKROMap.fold (fun _ bset acc -> BSet.union (BSet.map (fun bdd -> MLBDD.exists support24 bdd) bset) acc) new_delta BSet.empty) in
-                                      (hidden_state_set,new_delta)) reachable_set
+                                      (hidden_state_set,new_delta)) reachable_set  
+
+let automata_state_splitting_and_projection (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (state_splitting:BSet.t NKROMap.t) (transition: (MLBDD.t NKROMap.t)NKROMap.t):((MLBDD.t NKROBMap.t) NKROBMap.t) =
+  let support12 = generate_double_support man pk1 pk2 in
+  NKROMap.fold (fun nkro1 nkromap acc -> 
+    NKROMap.fold (fun nkro2 bdd acc ->
+      BSet.fold (fun bdd1 acc -> 
+        BSet.fold (fun bdd2 acc -> 
+          let transition_bdd = (MLBDD.exists support12 (MLBDD.dand bdd (MLBDD.dand bdd1 (rename_bdd pk1 pk2 (rename_bdd pk3 pk4 bdd2))))) in
+          add_nkrob_transition (nkro1,bdd1) (nkro2,bdd2) transition_bdd acc) 
+          (NKROMap.find nkro2 state_splitting) acc) (NKROMap.find nkro1 state_splitting) acc) nkromap acc) transition NKROBMap.empty
+                      
+(* pk1: x, pk2:x', pk3:y, pk4:y'*)
+let transition_by_maximal_bisimulation (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (start:NK.t option*Rel.t option) (calculate_reachable_pair:bool):((MLBDD.t NKROBMap.t) NKROBMap.t)=
+  let reachable_set = calculate_reachable_set man pk1 pk2 pk3 pk4 start calculate_reachable_pair in
+    if empty_transition reachable_set then
+      NKROBMap.empty
+    else
+  let all_transition_map =
+    NKROMap.mapi (fun nkro bdd -> (apply_nkro_mapping (fun tbdd -> (MLBDD.dand tbdd bdd)) (delta_kr man pk1 pk2 pk3 pk4 nkro (nkro_compare start nkro = 0)))
+                                  ) reachable_set in
+  let reversed_all_transition_map = reverse_nkro_transition all_transition_map in
+  let worklist = Queue.create() in
+    Queue.add (None,None) worklist;
+    let rec calculate_maximum_bisimulation (cur:BSet.t NKROMap.t):BSet.t NKROMap.t=
+      match Queue.take_opt worklist with
+        | None -> cur
+        | Some nkro1 -> let previous_transitions = 
+          match (NKROMap.find_opt nkro1 reversed_all_transition_map)
+            with 
+              | None -> NKROMap.empty
+              | Some transitions -> transitions
+              in
+            let new_cur = NKROMap.fold (fun nkro2 bdd acc ->
+              let current_bset = NKROMap.find nkro2 acc in
+                let new_bset = merge_new_bisimilar_class man pk1 pk2 pk3 pk4 bdd current_bset (NKROMap.find nkro1 acc) in
+                  if BSet.equal new_bset current_bset then
+                    acc
+                  else
+                    (Queue.add nkro2 worklist; NKROMap.add nkro2 new_bset acc)) previous_transitions cur in
+            calculate_maximum_bisimulation new_cur
+    in let bisimilarity = calculate_maximum_bisimulation (NKROMap.add (None,None) (BSet.singleton (bdd_true man)) (NKROMap.map (fun _ -> BSet.empty) reachable_set)) in
+      automata_state_splitting_and_projection man pk1 pk2 pk3 pk4 bisimilarity all_transition_map
+      
 
 let find_bdds (nkro:NK.t option*Rel.t option)(transition:(BSet.t*(BSet.t)NKROMap.t)NKROMap.t):BSet.t=
   match NKROMap.find_opt nkro transition with
@@ -1238,6 +1326,9 @@ let determinization (start:NKROSet.t) (transition:((MLBDD.t)NKROBMap.t)NKROBMap.
 
 let projection_compiler (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro:(NK.t option*Rel.t option)) (calculate_reachable_pair:bool):((MLBDD.t)NKROBSMap.t)NKROBSMap.t*NKROBSet.t =
   determinization (start_to_set nkro) (simplify_all_transition man pk1 pk2 pk3 pk4 (generate_all_transition man pk1 pk2 pk3 pk4 nkro calculate_reachable_pair))    
+
+let maximal_bisimulation_compiler (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro:(NK.t option*Rel.t option)) (calculate_reachable_pair:bool):((MLBDD.t)NKROBSMap.t)NKROBSMap.t*NKROBSet.t =
+  determinization (start_to_set nkro) (transition_by_maximal_bisimulation man pk1 pk2 pk3 pk4 nkro calculate_reachable_pair)
 
 let union_compiler (man:man) (pk1:pk) (pk2:pk) (pk3:pk) (pk4:pk) (nkro1:(NK.t option*Rel.t option)) (nkro2:(NK.t option*Rel.t option)) (calculate_reachable_pair:bool):((MLBDD.t)NKROBSMap.t)NKROBSMap.t*NKROBSet.t =
   let start1 = start_to_set nkro1 in

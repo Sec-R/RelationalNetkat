@@ -183,6 +183,7 @@ val transition_set_map_to_string : (BSet.t * BSet.t NKROMap.t) NKROMap.t -> stri
 val transition_map_to_string : MLBDD.t NKROBMap.t NKROBMap.t -> string
 val determinized_transition_map_to_string : MLBDD.t NKROBSMap.t NKROBSMap.t -> string
 val simplified_determinized_transition_map_to_string : MLBDD.t NKROBSMap.t NKROBSMap.t -> string
+val transition_by_maximal_bisimulation:   man -> pk -> pk -> pk -> pk -> (NK.t option * Rel.t option) -> bool -> ((MLBDD.t NKROBMap.t) NKROBMap.t)
 
 val init_man : field -> int -> man
 val bddvar : pk -> field -> int
@@ -242,6 +243,7 @@ val determinize_transition : MLBDD.t NKROBMap.t -> MLBDD.t NKROBSMap.t
 val start_to_set : NK.t option*Rel.t option -> NKROSet.t
 val determinization : NKROSet.t -> MLBDD.t NKROBMap.t NKROBMap.t -> MLBDD.t NKROBSMap.t NKROBSMap.t * NKROBSet.t
 val projection_compiler : man -> pk -> pk -> pk ->  pk -> (NK.t option * Rel.t option) -> bool -> MLBDD.t NKROBSMap.t NKROBSMap.t * NKROBSet.t
+val maximal_bisimulation_compiler : man -> pk -> pk -> pk -> pk -> (NK.t option * Rel.t option) -> bool -> MLBDD.t NKROBSMap.t NKROBSMap.t * NKROBSet.t
 val union_compiler : man -> pk -> pk -> pk ->  pk -> (NK.t option * Rel.t option) -> (NK.t option * Rel.t option) -> bool -> MLBDD.t NKROBSMap.t NKROBSMap.t * NKROBSet.t
 val bisim : man -> pk -> pk -> NKROBSet.t -> NKROBSet.t -> MLBDD.t NKROBSMap.t NKROBSMap.t -> MLBDD.t NKROBSMap.t NKROBSMap.t -> bool
 val equivalence_checker : man -> pk -> pk -> pk -> pk -> (NK.t option * Rel.t option) -> (NK.t option * Rel.t option) -> bool -> bool
