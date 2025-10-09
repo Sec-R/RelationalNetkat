@@ -132,16 +132,16 @@ run the notebook in `Batfish/jupyter_notebooks` directory. This will require you
 	to our `RN/` benchmark.
 	
 	
-### Code documentation
+# Code documentation
 
-# Relational NetKAT (RN)
+## Relational NetKAT (RN)
 
 This project provides an implementation of **Relational NetKAT** in the directory `RN/`,  a language for specifying and verifying relational properties between two network configurations.
 
 It consists of two main OCaml files:
 
 
-## RN.ml
+### RN.ml
 
 This is the core implementation of the language. It defines:
 
@@ -175,3 +175,118 @@ This file supports Batfish and Rela interfaces.
   - Loads and parses input/output format from Rela -- parse_rela_global_routing_table, parse_rela_to_rel
 
 	
+# Reusability Guide
+
+This artifact builds on top of the ocaml. This section describes how to reuse and adapt the artifact for your own language development.
+
+### Assumptions
+
+We assume you have already completed the steps outlined in the `Installation` section.
+
+### Workflow
+
+1. **Edit the Language Defintion**  
+   Modify the language definition in the `RN.ml` and `RN.mli` file located at `RN/lib`. Detailedly, we have:
+
+  - Types:
+    - `field`: Represents a field in a packet.
+    - `pk`: Represents a packet.
+    - `pred`: Represents a predicate in NetKAT (e.g., `True`, `False`, `Test`, `And`, `Or`, `Neg`).
+    - `pkr`: Represents a packet relation in NetKAT (e.g., `Id`, `Empty`, `Test`, `LeftAsgn`, `RightAsgn`, `Comp`, etc.).
+    - `next_step`: Represents the next step in a transition (`E`, `X`, `Y`, `XY`).
+
+  - Modules:
+    - `NK`: Represents NetKAT expressions (e.g., `Pred`, `Pkr`, `Asgn`, `Union`, `Seq`, `Inter`, `Diff`, `Star`, `Dup`).
+    - `SNK`: Represents sets of NetKAT expressions.
+    - `Rel`: Represents relational expressions (e.g., `Left`, `Right`, `Binary`, `App`, `Id`, `Nil`, `OrR`, `SeqR`, `StarR`).
+    - `SR`: Represents sets of relational expressions.
+    - `NKOMap`: Represents a mapping from optional NetKAT expressions to BDDs.
+    - `ROMap`: Represents a mapping from optional relational expressions to BDDs.
+    - `NKROMap`: Represents a mapping from pairs of optional NetKAT and relational expressions to BDDs.
+    - `NKROBMap`: Represents a mapping from pairs of optional NetKAT and relational expressions and BDDs to other values.
+    - `BSet`: Represents a set of BDDs.
+    - `NKROBSet`: Represents a set of pairs of optional NetKAT and relational expressions and BDDs.
+    - `NKROBSMap`: Represents a mapping from sets of pairs of optional NetKAT and relational expressions and BDDs to other values.
+
+  - Functions:
+    - BDD Operations:
+      - `bddvar`: Computes the BDD variable index for a given field and packet.
+      - `generate_single_var`: Generates a BDD for a single variable.
+      - `bdd_true` / `bdd_false`: Returns the BDD representing `true` or `false`.
+      - `compile_pred_bdd`: Compiles a predicate into a BDD.
+      - `produce_id`: Produces a BDD representing the identity relation.
+      - `produce_assign`: Produces a BDD representing an assignment.
+      - `rename_bdd`: Renames variables in a BDD.
+      - `closure_bdd`: Computes the closure of a BDD.
+      - `comp_bdd` / `comp_bdd_2` / `comp_bdd_4`: Composes BDDs for transitions.
+
+    - Mapping and Set Operations:
+      - `add_nko_mapping`, `add_ro_mapping`, `add_nkro_mapping`: Add mappings to BDDs.
+      - `union_nko_mapping`, `union_ro_mapping`, `union_nkro_mapping`: Union mappings.
+      - `apply_nko_mapping`, `apply_ro_mapping`, `apply_nkro_mapping`: Apply transformations to mappings.
+      - `concatenate_nko_mapping`, `concatenate_ro_mapping`, `concatenate_nkro_mapping`: Concatenate mappings.
+
+    - Delta and Transition Functions:
+      - `delta_k`: Computes the delta transition for a NetKAT expression.
+      - `delta_r`: Computes the delta transition for a relational expression.
+      - `delta_krx`: Computes the delta transition with epsilon closure.
+      - `delta_kr`: Computes the delta transition for a pair of NetKAT and relational expressions.
+
+    - Determinization and Simplification:
+      - `determinize_transition`: Determinizes a transition mapping.
+      - `determinization`: Determinizes a NetKAT automaton.
+      - `simplify_all_transition`: Simplifies all transitions for a NetKAT automaton.
+
+    - Bisimulation:
+      - `bisim`: Checks if two NetKAT automata are bisimilar.
+
+    - String Conversion:
+      - `pred_to_string`, `pkr_to_string`, `nk_to_string`, `rel_to_string`, `nkro_to_string`: Convert expressions to strings.
+
+    - Utility Functions:
+      - `generate_unused_pk`: Generates an unused packet index.
+      - `generate_support`: Generates the support set for a packet.
+      - `splitting_bdd`: Splits a BDD into a list of BDDs.
+      - `is_final_nkro`, `is_final_nkrob`, `is_final_nkrobs`: Check if states are final.
+
+    - Reordering Functions:
+      - `re_ordering`: Reorders variables in a BDD.
+      - `back_ordering`: Reverts the reordering of variables in a BDD.
+
+    - Variable Branching:
+      - `var_low_branch`, `var_high_branch`, `var_if`: Compute branches of a BDD for a given variable.
+
+   
+
+2. **Edit the Test Cases**   
+   Modify the test in the `test_Relationalnetkat.ml` file located at `RN/test`. We provided more than 600 loC of test for correctness. Listed as:
+
+   - var_test
+   - compile_pred_test
+   - compile_pkr_test
+   - compile_delta_k_test
+   - compile_delta_r_test
+   - delta_krx_test
+   - delta_kr_test
+   - var_order_test
+   - calculate_reachable_test
+   - splitting_bdd_test
+   - transition_test
+   - determinization_transition_test
+   - determinization_test
+   - bisim_test
+   
+    One can follow the comments in this file to test the correctness of your own version.
+
+	Other than correctness, one can play with `Rela` and `Batfish` to test the performance of their own version, please follow the test of:
+
+   - rela_id_test
+   - rela_delete_test
+   - rela_change_test
+   - change_validation_test
+   - hybrid_validation_test 
+
+ 
+3. **Explore the Impact of Changes**  
+   You can experiment with language changes by typing `dune runtest`.
+   
