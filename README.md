@@ -179,6 +179,8 @@ run the notebook in `Batfish/jupyter_notebooks` directory. This will require you
 
 3. Open and run the notebooks in Jupyter. Each query is instrumented with timing logic to match the test data reported in the paper.
 
+4. All tests should complete, but will be over **1×-20x faster** than `RN/`.
+
 ### Rela
 
 1. Navigate to the `Rela/` directory. One can see we add a `test.py` script to perform evaluation. One can verify we didn't change
@@ -189,6 +191,9 @@ the rest of the code and data by downloading the Rela repository:  https://githu
 	is exactly from Rela's repo.
 	-  A peformance benchmark containing 2000 examples for the corresponding scenario, one expect to see around 60x faster performance compared
 	to our `RN/` benchmark.
+	
+3. All tests should complete, but will be over **50×-70x faster** than `RN/`.
+
 	
 # Code documentation
 
