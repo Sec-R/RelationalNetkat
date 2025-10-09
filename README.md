@@ -6,114 +6,173 @@ to reproduce all experiments and comparisons described in the paper.
 
 ## Claims and Benchmarks
 
-The artifact supports the following evaluation claims:
+This artifact supports the following evaluation claims from the paper:
 
-- Relational NetKAT vs Rela (Section 5.2): performance on three benchmark scenarios
-- Relational NetKAT vs Batfish (Section 5.3): forwarding change validation
-- Relational NetKAT vs Batfish (Section 5.3): hybrid cloud network
-- Relational NetKAT (Section 5.3): NAT and tunnel validation
-- Relational NetKAT (Section 5.4): performance under different optimization
-  - `R(0)` and `R(1)` for reachability pruning
-  - `L(0)`, `L(32)`, `L(64)`,`Naive` for splitting algorithm
-  - `Global` for global optimization
-- Relational NetKAT (Section 5.5): performance under other optimization
-  - `Hash` for the hash table memorization optimization
-  - `Routing` for the efficient routing table optimization
-  - `Explicit` for the explicit location encoding
+### Section 5.2: Relational NetKAT vs. Rela
+- Performance comparison across three benchmark scenarios
 
-All benchmarks and inputs are generated using the code included in this artifact.
+### Section 5.3: Relational NetKAT vs. Batfish
+- Forwarding change validation
+- Hybrid cloud network case study
+
+### Section 5.3: Relational NetKAT Use Cases
+- NAT validation
+- Tunnel validation
+
+### Section 5.4: Performance Under Splitting Algorithms
+- `R(0)` and `R(1)`: Reachability pruning
+- `L(0)`, `L(32)`, `L(64)`, `Naive`: Splitting algorithms
+- `Global`: Global optimization
+
+### Section 5.5: Other Optimizations
+- `Hash`: Hash table memoization
+- `Routing`: Efficient routing table encoding
+- `Explicit`: Explicit vs. implicit location encoding
+
+All benchmarks and inputs are generated using the included code.
 
 ## Installation
 
-The implementation is written in OCaml 5.2.0 and depends on the following libraries and tools:
+The implementation is written in **OCaml 5.2.0** and depends on the following libraries:
 
 - [`mlbdd`](https://opam.ocaml.org/packages/mlbdd/)
 - [`yojson`](https://opam.ocaml.org/packages/yojson/)
 - [`ounit2`](https://opam.ocaml.org/packages/ounit2/)
-- [`dune`](https://dune.build/install) 
+- [`dune`](https://dune.build/install)
 
-To install these dependencies, run: `opam install mlbdd ounit2 yojson dune`.
+To install the OCaml dependencies, run: `opam install mlbdd ounit2 yojson dune`.
 
+Besides, Our evaluation includes comparisons with [Batfish](https://github.com/batfish/pybatfish) and [Rela](https://github.com/alibaba/rela/tree/main).  
+We have included the relevant source code for both in this artifact, but you may also download them directly from their respective GitHub repositories.
 
-Besides, our test uses code of Batfish and Rela. For installation of these toolkits, we have included the source code in our
-files, but you can also download them directly from the github repo https://github.com/batfish/pybatfish and https://github.com/alibaba/rela/tree/main . 
-To run these code and the view the diagram of our data, please install [`python3`](https://www.python.org/downloads/).
+To run the scripts and generate visualization diagrams, please ensure that you have [`python3`](https://www.python.org/downloads/) installed.
 
-## Notes before Evaluation
-1. It is common to have around 5-10% time difference each time you run our evaluation as our Rela benchmark randomly select nodes to be tested each time at evaluation.
-This time variance may go to 20-30% in the benchmark `Hash`. But as the performance difference demonstrated in our paper is significantly larger
-than 50%, and our most comparison claims are about whether such techniques make program timeout or not, these result should be able to verified
-in our benchmark.
+## Notes Before Evaluation
 
+1. **Timing Variance in Rela Benchmarks**  
+   The Rela benchmarks randomly select test nodes each time they run, leading to natural time variability of about 5–10%.  
+   In some cases, such as the `Hash` benchmark, this can reach 20–30%.  
+   However, the performance gains we report in the paper are significantly larger (often 50% or more), and most of our comparisons focus on whether a technique results in a **timeout** or not.  
+   Therefore, these variations do not affect the validity of the results.
 
-2. We observe that the `ounit2` library for ocaml testing have different default timeout time for different platform. Such as on ubuntu 22.04.2 it was 10 mins for each separate test case (not total time), while it is 60 mins
-on Windows 10. You may automatically get timeouts on some benchmarks that runs over 10 mins, but you may consider that as a fact that our techniques
-worked out as a method to resolve such timeout.
+2. **Platform-Specific Timeout Behavior**  
+   The `ounit2` OCaml test framework uses platform-specific default timeouts per test case.  
+   For example:
+   - On **Ubuntu 22.04.2**, the timeout is **10 minutes** per test case.
+   - On **Windows 10**, the timeout is **60 minutes** per test case.  
+   
+   Some benchmarks (especially without optimizations) may take longer than 10 minutes to complete.  
+   If a test times out on one platform but not another, that itself is evidence of the optimization’s impact.
 
-
-3. The benchmarks comparing Batfish vs. ours were ran on different platform due to the fact that batfish requires a docker subsystem to communicate.
-But we the time ratio between batfish/ours and rela/ours should appear the same as demonstrated on paper.
-
+3. **Batfish Benchmarks Use a Different Platform**  
+   Batfish requires a Docker subsystem for proper execution.  
+   As such, our Batfish evaluations were conducted on a different platform from the other experiments.  
+   Despite this, the **performance ratios** (e.g., Batfish vs. ours; Rela vs. ours) are consistent and reflect the trends shown in the paper.
+   
 # Evaluation Instructions
 
-This artifact includes all the code needed to evaluate Relational NetKAT and compare it with Batfish and Rela. 
-Below are instructions for running each set of experiments.
+This artifact includes all code necessary to evaluate **Relational NetKAT** and reproduce comparisons with Batfish and Rela as described in the paper.
 
-### Relational NetKAT
+### 1. Main Evaluation (`RN/`)
+Navigate to the `RN/` directory and run:
+```bash
+dune runtest --no-buffer
+python3 draw.py
+```
 
-1. **Main Evaluation (RN Directory)**:  
-   Navigate to the `RN/` directory and run: `dune runtest --no-buffer`, followed by `python3 draw.py`.
-   
-	This runs all benchmarks, including:
-	- Comparison with Rela (200 randomly selected inputs)
-	- Comparison with Batfish (including NAT and tunneling scenarios)
+This executes:
+- Performance comparison with Rela (200 randomly selected inputs)
+- Comparison with Batfish (including NAT and tunneling)
+- Timing breakdown for NAT and tunneling cases
 
-	The test may take over 20 minutes (in total) to complete.  
-	Additionally, this directory includes unit tests for compiler correctness, which are unrelated to the paper's benchmarks but may be of interest. 
- 
-2. **Reachability Pruning (R(0) and R(1))**:  
-	Navigate to the `R0/` and `R1/` directories and run: `dune runtest --no-buffer`, followed by `python3 draw.py`. 
+**Note**: The full run may take over 20 minutes.  
+This directory also includes compiler correctness unit tests, which are not part of the evaluation but may be useful.
 
-	This runs tests on the `preserve` and `delete` scenarios.
-	You expect to see a slightly faster (from 0.6x to 0.9x) performance compared to `RN/`'s performance on Rela dataset on `preserve` and `delete`.	
-	The `change` scenario is commented out by default due to expected timeout. You may uncomment it in `test/test_RelationalNetkat.ml` to verify the timeout behavior.
+---
 
-3. **Splitting Algorithm (L(0) and L(32))**:  
-	Navigate to the `L0/` and `L32/` directories and run: `dune runtest --no-buffer`, followed by `python3 draw.py`. 
-	
-	All tests should complete successfully. You expect to see a similar (from 0.95x to 1.05x) performance compared to `RN/`'s performance on Rela dataset.
+### 2. Reachability Pruning (`R0/` and `R1/`)
+Navigate to each directory and run:
+```bash
+dune runtest --no-buffer
+python3 draw.py
+```
 
-4. **TIMEOUT Splitting Algorithm (L(64) and Naive)**:
-	Navigate to the `L64/` and `Naive/` directories and run: `dune runtest --no-buffer`. 
+These benchmarks evaluate pruning strategies for `preserve` and `delete` cases.  
+You should observe a **slightly faster** runtime (0.6× to 0.9× speedup) relative to the `RN/` baseline on these cases.
 
-	All tests are expected to timeout.
+The `change` scenario is commented out by default (due to expected timeout).  
+You can uncomment it in `test/test_RelationalNetkat.ml` to verify the timeout behavior.
 
-5. **Global Bisimulation Optimizations (Global)**:
-	Navigate to the `Global/` directories and run: `dune runtest --no-buffer`, followed by `python3 draw.py`. 
-	
-	All tests should complete successfully.You expect to see a slightly slower (more than 2x) performance compared to `RN/`'s performance on Rela dataset.	
+---
 
+### 3. Splitting Algorithms (`L0/` and `L32/`)
+Navigate to each directory and run:
+```bash
+dune runtest --no-buffer
+python3 draw.py
+```
 
-6. **Other Optimizations (Hash, Routing, Explicit)**:
-	Navigate to the `Hash/` directories and run: `dune runtest --no-buffer`, followed by `python3 draw.py`. 
+These test our splitting heuristics. All benchmarks should complete successfully.  
+You should observe **comparable performance** to `RN/` (within ±5%).
 
-	Navigate to the `Routing/` directories and run: `dune runtest --no-buffer`. 
+---
 
-	Navigate to the `Explicit/` directories and run: `dune runtest --no-buffer`followed by `python3 draw.py`. 
-	
-	You may see some of the test case timeout due to some of the unoptimized version runs too slow. But TIMEOUT itself
-	should stand for our claims that these optimizations make program faster.
-	
-	You expected to see much slower (more than 100x in `Hash/`, more than 5x in `Explicit/`) compared to `RN/`'s performance on Rela dataset,
-	and a much slower (more than 50x in `Routing/`) to `RN/`'s performance on the first test in Batfish.
+### 4. Timeout Splitting Cases (`L64/` and `Naive/`)
+Navigate to each directory and run:
+```bash
+dune runtest --no-buffer
+```
 
+All tests are expected to **timeout**.  
+This demonstrates that certain splitting strategies are too inefficient to be practical.
+
+---
+
+### 5. Global Bisimulation (`Global/`)
+Navigate to the `Global/` directory and run:
+```bash
+dune runtest --no-buffer
+python3 draw.py
+```
+
+All tests should complete, but will be over **2× slower** than `RN/`.  
+This validates the advantage of our localized splitting approach.
+
+---
+
+### 6. Other Optimizations (`Hash/`, `Routing/`, `Explicit/`)
+For each directory:
+
+- In `Hash/`, run:
+  ```bash
+  dune runtest --no-buffer
+  python3 draw.py
+  ```
+
+- In `Routing/`, run:
+  ```bash
+  dune runtest --no-buffer
+  ```
+
+- In `Explicit/`, run:
+  ```bash
+  dune runtest --no-buffer
+  python3 draw.py
+  ```
+
+These tests validate additional optimizations:
+- `Hash/`: Shows over **100× speedup** from memoization.
+- `Routing/`: Demonstrates **50× speedup** in Batfish scenarios due to efficient table organization.
+- `Explicit/`: Encodes location information explicitly and is over **5× slower** than implicit encoding.
+
+Some test cases may timeout in unoptimized variants. This supports our claims about performance-critical optimizations.
 
 
 ### Batfish
 
 1. Navigate to the `Batfish/jupyter_notebooks` directory. One can see we attach a time measurement after each comparable test in the file
 `Introduction to Forwarding Change Validation.ipynb` and `Analyzing public and hybrid cloud networks.ipynb`. One can verify we didn't change
-  the rest of the code and data by downloading the Batfish repository:  https://github.com/batfish/pybatfish
+the rest of the code and data by downloading the Batfish repository:  https://github.com/batfish/pybatfish
 
 2. Carefully follows the instruction at https://batfish.org/ or https://batfish.readthedocs.io/en/latest/index.html so that you are able to 
 run the notebook in `Batfish/jupyter_notebooks` directory. This will require you to install another docker file to intialize the Batfish server.
@@ -123,14 +182,13 @@ run the notebook in `Batfish/jupyter_notebooks` directory. This will require you
 ### Rela
 
 1. Navigate to the `Rela/` directory. One can see we add a `test.py` script to perform evaluation. One can verify we didn't change
-  the rest of the code and data by downloading the Rela repository:  https://github.com/alibaba/rela
+the rest of the code and data by downloading the Rela repository:  https://github.com/alibaba/rela
 
 2. Type `python3 test.py`, this generates:
 	- `rela_test_all.json` — the full test dataset (matches `RN/dataset/rela_test_all.json`), one can verify that the dataset we uses
 	is exactly from Rela's repo.
 	-  A peformance benchmark containing 2000 examples for the corresponding scenario, one expect to see around 60x faster performance compared
 	to our `RN/` benchmark.
-	
 	
 # Code documentation
 
@@ -177,17 +235,27 @@ This file supports Batfish and Rela interfaces.
 	
 # Reusability Guide
 
-This artifact builds on top of the ocaml. This section describes how to reuse and adapt the artifact for your own language development.
+This artifact builds on top of OCaml. This section describes how to reuse and adapt the artifact for your own language development or verification tools.
 
-### Assumptions
+## Assumptions
 
-We assume you have already completed the steps outlined in the `Installation` section.
+Before proceeding, we assume:
 
-### Workflow
+- You have completed the steps in the **Installation** section.
+- You are familiar with OCaml syntax and basic usage of `dune`.
+- You understand the structure of the NetKAT-based relational language.
 
-1. **Edit the Language Defintion**  
-   Modify the language definition in the `RN.ml` and `RN.mli` file located at `RN/lib`. Detailedly, we have:
+## Workflow
 
+### 1. Edit the Language Definition
+
+To modify or extend the language:
+
+- Edit the core logic of Relational NetKAT in the following files:
+  - `RN/lib/RN.ml`
+  - `RN/lib/RN.mli`
+
+These files define:
   - Types:
     - `field`: Represents a field in a packet.
     - `pk`: Represents a packet.
@@ -259,7 +327,7 @@ We assume you have already completed the steps outlined in the `Installation` se
    
 
 2. **Edit the Test Cases**   
-   Modify the test in the `test_Relationalnetkat.ml` file located at `RN/test`. We provided more than 600 loC of test for correctness. Listed as:
+   Modify the test cases in the `test_RelationalNetkat.ml` file located at `RN/test`. We provide more than 600 lines of test code for correctness, including:
 
    - var_test
    - compile_pred_test
@@ -275,18 +343,32 @@ We assume you have already completed the steps outlined in the `Installation` se
    - determinization_transition_test
    - determinization_test
    - bisim_test
-   
-    One can follow the comments in this file to test the correctness of your own version.
 
-	Other than correctness, one can play with `Rela` and `Batfish` to test the performance of their own version, please follow the test of:
+   Follow the comments in this file to test the correctness of your own version.
+
+   For performance evaluation (e.g., with Rela and Batfish), test using:
 
    - rela_id_test
    - rela_delete_test
    - rela_change_test
    - change_validation_test
-   - hybrid_validation_test 
+   - hybrid_validation_test
 
- 
 3. **Explore the Impact of Changes**  
-   You can experiment with language changes by typing `dune runtest`.
-   
+   Run your modified implementation using:
+
+   ```bash
+   dune runtest
+   ```
+
+   This executes all test suites, including correctness checks and benchmarks.
+
+   To visualize benchmark results, run:
+
+   ```bash
+   python3 draw.py
+   ```
+
+   from the appropriate directory (e.g., `RN/`, `Hash/`, etc.).
+
+   This enables quick prototyping and thorough evaluation of any extensions or optimizations.
