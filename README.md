@@ -94,7 +94,7 @@ Below are instructions for running each set of experiments.
 	All tests should complete successfully.You expect to see a slightly slower (more than 2x) performance compared to `RN/`'s performance on Rela dataset.	
 
 
-6. **Other Optimizations (Hash, Routing, Explicit)
+6. **Other Optimizations (Hash, Routing, Explicit)**:
 	Navigate to the `Hash/` directories and run: `dune runtest --no-buffer`, followed by `python3 draw.py`. 
 
 	Navigate to the `Routing/` directories and run: `dune runtest --no-buffer`. 
