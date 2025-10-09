@@ -161,9 +161,9 @@ For each directory:
   ```
 
 These tests validate additional optimizations:
-- `Hash/`: Shows over **100× speedup** from memoization.
-- `Routing/`: Demonstrates **50× speedup** in Batfish scenarios due to efficient table organization.
-- `Explicit/`: Encodes location information explicitly and is over **5× slower** than implicit encoding.
+- `Hash/`: Shows over **100× slower** than `RN/`.
+- `Routing/`: Demonstrates **50× slower** in Batfish scenarios than `RN/` due to inefficient table organization.
+- `Explicit/`: Encodes location information explicitly and is over **5× slower** than `RN/`.
 
 Some test cases may timeout in unoptimized variants. This supports our claims about performance-critical optimizations.
 
