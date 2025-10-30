@@ -1,0 +1,9 @@
+Dear Reviewer A1,
+
+Thank you for your detailed report and apologize for that we were unable to provide a dockerfile due to the fact that the tests across 2 platforms and that Batfish benchmark requires another docker inside the docker.
+
+Let us briefly explain the things happen here:
+
+ > For both the L64 and Naive, it indeed times out but exits with errors (see below); even crashed my machine in one of the last runs.
+
+The timeout is indeed 
