@@ -15,7 +15,7 @@ Thanks for pointing this out! What we wrote in our README was:
 > - `Hash/`: Shows over **100× slower** than `RN/`.  
 > - `Routing/`: Demonstrates **50× slower** performance in Batfish scenarios than `RN/` due to inefficient table organization.
 
-What we meant is that `Hash` is 100× slower than the Rela benchmark in `RN/`, while `Routing` is 50× slower than the Batfish benchmark in `RN/`.  
+What we meant is that `Hash` is 100× slower than the `Rela` benchmark in `RN/`, while `Routing` is 50× slower than the `Batfish` benchmark in `RN/`.  
 Since Batfish takes around 30 seconds to run while each Rela benchmark takes around 0.1 seconds, it is expected that `Routing` appears slower than `Hash`.  
 We apologize for the ambiguous wording and will fix this in our next README revision.
 
