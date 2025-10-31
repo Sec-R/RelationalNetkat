@@ -1,43 +1,55 @@
+
+# Response to Reviewer A1
+
 Dear Reviewer A1,
 
-Thank you for your detailed report! Let us briefly explain the things happen here:
+Thank you for your detailed report! Let us briefly explain what happened here:
 
- > For both the L64 and Naive, it indeed times out but exits with errors (see below); even crashed my machine in one of the last runs.
+> For both the L64 and Naive cases, it indeed times out but exits with errors (see below); it even crashed my machine in one of the last runs.
 
-The timeout is indeed but we don't know the meaning of error code either. But as long as the runtime is greater than 600s, our result is verified.
+The timeout is indeed expected, but we do not know the exact meaning of the error code either. However, as long as the runtime exceeds 600 seconds, our result is considered verified.
 
-> You say that Routing is faster than Hash, but I was able to finish Hash while Routing timed out with error in the 4 times I tried it (see error below).
+> You say that Routing is faster than Hash, but I was able to finish Hash while Routing timed out with an error in the four times I tried it (see error below).
 
-Thanks for pointing out! What we wrote in our README was:
+Thanks for pointing this out! What we wrote in our README was:
 
-> - `Hash/`: Shows over **100× slower** than `RN/`.
-> - `Routing/`: Demonstrates **50× slower** in Batfish scenarios than `RN/` due to inefficient table organization.
+> - `Hash/`: Shows over **100× slower** than `RN/`.  
+> - `Routing/`: Demonstrates **50× slower** performance in Batfish scenarios than `RN/` due to inefficient table organization.
 
-And what we meant is `Hash` is 100x slower than the Rela benchmark while `Routing` is 50x slower than the Batfish benchmark. Since the running of Batfish requires around 30s while
-each Rela benmark takes around 0.1s, therefore it is expected to see `Routing` slower than `Hash`. We apologize for the ambiguous text and will fix it in our next README version.
+What we meant is that `Hash` is 100× slower than the Rela benchmark in `RN/`, while `Routing` is 50× slower than the Batfish benchmark in `RN/`.  
+Since Batfish takes around 30 seconds to run while each Rela benchmark takes around 0.1 seconds, it is expected that `Routing` appears slower than `Hash`.  
+We apologize for the ambiguous wording and will fix this in our next README revision.
 
-> Batfish: -- For 1., I can see that in Analyzing public and... they also differ in ans = bf.q.ipsecSessionStatus().answer() Vs ans = bf.q.ipsecSessionStatus(nodes="exitgw", remoteNodes="/^tgw-/").answer() with 16 extra tgw nodes in the output.
-> And in Introduction to... it's missing the actions="FAILURE" in bf.q.reachability for one of the tests. Do these diffs have any implications? -- I followed the instructions in 2., but in 3. I haven't yet been able to run your Jupyter notebooks in my machine. I think your instructions could be more detailed in this step. I'm not familiar with Jupyter and so am not sure, eg, where I should look at for checking the outputs.
+> Batfish: For 1., I can see that in *Analyzing Public and Hybrid Cloud Networks* they also differ in `ans = bf.q.ipsecSessionStatus().answer()` vs `ans = bf.q.ipsecSessionStatus(nodes="exitgw", remoteNodes="/^tgw-/").answer()` with 16 extra `tgw` nodes in the output.  
+> And in *Introduction to...* it’s missing the `actions="FAILURE"` in `bf.q.reachability` for one of the tests. Do these differences have any implications?  
+> I followed the instructions in 2., but in 3. I haven’t yet been able to run your Jupyter notebooks on my machine. I think your instructions could be more detailed in this step. I’m not familiar with Jupyter and so I’m not sure, e.g., where I should look for checking the outputs.
 
-Thanks for pointing this out! All we did with the Batfish notebook is to add a timer for the test we care about by the following program segment:
-```
+Thanks for pointing this out! All we did in the Batfish notebooks was to add a timer to the tests we cared about, using the following code snippet:
+
+```python
 start_time = time.perf_counter()
 ...
 end_time = time.perf_counter()
 print(f"Time taken for traceroute: {end_time - start_time:.3f} seconds")
 ```
-The running of Batfish requires very long steps of setting up things (To be honest, we also spend some time. Be sure to start the docker of Batfish before you run the text). After you set up, you
-can first run the original textbook `https://github.com/batfish/batfish` in the repo and try other way to record the time from it. This should generate the same result as the notebook we provide.
-If anything isn't working on your side, please let us know and we will try to fix it. 
 
+Running Batfish requires several setup steps (to be honest, we also spent quite some time on this).  
+Please make sure to start the Batfish Docker container before running the tests. Once set up, you can first try running the original notebooks from  
+`https://github.com/batfish/batfish` and use any timing method of your choice. This should produce the same results as our provided notebooks.  
+If anything still doesn’t work on your side, please let us know — we’ll be happy to help fix it.
 
-As for the difference in result, it is expected for that our Relational NetKAT tool will encode every query into equivalence judgement of the form `e` is empty or `e1=e2`, therefore it can only return either true of false.
-For Batfish, it is an industrial tool that is much powerful to show example traces aside from the `true` or `false` reachability result. This is a future direction we also want to explore, but for now it just can be ignored.
-It is considered true when it returns a least one trace, otherwise false. When the `actions="FAILURE"`, you can view it just as checking the reversed result.
+As for the differences in output, this is expected. Our Relational NetKAT tool encodes each query as an equivalence judgment of the form `e` is empty or `e1 = e2`,  
+so it only returns a boolean result (`true` or `false`).  
+Batfish, on the other hand, is an industrial-strength tool capable of showing example traces in addition to boolean reachability outcomes.  
+This is a direction we hope to explore in the future, but for now it can be ignored.  
+In Batfish, a query is considered `true` when at least one trace is returned; otherwise, it is `false`.  
+When using `actions="FAILURE"`, you can view it as checking for the complement of the reachability condition.
+
 
 > Rela: Running the script fails for me (see below); maybe a dependency is missing.
 
-Try this one?
-`python3 -m pip install tqdm`
+Please try installing the missing dependency with:
 
-
+```
+python3 -m pip install tqdm
+```
